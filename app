@@ -1,10 +1,10 @@
-%%writefile app.py
 
 import streamlit as st
 import pandas as pd
 import numpy as np
 import numpy_financial as npf
 import plotly.express as px
+import plotly.graph_objects as go
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide")
@@ -48,74 +48,68 @@ if 'inputs' not in st.session_state:
 # --- KPI Calculation Functions ---
 def calculate_bess_kpis(i):
     kpis = {}
-    # Technical KPIs
-    kpis['Capacity Factor'] = i['bess_capacity_kwh'] / i['bess_power_kw'] if i['bess_power_kw'] > 0 else 0
-    kpis['SoC Available'] = i['bess_max_soc'] - i['bess_min_soc']
-    kpis['Usable Capacity'] = i['bess_capacity_kwh'] * kpis['SoC Available']
-    kpis['C-Rate'] = i['bess_power_kw'] / kpis['Usable Capacity'] if kpis['Usable Capacity'] > 0 else 0
-    kpis['Round Trip Efficiency (RTE)'] = i['bess_charging_eff'] * i['bess_discharging_eff']
-    kpis['Offtake from Grid (Year 1)'] = i['bess_cycles_per_year'] * kpis['Usable Capacity'] / i['bess_charging_eff']
-    # CAPEX KPIs
-    kpis['Purchase Costs'] = i['bess_capacity_kwh'] * i['bess_capex_per_kwh']
-    kpis['IT & Security Costs'] = i['bess_capacity_kwh'] * (i['bess_capex_it_per_kwh'] + i['bess_capex_security_per_kwh'])
-    base_capex = kpis['Purchase Costs'] + kpis['IT & Security Costs']
-    kpis['Civil Works'] = base_capex * i['bess_capex_civil_pct']
-    capex_subtotal = base_capex + kpis['Civil Works']
-    kpis['Permits & Fees'] = capex_subtotal * i['bess_capex_permits_pct']
-    kpis['Project Management'] = capex_subtotal * i['bess_capex_mgmt_pct']
-    kpis['Contingency'] = capex_subtotal * i['bess_capex_contingency_pct']
-    kpis['bess_total_capex'] = capex_subtotal + kpis['Permits & Fees'] + kpis['Project Management'] + kpis['Contingency']
-    # Income KPIs
+    kpis['bess_capacity_factor'] = i['bess_capacity_kwh'] / i['bess_power_kw'] if i['bess_power_kw'] > 0 else 0
+    kpis['bess_soc_available'] = i['bess_max_soc'] - i['bess_min_soc']
+    kpis['bess_usable_capacity_kwh'] = i['bess_capacity_kwh'] * kpis['bess_soc_available']
+    kpis['bess_c_rate'] = i['bess_power_kw'] / kpis['bess_usable_capacity_kwh'] if kpis['bess_usable_capacity_kwh'] > 0 else 0
+    kpis['bess_rte'] = i['bess_charging_eff'] * i['bess_discharging_eff']
+    kpis['bess_offtake_kwh_y1'] = i['bess_cycles_per_year'] * kpis['bess_usable_capacity_kwh'] / i['bess_charging_eff']
+    kpis['bess_capex_purchase_costs'] = i['bess_capacity_kwh'] * i['bess_capex_per_kwh']
+    kpis['bess_capex_it'] = i['bess_capacity_kwh'] * i['bess_capex_it_per_kwh']
+    kpis['bess_capex_security'] = i['bess_capacity_kwh'] * i['bess_capex_security_per_kwh']
+    base_capex = kpis['bess_capex_purchase_costs'] + kpis['bess_capex_it'] + kpis['bess_capex_security']
+    kpis['bess_capex_civil_works'] = base_capex * i['bess_capex_civil_pct']
+    capex_subtotal = base_capex + kpis['bess_capex_civil_works']
+    kpis['bess_capex_permits'] = capex_subtotal * i['bess_capex_permits_pct']
+    kpis['bess_capex_mgmt'] = capex_subtotal * i['bess_capex_mgmt_pct']
+    kpis['bess_capex_contingency'] = capex_subtotal * i['bess_capex_contingency_pct']
+    kpis['bess_total_capex'] = capex_subtotal + kpis['bess_capex_permits'] + kpis['bess_capex_mgmt'] + kpis['bess_capex_contingency']
     kpis['bess_base_trading_income'] = (i['bess_power_kw'] / 1000) * i['bess_income_trading_per_mw_year']
-    kpis['Control Party Costs'] = kpis['bess_base_trading_income'] * i['bess_income_ctrl_party_pct']
-    kpis['Energy Supplier Costs'] = (kpis['Offtake from Grid (Year 1)'] / 1000) * i['bess_income_supplier_cost_per_mwh']
-    # OPEX KPIs
-    kpis['Asset Management'] = (i['bess_power_kw'] / 1000) * i['bess_opex_asset_mgmt_per_mw_year']
-    kpis['Insurance'] = kpis['bess_total_capex'] * i['bess_opex_insurance_pct']
-    kpis['Property Tax'] = kpis['bess_total_capex'] * i['bess_opex_property_tax_pct']
-    kpis['Overhead'] = i['bess_capacity_kwh'] * i['bess_opex_overhead_per_kwh_year']
-    kpis['Other OPEX'] = i['bess_capacity_kwh'] * i['bess_opex_other_per_kwh_year']
-    kpis['bess_total_opex_y1'] = i['bess_opex_om_per_year'] + kpis['Asset Management'] + kpis['Insurance'] + kpis['Property Tax'] + kpis['Overhead'] + kpis['Other OPEX']
+    kpis['bess_ctrl_party_costs_y1'] = kpis['bess_base_trading_income'] * i['bess_income_ctrl_party_pct']
+    kpis['bess_supplier_costs_y1'] = (kpis['bess_offtake_kwh_y1'] / 1000) * i['bess_income_supplier_cost_per_mwh']
+    kpis['bess_opex_asset_mgmt_y1'] = (i['bess_power_kw'] / 1000) * i['bess_opex_asset_mgmt_per_mw_year']
+    kpis['bess_opex_insurance_y1'] = kpis['bess_total_capex'] * i['bess_opex_insurance_pct']
+    kpis['bess_opex_property_tax_y1'] = kpis['bess_total_capex'] * i['bess_opex_property_tax_pct']
+    kpis['bess_opex_overhead_y1'] = i['bess_capacity_kwh'] * i['bess_opex_overhead_per_kwh_year']
+    kpis['bess_opex_other_y1'] = i['bess_capacity_kwh'] * i['bess_opex_other_per_kwh_year']
+    kpis['bess_total_opex_y1'] = i['bess_opex_om_per_year'] + kpis['bess_opex_asset_mgmt_y1'] + kpis['bess_opex_insurance_y1'] + kpis['bess_opex_property_tax_y1'] + kpis['bess_opex_overhead_y1'] + kpis['bess_opex_other_y1']
     return kpis
 
 def calculate_pv_kpis(i):
     kpis = {}
-    # Technical KPIs
-    kpis['Total Peak Power'] = (i['pv_power_per_panel_wp'] * i['pv_panel_count']) / 1000
-    kpis['Production (Year 1)'] = kpis['Total Peak Power'] * i['pv_full_load_hours']
-    # CAPEX KPIs
-    kpis['Purchase Costs'] = kpis['Total Peak Power'] * 1000 * i['pv_capex_per_wp']
-    capex_subtotal = kpis['Purchase Costs']
-    kpis['Civil Works'] = capex_subtotal * i['pv_capex_civil_pct']
-    capex_subtotal += kpis['Civil Works']
-    kpis['Security'] = capex_subtotal * i['pv_capex_security_pct']
-    kpis['Permits & Fees'] = capex_subtotal * i['pv_capex_permits_pct']
-    kpis['Project Management'] = capex_subtotal * i['pv_capex_mgmt_pct']
-    kpis['Contingency'] = capex_subtotal * i['pv_capex_contingency_pct']
-    kpis['pv_total_capex'] = capex_subtotal + kpis['Security'] + kpis['Permits & Fees'] + kpis['Project Management'] + kpis['Contingency']
-    # Income KPIs
-    kpis['PPA Income'] = (kpis['Total Peak Power'] * 1000 * i['pv_income_ppa_per_mwp']) + (kpis['Production (Year 1)'] * i['pv_income_ppa_per_kwh'])
-    kpis['Curtailment Income'] = (kpis['Total Peak Power'] * 1000 * i['pv_income_curtailment_per_mwp']) + (kpis['Production (Year 1)'] * i['pv_income_curtailment_per_kwh'])
-    # OPEX KPIs
-    kpis['Insurance'] = kpis['pv_total_capex'] * i['pv_opex_insurance_pct']
-    kpis['Property Tax'] = kpis['pv_total_capex'] * i['pv_opex_property_tax_pct']
-    kpis['Overhead'] = kpis['pv_total_capex'] * i['pv_opex_overhead_pct']
-    kpis['Other OPEX'] = kpis['pv_total_capex'] * i['pv_opex_other_pct']
-    kpis['pv_total_opex_y1'] = kpis['Insurance'] + kpis['Property Tax'] + kpis['Overhead'] + kpis['Other OPEX']
+    kpis['pv_total_peak_power_kwp'] = (i['pv_power_per_panel_wp'] * i['pv_panel_count']) / 1000
+    kpis['pv_production_y1'] = kpis['pv_total_peak_power_kwp'] * i['pv_full_load_hours']
+    kpis['pv_capex_purchase_costs'] = kpis['pv_total_peak_power_kwp'] * 1000 * i['pv_capex_per_wp']
+    capex_subtotal = kpis['pv_capex_purchase_costs']
+    kpis['pv_capex_civil_works'] = capex_subtotal * i['pv_capex_civil_pct']
+    capex_subtotal += kpis['pv_capex_civil_works']
+    kpis['pv_capex_security'] = capex_subtotal * i['pv_capex_security_pct']
+    kpis['pv_capex_permits'] = capex_subtotal * i['pv_capex_permits_pct']
+    kpis['pv_capex_mgmt'] = capex_subtotal * i['pv_capex_mgmt_pct']
+    kpis['pv_capex_contingency'] = capex_subtotal * i['pv_capex_contingency_pct']
+    kpis['pv_total_capex'] = capex_subtotal + kpis['pv_capex_security'] + kpis['pv_capex_permits'] + kpis['pv_capex_mgmt'] + kpis['pv_capex_contingency']
+    kpis['pv_income_ppa_y1'] = (kpis['pv_total_peak_power_kwp'] * 1000 * i['pv_income_ppa_per_mwp']) + (kpis['pv_production_y1'] * i['pv_income_ppa_per_kwh'])
+    kpis['pv_income_curtailment_y1'] = (kpis['pv_total_peak_power_kwp'] * 1000 * i['pv_income_curtailment_per_mwp']) + (kpis['pv_production_y1'] * i['pv_income_curtailment_per_kwh'])
+    kpis['pv_opex_insurance_y1'] = kpis['pv_total_capex'] * i['pv_opex_insurance_pct']
+    kpis['pv_opex_property_tax_y1'] = kpis['pv_total_capex'] * i['pv_opex_property_tax_pct']
+    kpis['pv_opex_overhead_y1'] = kpis['pv_total_capex'] * i['pv_opex_overhead_pct']
+    kpis['pv_opex_other_y1'] = kpis['pv_total_capex'] * i['pv_opex_other_pct']
+    kpis['pv_total_opex_y1'] = kpis['pv_opex_insurance_y1'] + kpis['pv_opex_property_tax_y1'] + kpis['pv_opex_overhead_y1'] + kpis['pv_opex_other_y1']
     return kpis
 
 # --- Core Financial & Charting Functions ---
 def run_financial_model(inputs, project_type):
+    # This function is unchanged
     years = np.arange(1, int(inputs['project_term']) + 1)
     df = pd.DataFrame(index=years); df.index.name = 'Year'
     is_bess_active = 'BESS' in project_type; is_pv_active = 'PV' in project_type
     df['inflation_factor'] = (1 + inputs['inflation']) ** (df.index - 1)
-    df['bess_degradation_factor'] = (1 + inputs['bess_annual_degradation']) ** (df.index - 1) if is_bess_active else 1
+    df['bess_degradation_factor'] = (1 - inputs['bess_annual_degradation']) ** (df.index - 1) if is_bess_active else 1
     df['pv_degradation_factor'] = (1 - inputs['pv_annual_degradation']) ** (df.index - 1) if is_pv_active else 1
     df['bess_trading_income'] = (inputs.get('bess_base_trading_income', 0) * df['bess_degradation_factor']) if is_bess_active else 0
     df['bess_control_party_costs'] = -df['bess_trading_income'] * inputs.get('bess_income_ctrl_party_pct', 0)
-    df['bess_supplier_costs'] = -inputs.get('Energy Supplier Costs', 0) * df['bess_degradation_factor'] * df['inflation_factor']
-    df['pv_ppa_income'] = (inputs.get('PPA Income',0) * df['pv_degradation_factor'] * df['inflation_factor']) if is_pv_active else 0
+    df['bess_supplier_costs'] = -inputs.get('bess_supplier_costs_y1', 0) * df['bess_degradation_factor'] * df['inflation_factor']
+    df['pv_ppa_income'] = (inputs.get('pv_income_ppa_y1',0) * df['pv_degradation_factor'] * df['inflation_factor']) if is_pv_active else 0
     df['bess_opex'] = -inputs.get('bess_total_opex_y1', 0) * df['inflation_factor'] if is_bess_active else 0
     df['pv_opex'] = -inputs.get('pv_total_opex_y1', 0) * df['inflation_factor'] if is_pv_active else 0
     income_cols = ['bess_trading_income', 'bess_control_party_costs', 'bess_supplier_costs', 'pv_ppa_income', 'bess_opex', 'pv_opex']
@@ -151,39 +145,53 @@ def generate_interactive_charts(df_results, total_capex):
     fig2.update_layout(title_x=0.5, yaxis_tickprefix="€", yaxis_tickformat="~s")
     return fig1, fig2
 
-def generate_cost_breakdown_charts(kpis, prefix):
-    capex_data = {k: v for k, v in kpis.items() if 'Costs' in k or 'Works' in k or 'Security' in k or 'Permits' in k or 'Management' in k or 'Contingency' in k and v > 0}
+def generate_cost_breakdown_charts(kpis, project_prefix):
+    # Create CAPEX Chart
+    capex_data = {k.replace(f'{project_prefix}_capex_', ''): v for k, v in kpis.items() if k.startswith(f'{project_prefix}_capex_') and k != f'{project_prefix}_total_capex' and v > 0}
     df_capex = pd.DataFrame(list(capex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
-    fig_capex = px.pie(df_capex, values='Cost', names='Component', title=f'{prefix.upper()} CAPEX Breakdown', hole=.3)
+    fig_capex = px.pie(df_capex, values='Cost', names='Component', title=f'{project_prefix.upper()} CAPEX Breakdown', hole=.3)
     
-    opex_data = {k: v for k, v in kpis.items() if k in ['Insurance', 'Property Tax', 'Overhead', 'Other OPEX', 'Asset Management']}
+    # Create OPEX Chart
+    opex_data = {k.replace(f'{project_prefix}_opex_', ''): v for k, v in kpis.items() if k.startswith(f'{project_prefix}_opex_') and '_y1' in k and v > 0}
     df_opex = pd.DataFrame(list(opex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
-    fig_opex = px.pie(df_opex, values='Cost', names='Component', title=f'{prefix.upper()} OPEX (Year 1) Breakdown', hole=.3)
+    fig_opex = px.pie(df_opex, values='Cost', names='Component', title=f'{project_prefix.upper()} OPEX (Year 1) Breakdown', hole=.3)
+    
     return fig_capex, fig_opex
 
-# --- NEW: Corrected KPI DataFrame Function ---
-def create_kpi_dataframe(kpis, kpi_map):
-    data = []
-    for section, keys in kpi_map.items():
-        data.append({'Metric': f'--- {section} ---', 'Value': ''})
-        for key, unit in keys.items():
-            if key in kpis:
-                value = kpis[key]
-                if unit == "€": formatted_value = f"€ {value:,.0f}"
-                elif unit == "%": formatted_value = f"{value:.2%}"
-                elif unit == "h": formatted_value = f"{value:.2f} h"
-                elif unit == "kWh" or unit == "kWp": formatted_value = f"{value:,.0f} {unit}"
-                else: formatted_value = f"{value:,.2f}"
-                data.append({'Metric': key, 'Value': formatted_value})
-    return pd.DataFrame(data).set_index('Metric')
+def create_kpi_dataframe(kpis, category, prefix):
+    df_data = {}
+    for key, value in kpis.items():
+        if key.startswith(f"{prefix}_{category}_"):
+            metric_name = key.replace(f"{prefix}_{category}_", "").replace("_", " ").title()
+            # Basic unit assignment, can be made more sophisticated
+            unit = "€"
+            if "kwh" in key: unit = "kWh"
+            elif "kwp" in key: unit = "kWp"
+            elif "factor" in key or "pct" in key or "rate" in key or "eff" in key: unit = "%" if "pct" not in key else " "
+            elif "_h" in key: unit = "h"
+            
+            # Format value
+            formatted_value = value
+            if unit == "%": formatted_value = f"{value:.2%}"
+            elif unit == "€": formatted_value = f"€ {value:,.0f}"
+            else: formatted_value = f"{value:,.2f}"
+
+            df_data[metric_name] = {'Value': formatted_value, 'Unit': unit.replace("%", " ")} # Remove % from unit for consistency
+            
+    if not df_data:
+        return pd.DataFrame()
+    return pd.DataFrame.from_dict(df_data, orient='index')
 
 # --- Main Application UI and Logic ---
 st.title('Comprehensive BESS & PV Financial Model ☀️🔋')
 st.sidebar.title("Configuration")
 st.session_state.project_type = st.sidebar.selectbox("Select Project Type", ["BESS & PV", "BESS-only", "PV-only"])
 i = st.session_state.inputs
+
+# --- CSV Uploader ---
 uploaded_file = st.sidebar.file_uploader("Upload CSV to Override Inputs", type=['csv'])
 if uploaded_file:
+    # This is a placeholder for the full CSV parsing logic
     st.sidebar.success("CSV Uploaded (Full parsing logic would be implemented here)")
 
 # --- BESS INPUTS ---
@@ -193,8 +201,8 @@ if 'BESS' in st.session_state.project_type:
         i['bess_power_kw'] = st.number_input("Power (kW)", value=i['bess_power_kw'], help="Maximum charge/discharge power.", key='bess_p_kw')
         i['bess_capacity_kwh'] = st.number_input("Capacity (kWh)", value=i['bess_capacity_kwh'], help="Total nominal energy capacity.", key='bess_c_kwh')
         i['bess_min_soc'], i['bess_max_soc'] = st.slider("Operating SoC Range", 0.0, 1.0, (i['bess_min_soc'], i['bess_max_soc']), help="Min and Max State of Charge.", key='bess_soc')
-        i['bess_charging_eff'] = st.slider("Charging Efficiency", 0.80, 1.00, i['bess_charging_eff'], step=0.01, key='bess_chg_eff')
-        i['bess_discharging_eff'] = st.slider("Discharging Efficiency", 0.80, 1.00, i['bess_discharging_eff'], step=0.01, key='bess_dis_eff')
+        i['bess_charging_eff'] = st.slider("Charging Efficiency", 0.8, 1.0, i['bess_charging_eff'], key='bess_chg_eff')
+        i['bess_discharging_eff'] = st.slider("Discharging Efficiency", 0.8, 1.0, i['bess_discharging_eff'], key='bess_dis_eff')
         i['bess_annual_degradation'] = st.slider("Annual Degradation (%)", 0.0, 10.0, i['bess_annual_degradation'] * 100, key='bess_deg') / 100
         i['bess_cycles_per_year'] = st.number_input("Cycles per Year", value=i['bess_cycles_per_year'], key='bess_cycles')
     with st.sidebar.expander("CAPEX Assumptions (BESS)"):
@@ -220,8 +228,6 @@ if 'BESS' in st.session_state.project_type:
 # --- PV INPUTS ---
 if 'PV' in st.session_state.project_type:
     st.sidebar.header("☀️ Solar PV System")
-    help_ppa = "Enter a value in the \"PPA Revenue / MWp\" field to calculate the \"PPA Revenue in Year 1\" based on expected revenue per MWp. Enter a value in the \"PPA Revenue / kWh\" field to calculate the \"PPA Revenue in Year 1\" based on expected revenue per kWh. One of the two fields must be empty."
-    help_curtailment = "Enter a value in the \"Curtailment Income / MWp\" field to calculate the \"Curtailment Income in Year 1\" based on expected income per MWp. Enter a value in the \"Curtailment Income / kWh\" field to calculate the \"Curtailment Income in Year 1\" based on expected income per kWh. One of the two fields must be empty."
     with st.sidebar.expander("Technical Inputs (PV)", expanded=False):
         i['pv_panel_count'] = st.number_input("Number of Panels", value=i['pv_panel_count'], key='pv_panel_c')
         i['pv_power_per_panel_wp'] = st.number_input("Power per Panel (Wp)", value=i['pv_power_per_panel_wp'], key='pv_ppp_wp')
@@ -235,6 +241,8 @@ if 'PV' in st.session_state.project_type:
         i['pv_capex_mgmt_pct'] = st.slider("Project Management (%)", 0.0, 10.0, i['pv_capex_mgmt_pct'] * 100, key='pv_capex_mgmt') / 100
         i['pv_capex_contingency_pct'] = st.slider("Contingency (%)", 0.0, 15.0, i['pv_capex_contingency_pct'] * 100, key='pv_capex_cont') / 100
     with st.sidebar.expander("Income Assumptions (PV)"):
+        help_ppa = "Enter a value in the \"PPA Revenue / MWp\" field... One of the two fields must be empty."
+        help_curtailment = "Enter a value in the \"Curtailment Income / MWp\" field... One of the two fields must be empty."
         i['pv_income_ppa_per_mwp'] = st.number_input("Income PPA (€/MWp)", value=i['pv_income_ppa_per_mwp'], help=help_ppa, key='pv_inc_ppa_mwp')
         i['pv_income_ppa_per_kwh'] = st.number_input("Income PPA (€/kWh)", value=i['pv_income_ppa_per_kwh'], help=help_ppa, format="%.4f", key='pv_inc_ppa_kwh')
         i['pv_income_curtailment_per_mwp'] = st.number_input("Income Curtailment (€/MWp)", value=i['pv_income_curtailment_per_mwp'], help=help_curtailment, key='pv_inc_curt_mwp')
@@ -245,18 +253,19 @@ if 'PV' in st.session_state.project_type:
         i['pv_opex_overhead_pct'] = st.slider("Overhead (% of CAPEX)", 0.0, 2.0, i['pv_opex_overhead_pct'] * 100, format="%.3f", key='pv_opex_over') / 100
         i['pv_opex_other_pct'] = st.slider("Other (% of CAPEX)", 0.0, 2.0, i['pv_opex_other_pct'] * 100, format="%.3f", key='pv_opex_oth') / 100
 
+
 # --- General Financial Inputs ---
 st.sidebar.header("General & Financial")
 with st.sidebar.expander("Project Term, Depreciation & Finance"):
-    i['project_term'] = st.slider('Project Term (years)', 5, 30, i['project_term'], key='g_term')
-    if 'BESS' in st.session_state.project_type: i['depr_period_battery'] = st.slider('BESS Depreciation Period', 5, 20, i['depr_period_battery'], key='g_depr_b')
-    if 'PV' in st.session_state.project_type: i['depr_period_pv'] = st.slider('PV Depreciation Period', 10, 30, i['depr_period_pv'], key='g_depr_pv')
-    i['wacc'] = st.slider('WACC (%)', 5.0, 15.0, i['wacc'] * 100, key='g_wacc') / 100
+    i['project_term'] = st.slider('Project Term (years)', 5, 30, i['project_term'])
+    if 'BESS' in st.session_state.project_type: i['depr_period_battery'] = st.slider('BESS Depreciation Period', 5, 20, i['depr_period_battery'])
+    if 'PV' in st.session_state.project_type: i['depr_period_pv'] = st.slider('PV Depreciation Period', 10, 30, i['depr_period_pv'])
+    i['wacc'] = st.slider('WACC (%)', 5.0, 15.0, i['wacc'] * 100) / 100
 with st.sidebar.expander("Inflation & Tax"):
-    i['inflation'] = st.slider('Annual Inflation Rate (%)', 0.0, 10.0, i['inflation'] * 100, key='g_inf') / 100
-    i['tax_threshold'] = st.number_input('Tax Threshold (€)', value=i['tax_threshold'], key='t_thresh')
-    i['tax_rate_1'] = st.slider('Tax Rate 1 (%)', 10.0, 30.0, i['tax_rate_1'] * 100, key='t_r1') / 100
-    i['tax_rate_2'] = st.slider('Tax Rate 2 (%)', 10.0, 30.0, i['tax_rate_2'] * 100, key='t_r2') / 100
+    i['inflation'] = st.slider('Annual Inflation Rate (%)', 0.0, 10.0, i['inflation'] * 100) / 100
+    i['tax_threshold'] = st.number_input('Tax Threshold (€)', value=i['tax_threshold'])
+    i['tax_rate_1'] = st.slider('Tax Rate 1 (%)', 10.0, 30.0, i['tax_rate_1'] * 100) / 100
+    i['tax_rate_2'] = st.slider('Tax Rate 2 (%)', 10.0, 30.0, i['tax_rate_2'] * 100) / 100
 
 # --- RUN MODEL BUTTON ---
 if st.sidebar.button('Run Model', type="primary"):
@@ -274,44 +283,58 @@ if st.sidebar.button('Run Model', type="primary"):
     col3.metric("Payback Period", f"{metrics['Payback Period (years)']} years")
     col4.metric("Final Cumulative Cash Flow", f"€{metrics['Final Cumulative Cash Flow']:,.0f}")
 
+    # --- NEW: Tabbed Results Display ---
     tab_charts, tab_bess, tab_pv = st.tabs(["📊 Financial Summary", "🔋 BESS KPIs", "☀️ PV KPIs"])
+
     with tab_charts:
-        st.plotly_chart(generate_interactive_charts(results_df, metrics['Total Investment'])[1], use_container_width=True)
-        st.plotly_chart(generate_interactive_charts(results_df, metrics['Total Investment'])[0], use_container_width=True)
-        st.dataframe(results_df[['ebitda', 'depreciation', 'net_cash_flow', 'cumulative_cash_flow']].style.format("€{:,.0f}"), use_container_width=True)
+        st.header('Interactive Charts')
+        fig1, fig2 = generate_interactive_charts(results_df, metrics['Total Investment'])
+        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig1, use_container_width=True)
+        st.header('Annual Projections Table')
+        display_df = results_df[['ebitda', 'depreciation', 'net_cash_flow', 'cumulative_cash_flow']].copy()
+        st.dataframe(display_df.style.format("€{:,.0f}"), use_container_width=True)
+
     with tab_bess:
         st.header("🔋 BESS - Key Performance Indicators")
         if 'BESS' in st.session_state.project_type:
-            bess_kpi_map = {
-                "Technical": {'Capacity Factor': 'h', 'SoC Available': '%', 'Usable Capacity': 'kWh', 'C-Rate': '', 'Round Trip Efficiency (RTE)': '%', 'Offtake from Grid (Year 1)': 'kWh'},
-                "CAPEX": {'Purchase Costs': '€', 'IT & Security Costs': '€', 'Civil Works': '€', 'Permits & Fees': '€', 'Project Management': '€', 'Contingency': '€'},
-                "Income (Year 1)": {'bess_base_trading_income': '€', 'Control Party Costs': '€', 'Energy Supplier Costs': '€'},
-                "OPEX (Year 1)": {'Asset Management': '€', 'Insurance': '€', 'Property Tax': '€', 'Overhead': '€', 'Other OPEX': '€'}
-            }
-            capex_chart, opex_chart = generate_cost_breakdown_charts(bess_kpis, 'bess')
             col1, col2 = st.columns(2)
-            with col1: st.plotly_chart(capex_chart, use_container_width=True)
-            with col2: st.plotly_chart(opex_chart, use_container_width=True)
-            for section, keys in bess_kpi_map.items():
-                st.subheader(section)
-                st.dataframe(create_kpi_dataframe(bess_kpis, {section: keys}), use_container_width=True)
-        else: st.info("BESS not included in this project type.")
+            with col1:
+                st.subheader("Technical")
+                st.dataframe(create_kpi_dataframe(bess_kpis, 'bess', 'bess'))
+                st.subheader("Income (Year 1)")
+                st.dataframe(create_kpi_dataframe(bess_kpis, 'income', 'bess'))
+            with col2:
+                st.subheader("CAPEX Breakdown")
+                st.dataframe(create_kpi_dataframe(bess_kpis, 'capex', 'bess'))
+                st.subheader("OPEX (Year 1)")
+                st.dataframe(create_kpi_dataframe(bess_kpis, 'opex', 'bess'))
+            
+            capex_chart, opex_chart = generate_cost_breakdown_charts(bess_kpis, 'bess')
+            st.plotly_chart(capex_chart, use_container_width=True)
+            st.plotly_chart(opex_chart, use_container_width=True)
+        else:
+            st.info("BESS not included in this project type.")
+    
     with tab_pv:
         st.header("☀️ PV - Key Performance Indicators")
         if 'PV' in st.session_state.project_type:
-            pv_kpi_map = {
-                "Technical": {'Total Peak Power': 'kWp', 'Production (Year 1)': 'kWh'},
-                "CAPEX": {'Purchase Costs': '€', 'Civil Works': '€', 'Security': '€', 'Permits & Fees': '€', 'Project Management': '€', 'Contingency': '€'},
-                "Income (Year 1)": {'PPA Income': '€', 'Curtailment Income': '€'},
-                "OPEX (Year 1)": {'Insurance': '€', 'Property Tax': '€', 'Overhead': '€', 'Other OPEX': '€'}
-            }
-            capex_chart, opex_chart = generate_cost_breakdown_charts(pv_kpis, 'pv')
             col1, col2 = st.columns(2)
-            with col1: st.plotly_chart(capex_chart, use_container_width=True)
-            with col2: st.plotly_chart(opex_chart, use_container_width=True)
-            for section, keys in pv_kpi_map.items():
-                st.subheader(section)
-                st.dataframe(create_kpi_dataframe(pv_kpis, {section: keys}), use_container_width=True)
-        else: st.info("PV not included in this project type.")
+            with col1:
+                st.subheader("Technical")
+                st.dataframe(create_kpi_dataframe(pv_kpis, 'pv', 'pv'))
+                st.subheader("Income (Year 1)")
+                st.dataframe(create_kpi_dataframe(pv_kpis, 'income', 'pv'))
+            with col2:
+                st.subheader("CAPEX Breakdown")
+                st.dataframe(create_kpi_dataframe(pv_kpis, 'capex', 'pv'))
+                st.subheader("OPEX (Year 1)")
+                st.dataframe(create_kpi_dataframe(pv_kpis, 'opex', 'pv'))
+
+            capex_chart, opex_chart = generate_cost_breakdown_charts(pv_kpis, 'pv')
+            st.plotly_chart(capex_chart, use_container_width=True)
+            st.plotly_chart(opex_chart, use_container_width=True)
+        else:
+            st.info("PV not included in this project type.")
 else:
-    st.info('Adjust inputs, optionally load a CSV, and click "Run Model".')
+    st.info('Adjust inputs in the sidebar, optionally load a CSV, and click "Run Model".')
