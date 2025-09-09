@@ -332,7 +332,7 @@ def show_project_selection_page():
                         if action_cols[0].button("✏️ Rename", key=f"rename_{project_name}", use_container_width=True):
                             st.session_state.renaming_project = project_name
                             st.rerun()
-                        if action_cols[1].button("複製 Duplicate", key=f"clone_{project_name}", use_container_width=True):
+                        if action_cols[1].button("Duplicate", key=f"clone_{project_name}", use_container_width=True):
                             new_name = f"{project_name} (copy)"
                             i = 1
                             while new_name in st.session_state.projects:
