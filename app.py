@@ -177,7 +177,7 @@ def create_kpi_dataframe(kpis, kpi_map):
     return pd.DataFrame(data).set_index('Metric')
 
 # --- Main Application UI and Logic ---
-st.title('Comprehensive BESS & PV Financial Model ☀️🔋')
+st.title('Flink Nederland EMS ☀️🔋')
 st.sidebar.title("Configuration")
 st.session_state.project_type = st.sidebar.selectbox("Select Project Type", ["BESS & PV", "BESS-only", "PV-only"])
 i = st.session_state.inputs
