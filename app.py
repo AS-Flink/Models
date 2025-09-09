@@ -253,7 +253,7 @@ def show_model_page():
 
     # --- Sidebar for Inputs ---
     with st.sidebar:
-        st.image("https://img.icons8.com/external-kiranshastry-lineal-color-kiranshastry/64/external-solar-panel-solar-system-kiranshastry-lineal-color-kiranshastry.png", width=70)
+        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=70)
         st.title("Configuration")
         if st.button("⬅️ Back to Project Selection"): st.session_state.page = "Project_Selection"; st.rerun()
         project_data['type'] = st.selectbox("Select Project Type", ["BESS & PV", "BESS-only", "PV-only"], index=["BESS & PV", "BESS-only", "PV-only"].index(project_data['type']), key=f"{project_name}_type")
