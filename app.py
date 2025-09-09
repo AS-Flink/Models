@@ -8,14 +8,19 @@ import plotly.express as px
 # --- Page Configuration ---
 st.set_page_config(layout="wide")
 
-# --- COMPLETE Hardcoded default values based on the business case ---
+# --- COMPLETE Hardcoded default values ---
 HARDCODED_DEFAULTS = {
-    # General & Financial
-    'project_term': 10, 'inflation': 0.02, 'wacc': 0.1,
-    'depr_period_battery': 10, 'depr_period_pv': 15,
+    'project_term': 10, 'depr_period_battery': 10, 'depr_period_pv': 15,
+    'lifespan_battery': 10, 'lifespan_pv': 25,
+    'inflation': 0.02,
     'tax_threshold': 200000, 'tax_rate_1': 0.19, 'tax_rate_2': 0.258,
+    'debt_senior_pct': 0.0, 'debt_junior_pct': 0.0, 'irr_equity_req': 0.1,
+    'interest_rate_senior': 0.06, 'interest_rate_junior': 0.08,
+    'grid_connection_old': 'Liander t/m 2.000 kVA', 'grid_transport_old': 'Liander MS (t/m 2.000 kW)',
+    'grid_connection_new': 'Liander t/m 2.000 kVA', 'grid_transport_new': 'Liander MS (t/m 2.000 kW)',
+    'kw_max_old': 195, 'kw_contract_old': 250, 'kw_max_new': 250, 'kw_contract_new': 250,
 
-    # --- BESS Parameters ---
+    # BESS Parameters
     'bess_power_kw': 2000, 'bess_capacity_kwh': 4000, 'bess_min_soc': 0.05,
     'bess_max_soc': 0.95, 'bess_charging_eff': 0.92, 'bess_discharging_eff': 0.92,
     'bess_annual_degradation': 0.04, 'bess_cycles_per_year': 600,
@@ -28,7 +33,7 @@ HARDCODED_DEFAULTS = {
     'bess_opex_property_tax_pct': 0.001, 'bess_opex_overhead_per_kwh_year': 1.0,
     'bess_opex_other_per_kwh_year': 1.0,
 
-    # --- PV Parameters ---
+    # PV Parameters
     'pv_power_per_panel_wp': 590, 'pv_panel_count': 3479, 'pv_full_load_hours': 817.8,
     'pv_annual_degradation': 0.005, 'pv_capex_per_wp': 0.2, 'pv_capex_civil_pct': 0.08,
     'pv_capex_security_pct': 0.02, 'pv_capex_permits_pct': 0.01,
@@ -43,6 +48,15 @@ HARDCODED_DEFAULTS = {
 if 'inputs' not in st.session_state:
     st.session_state.inputs = HARDCODED_DEFAULTS.copy()
     st.session_state.project_type = "BESS & PV"
+
+# --- Data Loading and KPI Functions ---
+@st.cache_data
+def load_connection_data():
+    try:
+        return pd.read_csv('connections.csv')
+    except FileNotFoundError:
+        return None
+
 
 # --- KPI Calculation Functions ---
 def calculate_bess_kpis(i):
@@ -177,13 +191,57 @@ def create_kpi_dataframe(kpis, kpi_map):
     return pd.DataFrame(data).set_index('Metric')
 
 # --- Main Application UI and Logic ---
-st.title('Flink Nederland EMS ☀️🔋')
+st.title('Flink EMS: BESS & PV Financial Model ☀️🔋')
+
+connection_data = load_connection_data()
+i = st.session_state.inputs
+
 st.sidebar.title("Configuration")
 st.session_state.project_type = st.sidebar.selectbox("Select Project Type", ["BESS & PV", "BESS-only", "PV-only"])
-i = st.session_state.inputs
-uploaded_file = st.sidebar.file_uploader("Upload CSV to Override Inputs", type=['csv'])
-if uploaded_file:
-    st.sidebar.success("CSV Uploaded (Full parsing logic would be implemented here)")
+
+# --- CSV UPLOADER (RESTORED) ---
+uploaded_file = st.sidebar.file_uploader("Upload CSV to Override All Inputs", type=['csv'])
+if uploaded_file is not None:
+    try:
+        df_inputs = pd.read_csv(uploaded_file, header=None, index_col=2)
+        # Simplified parsing logic; assumes CSV format from original file
+        def get_value(key, default):
+            try: return pd.to_numeric(df_inputs.loc[key, 3])
+            except (KeyError, ValueError): return default
+        
+        # Overwrite all defaults with values from the CSV
+        for key, default_value in HARDCODED_DEFAULTS.items():
+            st.session_state.inputs[key] = get_value(key, default_value)
+        
+        st.sidebar.success(f"Loaded values from {uploaded_file.name}")
+    except Exception as e:
+        st.sidebar.error(f"Error reading CSV: {e}")
+
+# --- Grid Connection Section ---
+with st.sidebar.expander("Grid Connection", expanded=True):
+    if connection_data is not None:
+        connection_options = connection_data['ConnectionName'].unique()
+        
+        def update_grid_params(situation):
+            connection_key = f'grid_connection_{situation}'
+            max_key = f'kw_max_{situation}'
+            contract_key = f'kw_contract_{situation}'
+            
+            selected_connection = i[connection_key]
+            match = connection_data[connection_data['ConnectionName'] == selected_connection]
+            if not match.empty:
+                i[max_key] = match['kWMax'].iloc[0]
+                i[contract_key] = match['kWContract'].iloc[0]
+
+        st.selectbox("Connection - old situation", connection_options, index=list(connection_options).index(i['grid_connection_old']), key='grid_connection_old_key', on_change=update_grid_params, args=('old',))
+        st.number_input("kW Max (offtake) - old", value=i['kw_max_old'], disabled=True)
+        st.number_input("kW contract (offtake) - old", value=i['kw_contract_old'], disabled=True)
+        
+        st.selectbox("Connection - new situation", connection_options, index=list(connection_options).index(i['grid_connection_new']), key='grid_connection_new_key', on_change=update_grid_params, args=('new',))
+        st.number_input("kW Max (offtake) - new", value=i['kw_max_new'], disabled=True)
+        st.number_input("kW contract (offtake) - new", value=i['kw_contract_new'], disabled=True)
+    else:
+        st.error("`connections.csv` not found.")
 
 # --- BESS INPUTS ---
 if 'BESS' in st.session_state.project_type:
@@ -251,11 +309,32 @@ with st.sidebar.expander("Project Term, Depreciation & Finance"):
     if 'BESS' in st.session_state.project_type: i['depr_period_battery'] = st.slider('BESS Depreciation Period', 5, 20, i['depr_period_battery'], key='g_depr_b')
     if 'PV' in st.session_state.project_type: i['depr_period_pv'] = st.slider('PV Depreciation Period', 10, 30, i['depr_period_pv'], key='g_depr_pv')
     i['wacc'] = st.slider('WACC (%)', 5.0, 15.0, i['wacc'] * 100, key='g_wacc') / 100
+    with st.sidebar.expander("Financing"):
+    i['debt_senior_pct'] = st.slider("Debt (senior) (%)", 0.0, 100.0, i['debt_senior_pct'] * 100) / 100
+    i['debt_junior_pct'] = st.slider("Debt (junior) (%)", 0.0, 100.0, i['debt_junior_pct'] * 100) / 100
+    i['irr_equity_req'] = st.slider("IRR requirement (equity) (%)", 5.0, 20.0, i['irr_equity_req'] * 100) / 100
+    i['interest_rate_senior'] = st.slider("Interest rate debt (senior) (%)", 2.0, 12.0, i['interest_rate_senior'] * 100) / 100
+    i['interest_rate_junior'] = st.slider("Interest rate debt (junior) (%)", 4.0, 15.0, i['interest_rate_junior'] * 100) / 100
 with st.sidebar.expander("Inflation & Tax"):
-    i['inflation'] = st.slider('Annual Inflation Rate (%)', 0.0, 10.0, i['inflation'] * 100, key='g_inf') / 100
-    i['tax_threshold'] = st.number_input('Tax Threshold (€)', value=i['tax_threshold'], key='t_thresh')
-    i['tax_rate_1'] = st.slider('Tax Rate 1 (%)', 10.0, 30.0, i['tax_rate_1'] * 100, key='t_r1') / 100
-    i['tax_rate_2'] = st.slider('Tax Rate 2 (%)', 10.0, 30.0, i['tax_rate_2'] * 100, key='t_r2') / 100
+    i['inflation'] = st.slider('Annual Inflation Rate (%)', 0.0, 10.0, i['inflation'] * 100)
+    st.subheader("Corporate Tax Threshold")
+    st.markdown("""
+    | Threshold      | Tariff  |
+    |----------------|---------|
+    | Up to €200,000 | 19.0%   |
+    | Above €200,000 | 25.8%   |
+    """)
+# --- Live Financial Calculations ---
+equity = 1 - i['debt_senior_pct'] - i['debt_junior_pct']
+wacc = (equity * i['irr_equity_req']) + \
+       (i['debt_senior_pct'] * i['interest_rate_senior']) + \
+       (i['debt_junior_pct'] * i['interest_rate_junior'])
+
+st.sidebar.subheader("Live Calculated Values")
+col1, col2 = st.sidebar.columns(2)
+col1.metric("Equity", f"{equity:.1%}")
+col2.metric("WACC", f"{wacc:.2%}")
+
 
 # --- RUN MODEL BUTTON ---
 if st.sidebar.button('Run Model', type="primary"):
