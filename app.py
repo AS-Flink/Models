@@ -4,6 +4,8 @@ import numpy as np
 import numpy_financial as npf
 import plotly.express as px
 import io
+import json # Import json for saving/loading projects
+import os   # Import os for file path operations
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Flink EMS")
@@ -66,7 +68,41 @@ if 'page' not in st.session_state:
     st.session_state.projects = {}
     st.session_state.current_project_name = None
 
-# --- Core Calculation & Charting Functions ---
+# --- Project Persistence Functions ---
+PROJECTS_FILE = "flink_ems_projects.json" # File to save/load projects
+
+def save_projects():
+    """Saves the current projects dictionary to a JSON file."""
+    with open(PROJECTS_FILE, 'w') as f:
+        # Convert DataFrames in results to dicts before saving
+        projects_for_save = {}
+        for proj_name, proj_data in st.session_state.projects.items():
+            projects_for_save[proj_name] = proj_data.copy()
+            if 'results' in projects_for_save[proj_name] and 'df' in projects_for_save[proj_name]['results']:
+                # Convert DataFrame to JSON string to preserve it
+                projects_for_save[proj_name]['results']['df'] = projects_for_save[proj_name]['results']['df'].to_json()
+        json.dump(projects_for_save, f)
+    st.sidebar.success("Projects saved successfully!")
+
+def load_projects():
+    """Loads projects from a JSON file into the session state."""
+    if os.path.exists(PROJECTS_FILE):
+        with open(PROJECTS_FILE, 'r') as f:
+            loaded_projects = json.load(f)
+            # Convert JSON strings back to DataFrames after loading
+            for proj_name, proj_data in loaded_projects.items():
+                if 'results' in proj_data and 'df' in proj_data['results']:
+                    proj_data['results']['df'] = pd.read_json(proj_data['results']['df'])
+            st.session_state.projects = loaded_projects
+        st.sidebar.success("Projects loaded successfully!")
+    else:
+        st.sidebar.info("No saved projects found.")
+
+# Automatically load projects when the app starts
+if not st.session_state.projects and os.path.exists(PROJECTS_FILE):
+    load_projects()
+
+# --- Core Calculation & Charting Functions (UNCHANGED from previous version) ---
 def calculate_bess_kpis(i):
     kpis = {}
     kpis['Capacity Factor'] = i['bess_capacity_kwh'] / i['bess_power_kw'] if i['bess_power_kw'] > 0 else 0
@@ -253,7 +289,8 @@ def show_model_page():
 
     # --- Sidebar for Inputs ---
     with st.sidebar:
-        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=70)
+        # Moved logo to the sidebar to be persistent across all "pages"
+        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=140) # Increased width here
         st.title("Configuration")
         if st.button("⬅️ Back to Project Selection"): st.session_state.page = "Project_Selection"; st.rerun()
         project_data['type'] = st.selectbox("Select Project Type", ["BESS & PV", "BESS-only", "PV-only"], index=["BESS & PV", "BESS-only", "PV-only"].index(project_data['type']), key=f"{project_name}_type")
@@ -403,6 +440,17 @@ def show_model_page():
         st.info('Adjust inputs in the sidebar and click "Run Model" to see the financial forecast.')
 
 # --- MAIN ROUTER ---
+# Sidebar elements that are always visible
+with st.sidebar:
+    st.markdown("---")
+    st.subheader("Project Data Management")
+    if st.button("💾 Save All Projects"):
+        save_projects()
+    if st.button("📂 Load All Projects"):
+        load_projects()
+        st.rerun() # Rerun to update the project selection dropdown
+
+
 if st.session_state.page == "Home":
     show_home_page()
 elif st.session_state.page == "Project_Selection":
