@@ -237,7 +237,7 @@ def create_kpi_dataframe(kpis, kpi_map):
 # --- PAGE DISPLAY FUNCTIONS ---
 def show_home_page():
     display_header("Flink Nederland EMS ☀️🔋")
-    st.subheader('Welcome to the Energy Modeling Suite')
+    st.subheader('Welcome to the Energy Management System')
     st.write("Please select a tool to begin.")
     col1, col2, col3 = st.columns(3)
     with col1:
