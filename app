@@ -4,6 +4,9 @@ import numpy as np
 import numpy_financial as npf
 import plotly.express as px
 import io
+import json
+import os
+import copy # Import the copy library
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Flink EMS")
@@ -12,10 +15,6 @@ st.set_page_config(layout="wide", page_title="Flink EMS")
 
 @st.cache_data
 def get_connection_data():
-    """
-    Loads and caches the grid connection data.
-    This data is stored internally, so no external CSV file is needed.
-    """
     csv_data = """name,transport_category,kw_max_offtake,kw_contract_offtake
 "Liander t/m 2.000 kVA","Enexis MS-D (t/m 1.500 kW)",195,250
 "Stedin > 2.000 kVA","Liander HS-A (t/m 10.000 kW)",1500,2000
@@ -26,7 +25,6 @@ def get_connection_data():
 
 connections_df = get_connection_data()
 
-# NOTE: These are the default parameters for any NEW project created.
 HARDCODED_DEFAULTS = {
     # General & Financial
     'project_term': 10, 'lifespan_battery_tech': 10, 'lifespan_pv_tech': 25,
@@ -66,7 +64,44 @@ if 'page' not in st.session_state:
     st.session_state.projects = {}
     st.session_state.current_project_name = None
 
-# --- Core Calculation & Charting Functions ---
+# --- Project Persistence Functions ---
+PROJECTS_FILE = "flink_ems_projects.json"
+
+def save_projects():
+    """Saves the current projects dictionary to a JSON file."""
+    with open(PROJECTS_FILE, 'w') as f:
+        # ** THE FIX IS HERE: Use deepcopy to avoid changing the live session state **
+        projects_for_save = copy.deepcopy(st.session_state.projects)
+        
+        for proj_name, proj_data in projects_for_save.items():
+            if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
+                proj_data['results']['df'] = proj_data['results']['df'].to_json()
+        json.dump(projects_for_save, f)
+
+def load_projects():
+    """Loads projects from a JSON file into the session state."""
+    if os.path.exists(PROJECTS_FILE):
+        with open(PROJECTS_FILE, 'r') as f:
+            loaded_projects = json.load(f)
+            for proj_name, proj_data in loaded_projects.items():
+                if 'results' in proj_data and isinstance(proj_data['results'].get('df'), str):
+                    proj_data['results']['df'] = pd.read_json(proj_data['results']['df'])
+            st.session_state.projects = loaded_projects
+        st.sidebar.success("Projects loaded!")
+    else:
+        st.sidebar.warning("No saved projects file found.")
+
+# --- UI HELPER ---
+def display_header(title):
+    """Creates a consistent header with logo and title for each page."""
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=1000)
+    with col2:
+        st.title(title)
+    st.markdown("---")
+
+# --- CORE CALCULATION & CHARTING FUNCTIONS (UNCHANGED) ---
 def calculate_bess_kpis(i):
     kpis = {}
     kpis['Capacity Factor'] = i['bess_capacity_kwh'] / i['bess_power_kw'] if i['bess_power_kw'] > 0 else 0
@@ -198,11 +233,10 @@ def create_kpi_dataframe(kpis, kpi_map):
                 data.append({'Metric': key, 'Value': formatted_value})
     return pd.DataFrame(data).set_index('Metric')
 
-# --- UI/Page Display Functions ---
+# --- PAGE DISPLAY FUNCTIONS ---
 def show_home_page():
-    st.title('Flink Nederland EMS ☀️🔋')
+    display_header("Flink Nederland EMS ☀️🔋")
     st.subheader('Welcome to the Energy Modeling Suite')
-    st.markdown("---")
     st.write("Please select a tool to begin.")
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -218,11 +252,7 @@ def show_home_page():
             st.rerun()
 
 def show_project_selection_page():
-    st.title("Project Management 🗂️")
-    if st.button("⬅️ Back to Home"):
-        st.session_state.page = "Home"
-        st.rerun()
-    st.markdown("---")
+    display_header("Project Management 🗂️")
     st.subheader("Create a New Project")
     new_project_name = st.text_input("Enter new project name:", key="new_project_name_input")
     if st.button("Create and Start Project"):
@@ -235,7 +265,7 @@ def show_project_selection_page():
             st.rerun()
     st.markdown("---")
     st.subheader("Load an Existing Project")
-    if not st.session_state.projects: st.info("No projects found. Create one above to get started!")
+    if not st.session_state.projects: st.info("No projects found. Create one above to get started, or load projects from the sidebar.")
     else:
         project_to_load = st.selectbox("Select a project:", options=list(st.session_state.projects.keys()))
         if st.button("Load Project"):
@@ -247,15 +277,27 @@ def show_model_page():
     project_name = st.session_state.current_project_name
     if not project_name or project_name not in st.session_state.projects:
         st.error("Error: No project loaded."); st.session_state.page = "Project_Selection"; st.rerun()
+        return
+    
     project_data = st.session_state.projects[project_name]
     i = project_data['inputs']
-    st.title(f"Business Case: {project_name}")
+    
+    display_header(f"Business Case: {project_name}")
+
+    # Navigation buttons on the main page
+    nav_cols = st.columns([1, 1, 5])
+    with nav_cols[0]:
+        if st.button("⬅️ Back to Projects"):
+            st.session_state.page = "Project_Selection"
+            st.rerun()
+    with nav_cols[1]:
+        if st.button("💾 Save Project"):
+            save_projects()
+            st.toast(f"Project '{project_name}' saved successfully!")
 
     # --- Sidebar for Inputs ---
     with st.sidebar:
-        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=70)
         st.title("Configuration")
-        if st.button("⬅️ Back to Project Selection"): st.session_state.page = "Project_Selection"; st.rerun()
         project_data['type'] = st.selectbox("Select Project Type", ["BESS & PV", "BESS-only", "PV-only"], index=["BESS & PV", "BESS-only", "PV-only"].index(project_data['type']), key=f"{project_name}_type")
         uploaded_file = st.file_uploader("Upload CSV to Override Inputs", type=['csv'], key=f"{project_name}_upload")
         if uploaded_file: st.sidebar.success("CSV Uploaded (Parsing logic to be implemented)")
@@ -403,6 +445,25 @@ def show_model_page():
         st.info('Adjust inputs in the sidebar and click "Run Model" to see the financial forecast.')
 
 # --- MAIN ROUTER ---
+# Sidebar elements that are always visible
+with st.sidebar:
+    st.markdown("---")
+    st.header("Navigation")
+    if st.button("🏠 Back to Home"):
+        st.session_state.page = "Home"
+        st.rerun()
+
+    st.markdown("---")
+    st.header("Data Management")
+    if st.button("📂 Load Projects from File"):
+        load_projects()
+        st.rerun()
+
+# Automatically load projects when the app starts, if they haven't been loaded yet.
+if 'projects' not in st.session_state or not st.session_state.projects:
+    if os.path.exists(PROJECTS_FILE):
+        load_projects()
+
 if st.session_state.page == "Home":
     show_home_page()
 elif st.session_state.page == "Project_Selection":
