@@ -4,8 +4,9 @@ import numpy as np
 import numpy_financial as npf
 import plotly.express as px
 import io
-import json # Import json for saving/loading projects
-import os   # Import os for file path operations
+import json
+import os
+import copy # Import the copy library
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Flink EMS")
@@ -69,11 +70,12 @@ PROJECTS_FILE = "flink_ems_projects.json"
 def save_projects():
     """Saves the current projects dictionary to a JSON file."""
     with open(PROJECTS_FILE, 'w') as f:
-        projects_for_save = {}
-        for proj_name, proj_data in st.session_state.projects.items():
-            projects_for_save[proj_name] = proj_data.copy()
-            if 'results' in projects_for_save[proj_name] and isinstance(projects_for_save[proj_name]['results'].get('df'), pd.DataFrame):
-                projects_for_save[proj_name]['results']['df'] = projects_for_save[proj_name]['results']['df'].to_json()
+        # ** THE FIX IS HERE: Use deepcopy to avoid changing the live session state **
+        projects_for_save = copy.deepcopy(st.session_state.projects)
+        
+        for proj_name, proj_data in projects_for_save.items():
+            if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
+                proj_data['results']['df'] = proj_data['results']['df'].to_json()
         json.dump(projects_for_save, f)
 
 def load_projects():
@@ -291,7 +293,7 @@ def show_model_page():
     with nav_cols[1]:
         if st.button("💾 Save Project"):
             save_projects()
-            st.toast(f"Project '{project_name}' saved!")
+            st.toast(f"Project '{project_name}' saved successfully!")
 
     # --- Sidebar for Inputs ---
     with st.sidebar:
@@ -300,7 +302,6 @@ def show_model_page():
         uploaded_file = st.file_uploader("Upload CSV to Override Inputs", type=['csv'], key=f"{project_name}_upload")
         if uploaded_file: st.sidebar.success("CSV Uploaded (Parsing logic to be implemented)")
         
-        # All the input expanders... (Identical to previous version)
         st.header("General & Financial")
         with st.expander("Time/Duration", expanded=True):
             i['project_term'] = st.slider('Project Term (years)', 5, 30, i['project_term'], key=f"{project_name}_g_term")
@@ -459,8 +460,9 @@ with st.sidebar:
         st.rerun()
 
 # Automatically load projects when the app starts, if they haven't been loaded yet.
-if not st.session_state.projects and os.path.exists(PROJECTS_FILE):
-    load_projects()
+if 'projects' not in st.session_state or not st.session_state.projects:
+    if os.path.exists(PROJECTS_FILE):
+        load_projects()
 
 if st.session_state.page == "Home":
     show_home_page()
