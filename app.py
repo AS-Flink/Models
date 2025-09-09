@@ -96,7 +96,7 @@ def display_header(title):
     """Creates a consistent header with logo and title for each page."""
     col1, col2 = st.columns([1, 4])
     with col1:
-        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=200)
+        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=300)
     with col2:
         st.title(title)
     st.markdown("---")
