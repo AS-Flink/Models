@@ -6,7 +6,8 @@ import plotly.express as px
 import io
 import json
 import os
-import copy # Import the copy library
+import copy
+from datetime import datetime
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Flink EMS")
@@ -63,6 +64,8 @@ if 'page' not in st.session_state:
     st.session_state.page = "Home"
     st.session_state.projects = {}
     st.session_state.current_project_name = None
+    st.session_state.renaming_project = None # State to track which project is being renamed
+    st.session_state.deleting_project = None # State to track which project is being deleted
 
 # --- Project Persistence Functions ---
 PROJECTS_FILE = "flink_ems_projects.json"
@@ -70,13 +73,11 @@ PROJECTS_FILE = "flink_ems_projects.json"
 def save_projects():
     """Saves the current projects dictionary to a JSON file."""
     with open(PROJECTS_FILE, 'w') as f:
-        # ** THE FIX IS HERE: Use deepcopy to avoid changing the live session state **
         projects_for_save = copy.deepcopy(st.session_state.projects)
-        
         for proj_name, proj_data in projects_for_save.items():
             if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
                 proj_data['results']['df'] = proj_data['results']['df'].to_json()
-        json.dump(projects_for_save, f)
+        json.dump(projects_for_save, f, indent=4)
 
 def load_projects():
     """Loads projects from a JSON file into the session state."""
@@ -96,7 +97,7 @@ def display_header(title):
     """Creates a consistent header with logo and title for each page."""
     col1, col2 = st.columns([1, 4])
     with col1:
-        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=1000)
+        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=140)
     with col2:
         st.title(title)
     st.markdown("---")
@@ -253,25 +254,97 @@ def show_home_page():
 
 def show_project_selection_page():
     display_header("Project Management 🗂️")
-    st.subheader("Create a New Project")
-    new_project_name = st.text_input("Enter new project name:", key="new_project_name_input")
-    if st.button("Create and Start Project"):
-        if not new_project_name: st.warning("Project name cannot be empty.")
-        elif new_project_name in st.session_state.projects: st.error("A project with this name already exists.")
+    
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Create a New Project")
+        with st.form("new_project_form"):
+            new_project_name = st.text_input("New project name:")
+            submitted = st.form_submit_button("Create Project")
+            if submitted:
+                if not new_project_name:
+                    st.warning("Project name cannot be empty.")
+                elif new_project_name in st.session_state.projects:
+                    st.error("A project with this name already exists.")
+                else:
+                    st.session_state.projects[new_project_name] = {
+                        'inputs': HARDCODED_DEFAULTS.copy(),
+                        'type': "BESS & PV",
+                        'last_saved': datetime.now().isoformat()
+                    }
+                    save_projects()
+                    st.success(f"Project '{new_project_name}' created!")
+                    st.rerun()
+
+    with col2:
+        st.subheader("Manage Existing Projects")
+        if not st.session_state.projects:
+            st.info("No projects found. Create one to get started!")
         else:
-            st.session_state.projects[new_project_name] = {'inputs': HARDCODED_DEFAULTS.copy(), 'type': "BESS & PV"}
-            st.session_state.current_project_name = new_project_name
-            st.session_state.page = "Model"
-            st.rerun()
-    st.markdown("---")
-    st.subheader("Load an Existing Project")
-    if not st.session_state.projects: st.info("No projects found. Create one above to get started, or load projects from the sidebar.")
-    else:
-        project_to_load = st.selectbox("Select a project:", options=list(st.session_state.projects.keys()))
-        if st.button("Load Project"):
-            st.session_state.current_project_name = project_to_load
-            st.session_state.page = "Model"
-            st.rerun()
+            for project_name, project_data in st.session_state.projects.items():
+                with st.container(border=True):
+                    p_col1, p_col2 = st.columns([3, 1])
+                    with p_col1:
+                        st.markdown(f"**{project_name}**")
+                        if 'last_saved' in project_data:
+                            saved_time = datetime.fromisoformat(project_data['last_saved']).strftime("%Y-%m-%d %H:%M")
+                            st.caption(f"Last saved: {saved_time}")
+                    with p_col2:
+                        if st.button("Load", key=f"load_{project_name}", use_container_width=True):
+                            st.session_state.current_project_name = project_name
+                            st.session_state.page = "Model"
+                            st.rerun()
+
+                    # --- RENAME UI ---
+                    if st.session_state.renaming_project == project_name:
+                        with st.form(f"rename_form_{project_name}"):
+                            new_name = st.text_input("New name", value=project_name)
+                            rename_col1, rename_col2 = st.columns(2)
+                            if rename_col1.form_submit_button("Save", use_container_width=True):
+                                if new_name and new_name not in st.session_state.projects:
+                                    st.session_state.projects[new_name] = st.session_state.projects.pop(project_name)
+                                    st.session_state.renaming_project = None
+                                    save_projects()
+                                    st.rerun()
+                                else:
+                                    st.error("New name is invalid or already exists.")
+                            if rename_col2.form_submit_button("Cancel", use_container_width=True):
+                                st.session_state.renaming_project = None
+                                st.rerun()
+                    
+                    # --- DELETE UI ---
+                    elif st.session_state.deleting_project == project_name:
+                        st.warning(f"Are you sure you want to delete **{project_name}**?")
+                        del_col1, del_col2 = st.columns(2)
+                        if del_col1.button("Yes, permanently delete", type="primary", key=f"del_confirm_{project_name}", use_container_width=True):
+                            del st.session_state.projects[project_name]
+                            st.session_state.deleting_project = None
+                            save_projects()
+                            st.rerun()
+                        if del_col2.button("Cancel", key=f"del_cancel_{project_name}", use_container_width=True):
+                            st.session_state.deleting_project = None
+                            st.rerun()
+                            
+                    # --- ACTION BUTTONS ---
+                    else:
+                        action_cols = st.columns(3)
+                        if action_cols[0].button("✏️ Rename", key=f"rename_{project_name}", use_container_width=True):
+                            st.session_state.renaming_project = project_name
+                            st.rerun()
+                        if action_cols[1].button("複製 Duplicate", key=f"clone_{project_name}", use_container_width=True):
+                            new_name = f"{project_name} (copy)"
+                            i = 1
+                            while new_name in st.session_state.projects:
+                                i += 1
+                                new_name = f"{project_name} (copy {i})"
+                            st.session_state.projects[new_name] = copy.deepcopy(project_data)
+                            st.session_state.projects[new_name]['last_saved'] = datetime.now().isoformat()
+                            save_projects()
+                            st.rerun()
+                        if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True):
+                            st.session_state.deleting_project = project_name
+                            st.rerun()
 
 def show_model_page():
     project_name = st.session_state.current_project_name
@@ -284,24 +357,18 @@ def show_model_page():
     
     display_header(f"Business Case: {project_name}")
 
-    # Navigation buttons on the main page
     nav_cols = st.columns([1, 1, 5])
-    with nav_cols[0]:
-        if st.button("⬅️ Back to Projects"):
-            st.session_state.page = "Project_Selection"
-            st.rerun()
-    with nav_cols[1]:
-        if st.button("💾 Save Project"):
-            save_projects()
-            st.toast(f"Project '{project_name}' saved successfully!")
+    if nav_cols[0].button("⬅️ Back to Projects"): st.session_state.page = "Project_Selection"; st.rerun()
+    if nav_cols[1].button("💾 Save Project"):
+        project_data['last_saved'] = datetime.now().isoformat()
+        save_projects()
+        st.toast(f"Project '{project_name}' saved!")
 
-    # --- Sidebar for Inputs ---
     with st.sidebar:
         st.title("Configuration")
         project_data['type'] = st.selectbox("Select Project Type", ["BESS & PV", "BESS-only", "PV-only"], index=["BESS & PV", "BESS-only", "PV-only"].index(project_data['type']), key=f"{project_name}_type")
-        uploaded_file = st.file_uploader("Upload CSV to Override Inputs", type=['csv'], key=f"{project_name}_upload")
+        uploaded_file = st.file_uploader("Upload CSV", type=['csv'], key=f"{project_name}_upload")
         if uploaded_file: st.sidebar.success("CSV Uploaded (Parsing logic to be implemented)")
-        
         st.header("General & Financial")
         with st.expander("Time/Duration", expanded=True):
             i['project_term'] = st.slider('Project Term (years)', 5, 30, i['project_term'], key=f"{project_name}_g_term")
@@ -407,7 +474,6 @@ def show_model_page():
                 project_data['results'] = {'df': results_df, 'metrics': metrics, 'bess_kpis': bess_kpis, 'pv_kpis': pv_kpis}
                 st.rerun()
 
-    # --- Main content area to display results ---
     if 'results' in project_data:
         metrics = project_data['results']['metrics']; results_df = project_data['results']['df']
         bess_kpis = project_data['results']['bess_kpis']; pv_kpis = project_data['results']['pv_kpis']
@@ -445,21 +511,20 @@ def show_model_page():
         st.info('Adjust inputs in the sidebar and click "Run Model" to see the financial forecast.')
 
 # --- MAIN ROUTER ---
-# Sidebar elements that are always visible
 with st.sidebar:
     st.markdown("---")
     st.header("Navigation")
     if st.button("🏠 Back to Home"):
         st.session_state.page = "Home"
+        st.session_state.renaming_project = None
+        st.session_state.deleting_project = None
         st.rerun()
-
     st.markdown("---")
     st.header("Data Management")
     if st.button("📂 Load Projects from File"):
         load_projects()
         st.rerun()
 
-# Automatically load projects when the app starts, if they haven't been loaded yet.
 if 'projects' not in st.session_state or not st.session_state.projects:
     if os.path.exists(PROJECTS_FILE):
         load_projects()
