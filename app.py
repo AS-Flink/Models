@@ -212,7 +212,7 @@ if 'BESS' in st.session_state.project_type:
         i['bess_capex_security_per_kwh'] = st.number_input("Security (€/kWh)", value=i['bess_capex_security_per_kwh'])
         i['bess_capex_permits_pct'] = st.slider("Permits & Fees (%)", 0.0, 10.0, i['bess_capex_permits_pct'] * 100) / 100
         i['bess_capex_mgmt_pct'] = st.slider("Project Management (%)", 0.0, 10.0, i['bess_capex_mgmt_pct'] * 100) / 100
-        i['bess_capex_contingency_pct'] = st.slider("Contingency (%)", 0.0, 15.0, i['bess_capex_contingency_pct'] * 100) / 100
+        i['bess_capex_contingency_pct'] = st.slider("Contingency (%)", 0.0, 15.0, i['bess_capex_contingency_pct'] * 100,key="bess_contingency")) / 100
     with st.sidebar.expander("Income Assumptions (BESS)"):
         i['bess_income_trading_per_mw_year'] = st.number_input("Trading Income (€/MW/year)", value=i['bess_income_trading_per_mw_year'])
         i['bess_income_ctrl_party_pct'] = st.slider("Control Party Costs (% of Income)", 0.0, 25.0, i['bess_income_ctrl_party_pct'] * 100) / 100
@@ -241,7 +241,7 @@ if 'PV' in st.session_state.project_type:
         i['pv_capex_security_pct'] = st.slider("Security (%)", 0.0, 10.0, i['pv_capex_security_pct'] * 100) / 100
         i['pv_capex_permits_pct'] = st.slider("Permits & Fees (%)", 0.0, 10.0, i['pv_capex_permits_pct'] * 100) / 100
         i['pv_capex_mgmt_pct'] = st.slider("Project Management (%)", 0.0, 10.0, i['pv_capex_mgmt_pct'] * 100) / 100
-        i['pv_capex_contingency_pct'] = st.slider("Contingency (%)", 0.0, 15.0, i['pv_capex_contingency_pct'] * 100) / 100
+        i['pv_capex_contingency_pct'] = st.slider("Contingency (%)", 0.0, 15.0, i['pv_capex_contingency_pct'] * 100,key="pv_contingency")) / 100
     with st.sidebar.expander("Income Assumptions (PV)"):
         help_ppa = "Enter a value in the \"PPA Revenue / MWp\" field to calculate the \"PPA Revenue in Year 1\" based on expected revenue per MWp. Enter a value in the \"PPA Revenue / kWh\" field to calculate the \"PPA Revenue in Year 1\" based on expected revenue per kWh. One of the two fields must be empty."
         help_curtailment = "Enter a value in the \"Curtailment Income / MWp\" field to calculate the \"Curtailment Income in Year 1\" based on expected income per MWp. Enter a value in the \"Curtailment Income / kWh\" field to calculate the \"Curtailment Income in Year 1\" based on expected income per kWh. One of the two fields must be empty."
