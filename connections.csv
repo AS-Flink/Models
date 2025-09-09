@@ -1,0 +1,5 @@
+Provider,ConnectionName,TransportCategory,kWMax,kWContract
+Liander,Liander t/m 2.000 kVA,Liander MS (t/m 2.000 kW),195,250
+Liander,Liander t/m 1.000 kVA,Liander MS (t/m 2.000 kW),150,200
+Stedin,Stedin t/m 1.750 kVA,Stedin MS (t/m 1.500 kW),180,220
+Enexis,Enexis t/m 630 kVA,Enexis MS-D (t/m 1.500 kW),120,150
