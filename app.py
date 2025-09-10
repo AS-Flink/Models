@@ -256,16 +256,32 @@ def run_financial_model(i, project_type):
         metrics['payback_period'] = "Not reached"
     return {"df": df, "metrics": metrics, "bess_kpis": bess_base, "pv_kpis": pv_base}
 
+# --- RE-ADDED: Helper functions for KPI tabs ---
+def create_kpi_dataframe(kpis, kpi_map):
+    data = []
+    for section, keys in kpi_map.items():
+        data.append({'Metric': f'--- {section} ---', 'Value': ''})
+        for key, unit in keys.items():
+            if key in kpis:
+                value = kpis[key]
+                if unit == "€": formatted_value = f"€ {value:,.0f}"
+                elif unit == "%": formatted_value = f"{value:.2%}"
+                elif unit == "h": formatted_value = f"{value:.2f} h"
+                elif unit == "kWp" or unit == "kWh": formatted_value = f"{value:,.0f} {unit}"
+                else: formatted_value = f"{value:,.2f}"
+                data.append({'Metric': key.replace('_', ' ').title(), 'Value': formatted_value})
+    return pd.DataFrame(data).set_index('Metric')
+
 def generate_summary_chart(df, y_bar, y_line, title):
     fig = go.Figure()
     fig.add_trace(go.Bar(x=df.index, y=df[y_bar], name=y_bar.replace('_', ' ').title(), marker_color='#1f77b4'))
     fig.add_trace(go.Scatter(x=df.index, y=df[y_line], name=y_line.replace('_', ' ').title(), mode='lines+markers', line=dict(color='#2ca02c', width=3)))
     fig.update_layout(
-        title=dict(text=title, x=0.5, font_size=20),
+        title=dict(text=title, x=0.5, font=dict(size=18)), # Smaller title
         yaxis_tickprefix="€",
         yaxis_tickformat="~s",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font_size=12),
-        font=dict(size=12)
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=12)), # Smaller legend
+        font=dict(size=11) # Smaller axis labels/ticks
     )
     return fig
 
@@ -463,7 +479,7 @@ def show_model_page():
                 i['pv_opex_property_tax_pct'] = st.slider("Property Tax (% of CAPEX)", 0.0, 2.0, i['pv_opex_property_tax_pct'] * 100, format="%.3f", key=f"{project_name}_pv_opex_tax") / 100
                 i['pv_opex_overhead_pct'] = st.slider("Overhead (% of CAPEX)", 0.0, 2.0, i['pv_opex_overhead_pct'] * 100, format="%.3f", key=f"{project_name}_pv_opex_over") / 100
                 i['pv_opex_other_pct'] = st.slider("Other (% of CAPEX)", 0.0, 2.0, i['pv_opex_other_pct'] * 100, format="%.3f", key=f"{project_name}_pv_opex_oth") / 100
-        
+
         if st.button('Run Model', type="primary", key=f"{project_name}_run"):
             project_data['last_saved'] = datetime.now().isoformat()
             project_data['results'] = run_financial_model(i, project_data['type'])
@@ -477,7 +493,6 @@ def show_model_page():
         metrics = results_dict['metrics']
         bess_kpis = results_dict['bess_kpis']
         pv_kpis = results_dict['pv_kpis']
-
         tab1, tab2, tab3 = st.tabs(["📊 Financial Summary", "🔋 BESS Details", "☀️ PV Details"])
 
         with tab1:
@@ -506,54 +521,46 @@ def show_model_page():
         with tab2:
             if 'BESS' in project_data['type']:
                 st.header("🔋 BESS Details")
-                bess_kpi_map = {
-                    "Technical": {'Capacity Factor': 'h', 'SoC Available': '%', 'Usable Capacity': 'kWh', 'C-Rate': '', 'Round Trip Efficiency (RTE)': '%'},
-                    "CAPEX": {'Purchase Costs': '€', 'IT & Security Costs': '€', 'Civil Works': '€', 'Permits & Fees': '€', 'Project Management': '€', 'Contingency': '€', 'total_capex': '€'},
-                    "OPEX (Year 1)": {'om_y1':'€', 'retribution_y1':'€', 'asset_mgmt_y1':'€', 'insurance_y1':'€', 'property_tax_y1':'€', 'overhead_y1':'€', 'other_y1':'€'}
-                }
+                bess_kpi_map = { "Technical": {'Capacity Factor': 'h', 'SoC Available': '%', 'Usable Capacity': 'kWh', 'C-Rate': '', 'Round Trip Efficiency (RTE)': '%'}, "CAPEX": {'Purchase Costs': '€', 'IT & Security Costs': '€', 'Civil Works': '€', 'Permits & Fees': '€', 'Project Management': '€', 'Contingency': '€', 'total_capex': '€'}, "OPEX (Year 1)": {'om_y1':'€', 'retribution_y1':'€', 'asset_mgmt_y1':'€', 'insurance_y1':'€', 'property_tax_y1':'€', 'overhead_y1':'€', 'other_y1':'€'} }
                 pie_col1, pie_col2 = st.columns(2)
                 with pie_col1:
                     capex_data = {k: v for k, v in bess_kpis.items() if k in ['Purchase Costs', 'IT & Security Costs', 'Civil Works', 'Permits & Fees', 'Project Management', 'Contingency']}
-                    df_capex = pd.DataFrame(list(capex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
-                    fig_capex = px.pie(df_capex, values='Cost', names='Component', title='BESS CAPEX Breakdown', hole=.3)
-                    st.plotly_chart(fig_capex, use_container_width=True)
+                    if any(v > 0 for v in capex_data.values()):
+                        df_capex = pd.DataFrame(list(capex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
+                        fig_capex = px.pie(df_capex, values='Cost', names='Component', title='BESS CAPEX Breakdown', hole=.3)
+                        st.plotly_chart(fig_capex, use_container_width=True)
                 with pie_col2:
-                    opex_data = {k.replace('_y1','').title(): v for k, v in bess_kpis.items() if '_y1' in k}
-                    df_opex = pd.DataFrame(list(opex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
-                    fig_opex = px.pie(df_opex, values='Cost', names='Component', title='BESS OPEX (Year 1) Breakdown', hole=.3)
-                    st.plotly_chart(fig_opex, use_container_width=True)
-                
+                    opex_data = {k.replace('_y1','').replace('_',' ').title(): v for k, v in bess_kpis.items() if '_y1' in k}
+                    if any(v > 0 for v in opex_data.values()):
+                        df_opex = pd.DataFrame(list(opex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
+                        fig_opex = px.pie(df_opex, values='Cost', names='Component', title='BESS OPEX (Year 1) Breakdown', hole=.3)
+                        st.plotly_chart(fig_opex, use_container_width=True)
                 for section, keys in bess_kpi_map.items():
                     st.subheader(section)
                     st.dataframe(create_kpi_dataframe(bess_kpis, {section: keys}), use_container_width=True)
-            else:
-                st.info("BESS not included in this project type.")
+            else: st.info("BESS not included in this project type.")
 
         with tab3:
             if 'PV' in project_data['type']:
                 st.header("☀️ PV Details")
-                pv_kpi_map = {
-                    "Technical": {'Total Peak Power': 'kWp', 'Production (Year 1)': 'kWh'},
-                    "CAPEX": {'Purchase Costs': '€', 'Civil Works': '€', 'Security': '€', 'Permits & Fees': '€', 'Project Management': '€', 'Contingency': '€', 'total_capex': '€'},
-                    "OPEX (Year 1)": {'om_y1':'€', 'retribution_y1':'€', 'insurance_y1':'€', 'property_tax_y1':'€', 'overhead_y1':'€', 'other_y1':'€'}
-                }
+                pv_kpi_map = { "Technical": {'Total Peak Power': 'kWp', 'Production (Year 1)': 'kWh'}, "CAPEX": {'Purchase Costs': '€', 'Civil Works': '€', 'Security': '€', 'Permits & Fees': '€', 'Project Management': '€', 'Contingency': '€', 'total_capex': '€'}, "OPEX (Year 1)": {'om_y1':'€', 'retribution_y1':'€', 'insurance_y1':'€', 'property_tax_y1':'€', 'overhead_y1':'€', 'other_y1':'€'} }
                 pie_col1, pie_col2 = st.columns(2)
                 with pie_col1:
                     capex_data = {k: v for k, v in pv_kpis.items() if k in ['Purchase Costs', 'Civil Works', 'Security', 'Permits & Fees', 'Project Management', 'Contingency']}
-                    df_capex = pd.DataFrame(list(capex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
-                    fig_capex = px.pie(df_capex, values='Cost', names='Component', title='PV CAPEX Breakdown', hole=.3)
-                    st.plotly_chart(fig_capex, use_container_width=True)
+                    if any(v > 0 for v in capex_data.values()):
+                        df_capex = pd.DataFrame(list(capex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
+                        fig_capex = px.pie(df_capex, values='Cost', names='Component', title='PV CAPEX Breakdown', hole=.3)
+                        st.plotly_chart(fig_capex, use_container_width=True)
                 with pie_col2:
-                    opex_data = {k.replace('_y1','').title(): v for k, v in pv_kpis.items() if '_y1' in k}
-                    df_opex = pd.DataFrame(list(opex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
-                    fig_opex = px.pie(df_opex, values='Cost', names='Component', title='PV OPEX (Year 1) Breakdown', hole=.3)
-                    st.plotly_chart(fig_opex, use_container_width=True)
-                
+                    opex_data = {k.replace('_y1','').replace('_',' ').title(): v for k, v in pv_kpis.items() if '_y1' in k}
+                    if any(v > 0 for v in opex_data.values()):
+                        df_opex = pd.DataFrame(list(opex_data.items()), columns=['Component', 'Cost']).sort_values('Cost', ascending=False)
+                        fig_opex = px.pie(df_opex, values='Cost', names='Component', title='PV OPEX (Year 1) Breakdown', hole=.3)
+                        st.plotly_chart(fig_opex, use_container_width=True)
                 for section, keys in pv_kpi_map.items():
                     st.subheader(section)
                     st.dataframe(create_kpi_dataframe(pv_kpis, {section: keys}), use_container_width=True)
-            else:
-                st.info("PV not included in this project type.")
+            else: st.info("PV not included in this project type.")
     else:
         st.info('Adjust inputs in the sidebar and click "Run Model" to see the financial forecast.')
 
