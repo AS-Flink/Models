@@ -25,7 +25,6 @@ def get_connection_data():
 
 connections_df = get_connection_data()
 
-# --- UPDATED: Default values with new financial inputs ---
 HARDCODED_DEFAULTS = {
     # General & Financial
     'project_term': 10, 'lifespan_battery_tech': 10, 'lifespan_pv_tech': 25,
@@ -110,12 +109,9 @@ def display_header(title):
     st.markdown("---")
 
 # --- CORE CALCULATION & CHARTING FUNCTIONS ---
-
 def calculate_y1_base_and_capex(i, tech_type):
-    """Calculates Year 1 base values and total CAPEX for either BESS or PV."""
     kpis = {}
     if tech_type == 'bess':
-        # CAPEX
         purchase = i['bess_capacity_kwh'] * i['bess_capex_per_kwh']
         it_sec = i['bess_capacity_kwh'] * (i['bess_capex_it_per_kwh'] + i['bess_capex_security_per_kwh'])
         civil = (purchase + it_sec) * i['bess_capex_civil_pct']
@@ -124,15 +120,11 @@ def calculate_y1_base_and_capex(i, tech_type):
         mgmt = subtotal * i['bess_capex_mgmt_pct']
         contingency = subtotal * i['bess_capex_contingency_pct']
         kpis['total_capex'] = subtotal + permits + mgmt + contingency
-        
-        # Y1 Income
         kpis['trading_income_y1'] = (i['bess_power_kw'] / 1000) * i['bess_income_trading_per_mw_year']
         kpis['control_party_costs_y1'] = kpis['trading_income_y1'] * i['bess_income_ctrl_party_pct']
         usable_cap = i['bess_capacity_kwh'] * (i['bess_max_soc'] - i['bess_min_soc'])
         offtake_y1 = i['bess_cycles_per_year'] * usable_cap / i['bess_charging_eff']
         kpis['supplier_costs_y1'] = (offtake_y1 / 1000) * i['bess_income_supplier_cost_per_mwh']
-
-        # Y1 OPEX
         kpis['om_y1'] = i['bess_opex_om_per_year']
         kpis['retribution_y1'] = i['bess_opex_retribution']
         kpis['asset_mgmt_y1'] = (i['bess_power_kw'] / 1000) * i['bess_opex_asset_mgmt_per_mw_year']
@@ -140,9 +132,7 @@ def calculate_y1_base_and_capex(i, tech_type):
         kpis['property_tax_y1'] = kpis['total_capex'] * i['bess_opex_property_tax_pct']
         kpis['overhead_y1'] = i['bess_capacity_kwh'] * i['bess_opex_overhead_per_kwh_year']
         kpis['other_y1'] = i['bess_capacity_kwh'] * i['bess_opex_other_per_kwh_year']
-        
     elif tech_type == 'pv':
-        # CAPEX
         peak_power_kw = (i['pv_power_per_panel_wp'] * i['pv_panel_count']) / 1000
         purchase = peak_power_kw * 1000 * i['pv_capex_per_wp']
         civil = purchase * i['pv_capex_civil_pct']
@@ -152,28 +142,21 @@ def calculate_y1_base_and_capex(i, tech_type):
         mgmt = subtotal * i['pv_capex_mgmt_pct']
         contingency = subtotal * i['pv_capex_contingency_pct']
         kpis['total_capex'] = subtotal + security + permits + mgmt + contingency
-        
-        # Y1 Income
         prod_y1 = peak_power_kw * i['pv_full_load_hours']
         kpis['ppa_income_y1'] = (peak_power_kw * 1000 * i['pv_income_ppa_per_mwp']) + (prod_y1 * i['pv_income_ppa_per_kwh'])
         kpis['curtailment_income_y1'] = (peak_power_kw * 1000 * i['pv_income_curtailment_per_mwp']) + (prod_y1 * i['pv_income_curtailment_per_kwh'])
-        
-        # Y1 OPEX
-        kpis['om_y1'] = i['pv_opex_om_y1'] # Assuming a direct input for now
+        kpis['om_y1'] = i['pv_opex_om_y1']
         kpis['retribution_y1'] = i['pv_opex_retribution']
         kpis['insurance_y1'] = kpis['total_capex'] * i['pv_opex_insurance_pct']
         kpis['property_tax_y1'] = kpis['total_capex'] * i['pv_opex_property_tax_pct']
         kpis['overhead_y1'] = kpis['total_capex'] * i['pv_opex_overhead_pct']
         kpis['other_y1'] = kpis['total_capex'] * i['pv_opex_other_pct']
-        
     return kpis
 
 def run_financial_model(i, project_type):
     years_op = np.arange(1, int(i['project_term']) + 1)
     df = pd.DataFrame(index=years_op); df.index.name = 'Year'
     is_bess, is_pv = 'BESS' in project_type, 'PV' in project_type
-    
-    # --- 1. Indexations ---
     years_vector = df.index - 1
     df['idx_inflation'] = (1 + i['inflation']) ** years_vector
     df['idx_trading_income'] = (1 + i['inflation'] + i['idx_trading_income']) ** years_vector
@@ -186,12 +169,9 @@ def run_financial_model(i, project_type):
     df['idx_curtailment_income'] = (1 + i['inflation'] + i['idx_curtailment_income']) ** years_vector
     df['idx_degradation_bess'] = (1 - i['bess_annual_degradation']) ** df.index
     df['idx_degradation_pv'] = (1 - i['pv_annual_degradation']) ** df.index
-    
-    # --- 2. Costs and Income Battery ---
     bess_base = calculate_y1_base_and_capex(i, 'bess') if is_bess else {}
     bess_capex = bess_base.get('total_capex', 0)
     bess_active_mask = (df.index <= i['project_term']) & (df.index <= i['lifespan_battery_tech'])
-    
     if is_bess:
         df['bess_trading_income'] = bess_base['trading_income_y1'] * df['idx_trading_income'] * df['idx_degradation_bess']
         df['bess_control_party_costs'] = -df['bess_trading_income'] * i['bess_income_ctrl_party_pct']
@@ -207,12 +187,9 @@ def run_financial_model(i, project_type):
         for col in bess_cols: df[col] *= bess_active_mask
         df['ebitda_bess'] = df[bess_cols].sum(axis=1)
     else: df['ebitda_bess'] = 0
-
-    # --- 3. Costs and Income PV System ---
     pv_base = calculate_y1_base_and_capex(i, 'pv') if is_pv else {}
     pv_capex = pv_base.get('total_capex', 0)
     pv_active_mask = (df.index <= i['project_term']) & (df.index <= i['lifespan_pv_tech'])
-    
     if is_pv:
         df['pv_ppa_income'] = pv_base['ppa_income_y1'] * df['idx_ppa_income'] * df['idx_degradation_pv']
         df['pv_curtailment_income'] = pv_base['curtailment_income_y1'] * df['idx_curtailment_income'] * df['idx_degradation_pv']
@@ -226,61 +203,45 @@ def run_financial_model(i, project_type):
         for col in pv_cols: df[col] *= pv_active_mask
         df['ebitda_pv'] = df[pv_cols].sum(axis=1)
     else: df['ebitda_pv'] = 0
-        
-    # --- 4. Grid Connection Costs ---
     grid_capex = i['grid_one_time_bess'] + i['grid_one_time_pv'] + i['grid_one_time_general']
     df['grid_annual_fixed'] = -i['grid_annual_fixed'] * df['idx_grid_op']
     df['grid_annual_kw_max'] = -i['grid_annual_kw_max'] * df['idx_grid_op']
     df['grid_annual_kw_contract'] = -i['grid_annual_kw_contract'] * df['idx_grid_op']
     df['grid_annual_kwh_offtake'] = -i['grid_annual_kwh_offtake'] * df['idx_grid_op']
     df['ebitda_grid'] = df[['grid_annual_fixed', 'grid_annual_kw_max', 'grid_annual_kw_contract', 'grid_annual_kwh_offtake']].sum(axis=1)
-
-    # --- 5. Project Result ---
     df['total_ebitda'] = df['ebitda_bess'] + df['ebitda_pv'] + df['ebitda_grid']
     total_investment = bess_capex + pv_capex + grid_capex
-    
-    # --- 6. Equity Result ---
     df['depreciation_bess'] = -bess_capex / i['depr_period_battery'] if i['depr_period_battery'] > 0 else 0
     df.loc[df.index > i['depr_period_battery'], 'depreciation_bess'] = 0
     df['depreciation_pv'] = -pv_capex / i['depr_period_pv'] if i['depr_period_pv'] > 0 else 0
     df.loc[df.index > i['depr_period_pv'], 'depreciation_pv'] = 0
-    
     df['result_before_eia'] = df['total_ebitda'] + df['depreciation_bess'] + df['depreciation_pv']
-    
     eia_allowance = total_investment * i['eia_pct']
     df['eia_applied'] = 0
     if len(df) > 0 and df.loc[1, 'result_before_eia'] > 0:
         df.loc[1, 'eia_applied'] = min(eia_allowance, df.loc[1, 'result_before_eia'])
-
     df['result_before_tax'] = df['result_before_eia'] - df['eia_applied']
-    df['corporate_tax'] = -df['result_before_tax'].apply(
-        lambda x: 200000 * 0.19 + (x - 200000) * 0.258 if x > 200000 else x * 0.19 if x > 0 else 0
-    )
+    df['corporate_tax'] = -df['result_before_tax'].apply(lambda x: 200000 * 0.19 + (x - 200000) * 0.258 if x > 200000 else x * 0.19 if x > 0 else 0)
     df['profit_after_tax'] = df['result_before_tax'] + df['corporate_tax']
-    
-    # --- 7. Cash Flows ---
     df['net_cash_flow'] = df['total_ebitda'] + df['corporate_tax']
     ncf_y0 = -total_investment
     df['cumulative_cash_flow'] = df['net_cash_flow'].cumsum() + ncf_y0
-    
-    # --- 8. Final Metrics ---
     cash_flows_for_irr = [ncf_y0] + df['net_cash_flow'].tolist()
-    
     metrics = {}
     metrics['total_investment'] = total_investment
     metrics['npv'] = npf.npv(i['wacc'], cash_flows_for_irr[1:]) + ncf_y0
     metrics['equity_irr'] = npf.irr(cash_flows_for_irr)
     project_ebitda_flows = [ncf_y0] + df['total_ebitda'].tolist()
     metrics['project_irr'] = npf.irr(project_ebitda_flows)
-    
     try:
         payback_year_val = df[df['cumulative_cash_flow'] >= 0].index[0]
         cash_flow_prev_year = df.loc[payback_year_val - 1, 'cumulative_cash_flow'] - df.loc[payback_year_val-1, 'net_cash_flow'] if payback_year_val > 1 else ncf_y0
         metrics['payback_period'] = (payback_year_val - 1) + abs(cash_flow_prev_year / df.loc[payback_year_val, 'net_cash_flow'])
     except IndexError:
         metrics['payback_period'] = "Not reached"
-        
-    return df, metrics
+    
+    # --- FIX 1: Return a dictionary instead of a tuple ---
+    return {"df": df, "metrics": metrics}
 
 # --- PAGE DISPLAY FUNCTIONS ---
 def show_home_page():
@@ -312,7 +273,7 @@ def show_project_selection_page():
                 if not new_project_name: st.warning("Project name cannot be empty.")
                 elif new_project_name in st.session_state.projects: st.error("A project with this name already exists.")
                 else:
-                    st.session_state.projects[new_project_name] = {'inputs': HARDCODED_DEFAULTS.copy(), 'type': "BESS & PV", 'last_saved': datetime.now().isoformat()}
+                    st.session_state.projects[new_project_name] = {'inputs': HARDCODED_DEFAULTS.copy(),'type': "BESS & PV",'last_saved': datetime.now().isoformat()}
                     save_projects()
                     st.success(f"Project '{new_project_name}' created!")
                     st.rerun()
@@ -385,17 +346,10 @@ def show_model_page():
         save_projects()
         st.toast(f"Project '{project_name}' saved!")
 
-# --- Sidebar for Inputs ---
+    # This is the full, correct sidebar from your previous request
     with st.sidebar:
         st.title("Configuration")
-        project_data['type'] = st.selectbox(
-            "Select Project Type",
-            ["BESS & PV", "BESS-only", "PV-only"],
-            index=["BESS & PV", "BESS-only", "PV-only"].index(project_data['type']),
-            key=f"{project_name}_type"
-        )
-        
-        # --- General & Financial ---
+        project_data['type'] = st.selectbox("Select Project Type",["BESS & PV", "BESS-only", "PV-only"],index=["BESS & PV", "BESS-only", "PV-only"].index(project_data['type']),key=f"{project_name}_type")
         st.header("General & Financial")
         with st.expander("Time/Duration & EIA", expanded=True):
             i['project_term'] = st.slider('Project Term (years)', 5, 40, i['project_term'], key=f"{project_name}_g_term")
@@ -406,14 +360,11 @@ def show_model_page():
             if 'PV' in project_data['type']:
                 i['lifespan_pv_tech'] = st.slider('PV Lifespan (technical)', 10, 40, i['lifespan_pv_tech'], key=f"{project_name}_g_life_pv")
                 i['depr_period_pv'] = st.slider('PV Depreciation Period', 10, 40, i['depr_period_pv'], key=f"{project_name}_g_depr_pv")
-
         with st.expander("Financing", expanded=True):
             i['debt_senior_pct'] = st.slider('Debt (senior) (%)', 0.0, 100.0, i['debt_senior_pct'] * 100, key=f"{project_name}_fin_ds") / 100
             i['debt_junior_pct'] = st.slider('Debt (junior) (%)', 0.0, 100.0, i['debt_junior_pct'] * 100, key=f"{project_name}_fin_dj") / 100
             equity_pct = 1.0 - i['debt_senior_pct'] - i['debt_junior_pct']
-            if equity_pct < 0:
-                st.error("Total debt cannot exceed 100%")
-                equity_pct = 0
+            if equity_pct < 0: st.error("Total debt cannot exceed 100%"); equity_pct = 0
             st.metric(label="Equity", value=f"{equity_pct:.1%}")
             i['irr_equity_req'] = st.slider('IRR requirement (equity) (%)', 0.0, 25.0, i['irr_equity_req'] * 100, key=f"{project_name}_fin_irr") / 100
             i['interest_rate_senior'] = st.slider('Interest rate debt (senior) (%)', 0.0, 15.0, i['interest_rate_senior'] * 100, key=f"{project_name}_fin_irs") / 100
@@ -421,7 +372,6 @@ def show_model_page():
             wacc = (equity_pct * i['irr_equity_req']) + (i['debt_senior_pct'] * i['interest_rate_senior']) + (i['debt_junior_pct'] * i['interest_rate_junior'])
             i['wacc'] = wacc
             st.metric(label="Weighted Average Cost of Capital (WACC)", value=f"{wacc:.2%}")
-
         with st.expander("Indexations"):
             i['inflation'] = st.slider('General Inflation (%)', 0.0, 10.0, i['inflation'] * 100, key=f"{project_name}_g_inf") / 100
             st.markdown("###### Indexations relative to inflation:")
@@ -432,8 +382,6 @@ def show_model_page():
             i['idx_om_bess'] = st.slider('BESS O&M Index (%)', -5.0, 5.0, i['idx_om_bess'] * 100, key=f"{project_name}_idx_omb") / 100
             i['idx_om_pv'] = st.slider('PV O&M Index (%)', -5.0, 5.0, i['idx_om_pv'] * 100, key=f"{project_name}_idx_ompv") / 100
             i['idx_other_costs'] = st.slider('Other Annual Costs Index (%)', -5.0, 5.0, i['idx_other_costs'] * 100, key=f"{project_name}_idx_oc") / 100
-
-        # --- Grid Connection ---
         st.header("Grid Connection")
         with st.expander("One-Time Costs"):
              i['grid_one_time_bess'] = st.number_input('One-time BESS Costs (€)', value=i['grid_one_time_bess'], key=f"{project_name}_grid_ot_bess")
@@ -444,8 +392,6 @@ def show_model_page():
             i['grid_annual_kw_max'] = st.number_input('Annual cost kW max (€/year)', value=i['grid_annual_kw_max'], key=f"{project_name}_grid_ann_kwmax")
             i['grid_annual_kw_contract'] = st.number_input('Annual cost kW contract (€/year)', value=i['grid_annual_kw_contract'], key=f"{project_name}_grid_ann_kwcont")
             i['grid_annual_kwh_offtake'] = st.number_input('Annual cost kWh offtake (€/year)', value=i['grid_annual_kwh_offtake'], key=f"{project_name}_grid_ann_kwh")
-
-        # --- BESS ---
         if 'BESS' in project_data['type']:
             st.header("🔋 BESS")
             with st.expander("Technical"):
@@ -476,8 +422,6 @@ def show_model_page():
                 i['bess_opex_property_tax_pct'] = st.slider("Property Tax (% of CAPEX)", 0.0, 2.0, i['bess_opex_property_tax_pct'] * 100, format="%.3f", key=f"{project_name}_bess_opex_tax") / 100
                 i['bess_opex_overhead_per_kwh_year'] = st.number_input("Overhead (€/kWh/year)", value=i['bess_opex_overhead_per_kwh_year'], key=f"{project_name}_bess_opex_over")
                 i['bess_opex_other_per_kwh_year'] = st.number_input("Other (€/kWh/year)", value=i['bess_opex_other_per_kwh_year'], key=f"{project_name}_bess_opex_oth")
-
-        # --- PV ---
         if 'PV' in project_data['type']:
             st.header("☀️ Solar PV")
             with st.expander("Technical"):
@@ -504,17 +448,19 @@ def show_model_page():
                 i['pv_opex_property_tax_pct'] = st.slider("Property Tax (% of CAPEX)", 0.0, 2.0, i['pv_opex_property_tax_pct'] * 100, format="%.3f", key=f"{project_name}_pv_opex_tax") / 100
                 i['pv_opex_overhead_pct'] = st.slider("Overhead (% of CAPEX)", 0.0, 2.0, i['pv_opex_overhead_pct'] * 100, format="%.3f", key=f"{project_name}_pv_opex_over") / 100
                 i['pv_opex_other_pct'] = st.slider("Other (% of CAPEX)", 0.0, 2.0, i['pv_opex_other_pct'] * 100, format="%.3f", key=f"{project_name}_pv_opex_oth") / 100
-
+        
         if st.button('Run Model', type="primary", key=f"{project_name}_run"):
-            # Update the last saved timestamp when the model is run and results are generated
             project_data['last_saved'] = datetime.now().isoformat()
             project_data['results'] = run_financial_model(i, project_data['type'])
-            # Save automatically after a successful run
             save_projects()
             st.rerun()
 
     if 'results' in project_data:
-        results_df, metrics = project_data['results']
+        # --- FIX 2: Unpack the results from the new dictionary structure ---
+        results_dict = project_data['results']
+        results_df = results_dict['df']
+        metrics = results_dict['metrics']
+        
         st.header('Financial Metrics')
         col1, col2, col3, col4, col5 = st.columns(5)
         col1.metric("Total Investment", f"€{metrics['total_investment']:,.0f}")
@@ -525,13 +471,11 @@ def show_model_page():
         col5.metric("Payback Period", f"{payback_val:.2f} years" if isinstance(payback_val, (int, float)) else payback_val)
 
         st.header("Financial Summary")
-        display_df = results_df[[
-            'total_ebitda', 'depreciation_bess', 'depreciation_pv', 
-            'result_before_tax', 'corporate_tax', 'profit_after_tax',
-            'net_cash_flow', 'cumulative_cash_flow'
-        ]].copy()
+        display_df = results_df[['total_ebitda', 'depreciation_bess', 'depreciation_pv', 'result_before_tax', 'corporate_tax', 'profit_after_tax', 'net_cash_flow', 'cumulative_cash_flow']].copy()
         display_df.index.name = "Year"
         st.dataframe(display_df.style.format("€{:,.0f}").highlight_min(color='lightpink', axis=1, subset=['net_cash_flow']).highlight_max(color='lightgreen', axis=1, subset=['net_cash_flow']))
+    else:
+        st.info('Adjust inputs in the sidebar and click "Run Model" to see the financial forecast.')
 
 # --- MAIN ROUTER ---
 with st.sidebar:
@@ -541,7 +485,8 @@ with st.sidebar:
     if st.button("📂 Load Projects from File"): load_projects(); st.rerun()
 
 if 'projects' not in st.session_state or not st.session_state.projects:
-    if os.path.exists(PROJECTS_FILE): load_projects()
+    if os.path.exists(PROJECTS_FILE):
+        load_projects()
 
 if st.session_state.page == "Home": show_home_page()
 elif st.session_state.page == "Project_Selection": show_project_selection_page()
