@@ -10,10 +10,14 @@ import os
 import copy
 from datetime import datetime
 
+# --- IMPORTANT: Add this new import for the revenue tool ---
+from revenue_logic import run_revenue_model
+
+
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Flink EMS")
 
-# --- DATA (Connections, Defaults) ---
+# --- DATA (Connections, Defaults for Financial Model) ---
 @st.cache_data
 def get_connection_data():
     csv_data = """name,transport_category,kw_max_offtake,kw_contract_offtake
@@ -76,6 +80,7 @@ if 'page' not in st.session_state:
     st.session_state.current_project_name = None
     st.session_state.renaming_project = None
     st.session_state.deleting_project = None
+    st.session_state.revenue_results = None # Add for new tool
 
 PROJECTS_FILE = "flink_ems_projects.json"
 
@@ -114,7 +119,7 @@ def display_header(title):
         st.title(title)
     st.markdown("---")
 
-# --- CORE CALCULATION & CHARTING FUNCTIONS ---
+# --- CORE CALCULATION & CHARTING FUNCTIONS (Financial Model) ---
 def calculate_all_kpis(i, tech_type):
     kpis = {}
     if tech_type == 'bess':
@@ -256,7 +261,6 @@ def run_financial_model(i, project_type):
         metrics['payback_period'] = "Not reached"
     return {"df": df, "metrics": metrics, "bess_kpis": bess_base, "pv_kpis": pv_base}
 
-# --- RE-ADDED: Helper functions for KPI tabs ---
 def create_kpi_dataframe(kpis, kpi_map):
     data = []
     for section, keys in kpi_map.items():
@@ -296,7 +300,9 @@ def show_home_page():
         if st.button("Battery Size Finder"): st.info("This feature is coming soon!")
     with col2:
         st.markdown("#### 💰 Revenue Analysis")
-        if st.button("Battery Revenue Analysis"): st.info("This feature is coming soon!")
+        if st.button("Battery Revenue Analysis"):
+            st.session_state.page = "Revenue_Analysis"
+            st.rerun()
     with col3:
         st.markdown("#### 📈 Financial Modeling")
         if st.button("Business Case Simulation", type="primary"):
@@ -361,6 +367,108 @@ def show_project_selection_page():
                             save_projects(); st.rerun()
                         if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
 
+
+# --- NEW PAGE FUNCTION for REVENUE ANALYSIS ---
+def show_revenue_analysis_page():
+    display_header("Battery Revenue Analysis 🔋")
+    st.write("Upload a data file and configure the battery parameters to run a revenue simulation.")
+
+    with st.sidebar:
+        st.header("⚙️ Configuration")
+
+        # 1. File Uploader
+        uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
+
+        # 2. Battery Configuration Selector
+        battery_config_options = [
+            "Day-ahead trading, minimaliseer energiekosten",
+            "Onbalanshandel, alleen batterij op SAP",
+            "Onbalanshandel, alles op onbalansprijzen",
+            "Verhogen eigen verbruik PV, alles op day-ahead",
+        ]
+        battery_config = st.selectbox("Battery Strategy", battery_config_options)
+
+        # 3. Parameter Inputs
+        st.subheader("Battery Parameters")
+        power_mw = st.number_input("Vermogen batterij (MW)", value=1.0, min_value=0.1, step=0.1)
+        capacity_mwh = st.number_input("Capaciteit batterij (MWh)", value=2.0, min_value=0.1, step=0.1)
+        min_soc = st.slider("Minimum SoC", 0.0, 1.0, 0.05)
+        max_soc = st.slider("Maximum SoC", 0.0, 1.0, 0.95)
+        eff_ch = st.slider("Efficiëntie opladen", 0.8, 1.0, 0.95)
+        eff_dis = st.slider("Efficiëntie ontladen", 0.8, 1.0, 0.95)
+
+        st.subheader("Cost & Other Parameters")
+        max_cycles = st.number_input("Max cycli per jaar", value=600, min_value=1)
+        supply_costs = st.number_input("Kosten energieleverancier (€/MWh)", value=20.0)
+        transport_costs = st.number_input("Transportkosten afname (€/MWh)", value=15.0)
+
+    # Main page layout
+    col1, col2 = st.columns([2, 3])
+
+    with col1:
+        st.subheader("Run Simulation")
+        if st.button("🚀 Run Analysis", type="primary"):
+            if uploaded_file is None:
+                st.error("Please upload an input file.")
+            else:
+                with st.spinner("Reading data and running model... Please wait."):
+                    try:
+                        if uploaded_file.name.endswith('.csv'):
+                            input_df = pd.read_csv(uploaded_file)
+                        else:
+                            # Assuming the specific sheet name from your original code
+                            input_df = pd.read_excel(uploaded_file, sheet_name='Import uit Python')
+                    except Exception as e:
+                        st.error(f"Error reading file: {e}. Ensure it contains a sheet named 'Import uit Python'.")
+                        st.stop()
+
+                    params = {
+                        "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
+                        "MIN_SOC": min_soc, "MAX_SOC": max_soc,
+                        "EFF_CH": eff_ch, "EFF_DIS": eff_dis,
+                        "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
+                        "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
+                        "BATTERY_CONFIG": battery_config, "TIME_STEP_H": 0.25,
+                    }
+
+                    status_placeholder = st.empty()
+                    def progress_callback(msg):
+                        status_placeholder.info(f"⏳ {msg}")
+                    
+                    results = run_revenue_model(params, input_df, progress_callback)
+                    st.session_state.revenue_results = results
+                    status_placeholder.empty()
+                st.rerun()
+
+    with col2:
+        st.subheader("Results")
+        results = st.session_state.revenue_results
+        if results:
+            if results["error"]:
+                st.error(results["error"])
+            else:
+                st.success("Analysis complete!")
+                
+                summary = results["summary"]
+                st.metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
+                # Add more metrics from your summary dictionary here if needed
+                
+                for warning in results["warnings"]:
+                    st.warning(warning)
+                
+                st.download_button(
+                    label="📥 Download Results (Excel)",
+                    data=results["output_file_bytes"],
+                    file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        else:
+            st.info("Configure parameters and click 'Run Analysis' to see results.")
+
+    if st.button("⬅️ Back to Home"):
+        st.session_state.page = "Home"
+        st.session_state.revenue_results = None # Clear results on exit
+        st.rerun()
 
 
 def show_model_page():
@@ -437,9 +545,9 @@ def show_model_page():
             i['idx_other_costs'] = st.slider('Other Annual Costs Index (%)', -5.0, 5.0, i['idx_other_costs'] * 100, key=f"{project_name}_idx_oc") / 100
         st.header("Grid Connection")
         with st.expander("One-Time Costs"):
-             i['grid_one_time_bess'] = st.number_input('One-time BESS Costs (€)', value=i['grid_one_time_bess'], key=f"{project_name}_grid_ot_bess")
-             i['grid_one_time_pv'] = st.number_input('One-time PV Costs (€)', value=i['grid_one_time_pv'], key=f"{project_name}_grid_ot_pv")
-             i['grid_one_time_general'] = st.number_input('One-time General Costs (€)', value=i['grid_one_time_general'], key=f"{project_name}_grid_ot_gen")
+            i['grid_one_time_bess'] = st.number_input('One-time BESS Costs (€)', value=i['grid_one_time_bess'], key=f"{project_name}_grid_ot_bess")
+            i['grid_one_time_pv'] = st.number_input('One-time PV Costs (€)', value=i['grid_one_time_pv'], key=f"{project_name}_grid_ot_pv")
+            i['grid_one_time_general'] = st.number_input('One-time General Costs (€)', value=i['grid_one_time_general'], key=f"{project_name}_grid_ot_gen")
         with st.expander("Annual Costs (Year 1)"):
             i['grid_annual_fixed'] = st.number_input('Annual Fixed Charge (€/year)', value=i['grid_annual_fixed'], key=f"{project_name}_grid_ann_fixed")
             i['grid_annual_kw_max'] = st.number_input('Annual cost kW max (€/year)', value=i['grid_annual_kw_max'], key=f"{project_name}_grid_ann_kwmax")
@@ -588,10 +696,16 @@ def show_model_page():
     else:
         st.info('Adjust inputs in the sidebar and click "Run Model" to see the financial forecast.')
 
+
 # --- MAIN ROUTER ---
 with st.sidebar:
     st.markdown("---"); st.header("Navigation")
-    if st.button("🏠 Back to Home"): st.session_state.page = "Home"; st.session_state.renaming_project = None; st.session_state.deleting_project = None; st.rerun()
+    if st.button("🏠 Back to Home"): 
+        st.session_state.page = "Home"
+        st.session_state.renaming_project = None
+        st.session_state.deleting_project = None
+        st.session_state.revenue_results = None
+        st.rerun()
     st.markdown("---"); st.header("Data Management")
     if st.button("📂 Load Projects from File"): load_projects(); st.rerun()
 
@@ -599,6 +713,11 @@ if 'projects' not in st.session_state or not st.session_state.projects:
     if os.path.exists(PROJECTS_FILE):
         load_projects()
 
-if st.session_state.page == "Home": show_home_page()
-elif st.session_state.page == "Project_Selection": show_project_selection_page()
-elif st.session_state.page == "Model": show_model_page()
+if st.session_state.page == "Home":
+    show_home_page()
+elif st.session_state.page == "Project_Selection":
+    show_project_selection_page()
+elif st.session_state.page == "Model":
+    show_model_page()
+elif st.session_state.page == "Revenue_Analysis":
+    show_revenue_analysis_page()
