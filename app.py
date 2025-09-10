@@ -414,13 +414,19 @@ def show_revenue_analysis_page():
                 with st.spinner("Reading data and running model... Please wait."):
                     try:
                         if uploaded_file.name.endswith('.csv'):
-                            input_df = pd.read_csv(uploaded_file)
+                            # For CSV files
+                            input_df = pd.read_csv(uploaded_file, header=0)
                         else:
-                            # Assuming the specific sheet name from your original code
-                            input_df = pd.read_excel(uploaded_file, sheet_name='Import uit Python')
+                            # For Excel files, using the CORRECT sheet name now
+                            input_df = pd.read_excel(
+                                uploaded_file,
+                                sheet_name='Export naar Python', # <-- CORRECTED NAME
+                                header=0
+                            )
                     except Exception as e:
-                        st.error(f"Error reading file: {e}. Ensure it contains a sheet named 'Import uit Python'.")
+                        st.error(f"Error reading file: {e}. Ensure it contains a sheet named 'Export naar Python'.")
                         st.stop()
+
 
                     params = {
                         "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
