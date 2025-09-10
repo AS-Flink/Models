@@ -30,7 +30,7 @@ def calculate_energy_tax(total_consumption_mwh, tax_table):
 
 def run_battery_trading(config, progress_callback=None):
     # Read Excel sheet
-    df = pd.read_excel(config.DATA_PATH, sheet_name='Export naar Python')
+    df = config.input_data.copy()
     datetime_col = None
     for col in df.columns:
         if col.strip().lower() == 'datetime':
