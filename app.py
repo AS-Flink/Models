@@ -300,7 +300,7 @@ def show_home_page():
         if st.button("Battery Size Finder"): st.info("This feature is coming soon!")
     with col2:
         st.markdown("#### 💰 Revenue Analysis")
-        if st.button("Battery Revenue Analysis"):
+        if st.button("Battery Revenue Analysis",type="primary"):
             st.session_state.page = "Revenue_Analysis"
             st.rerun()
     with col3:
