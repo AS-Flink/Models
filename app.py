@@ -361,7 +361,29 @@ def show_project_selection_page():
                             save_projects(); st.rerun()
                         if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
 
+
+
 def show_model_page():
+    # --- ADD THIS CODE AT THE TOP OF THE FUNCTION ---
+    # Define custom CSS for smaller metric fonts
+    st.markdown("""
+    <style>
+    .metric-label {
+        font-size: 14px;
+        color: #555555;
+    }
+    .metric-value {
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Helper function to display the custom metric
+    def custom_metric(label, value):
+        st.markdown(f'<p class="metric-label">{label}</p><p class="metric-value">{value}</p>', unsafe_allow_html=True)
+    # --- END OF ADDED CODE ---
     project_name = st.session_state.current_project_name
     if not project_name or project_name not in st.session_state.projects:
         st.error("Error: No project loaded."); st.session_state.page = "Project_Selection"; st.rerun()
@@ -501,22 +523,24 @@ def show_model_page():
                 with st.container(border=True):
                     st.subheader("Project Result")
                     payback_val_proj = metrics['payback_period']
-                    st.metric("Investment", f"€{metrics['total_investment']:,.0f}")
-                    st.metric("Cumulative EBITDA end of term", f"€{metrics['cumulative_ebitda_end']:,.0f}")
-                    st.metric("Project IRR (10 years)", f"{metrics['project_irr']:.1%}")
-                    st.metric("Payback period (simple)", f"{payback_val_proj:.1f} jaar" if isinstance(payback_val_proj, (int,float)) else "N/A")
+                    custom_metric("Investment", f"€{metrics['total_investment']:,.0f}")
+                    custom_metric("Cumulative EBITDA end of term", f"€{metrics['cumulative_ebitda_end']:,.0f}")
+                    custom_metric("Project IRR (10 years)", f"{metrics['project_irr']:.1%}")
+                    custom_metric("Payback period (simple)", f"{payback_val_proj:.1f} jaar" if isinstance(payback_val_proj, (int,float)) else "N/A")
                     fig_proj = generate_summary_chart(results_df, 'total_ebitda', 'cumulative_ebitda', 'Project Result (based on EBITDA)')
                     st.plotly_chart(fig_proj, use_container_width=True)
+
             with col2:
                 with st.container(border=True):
                     st.subheader("Return on Equity")
                     payback_val_eq = metrics['payback_period']
-                    st.metric("Investment", f"€{metrics['total_investment']:,.0f}")
-                    st.metric("Cumulative cash flow end of term", f"€{metrics['cumulative_cash_flow_end']:,.0f}")
-                    st.metric("Return on equity (10 years)", f"{metrics['equity_irr']:.1%}")
-                    st.metric("Payback period", f"{payback_val_eq:.1f} jaar" if isinstance(payback_val_eq, (int,float)) else "N/A")
+                    custom_metric("Investment", f"€{metrics['total_investment']:,.0f}")
+                    custom_metric("Cumulative cash flow end of term", f"€{metrics['cumulative_cash_flow_end']:,.0f}")
+                    custom_metric("Return on equity (10 years)", f"{metrics['equity_irr']:.1%}")
+                    custom_metric("Payback period", f"{payback_val_eq:.1f} jaar" if isinstance(payback_val_eq, (int,float)) else "N/A")
                     fig_eq = generate_summary_chart(results_df, 'net_cash_flow', 'cumulative_cash_flow', 'Cash Flow Equity')
                     st.plotly_chart(fig_eq, use_container_width=True)
+
 
         with tab2:
             if 'BESS' in project_data['type']:
