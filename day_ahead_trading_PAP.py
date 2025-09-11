@@ -631,7 +631,7 @@ def run_heuristic_fallback(df, config, progress_callback=None):
                     action_needed = "discharge"
             
             # Voer de gekozen actie uit
-            if action_needed == "charge":
+            if action_needed == "charge" and cumulative_cycles < max_cycles:
                 # Beperk door batterij vermogen en SoC
                 max_charge_mw = min(power_mw, (max_soc - current_soc) / (time_step_h * eff_ch))
                 charge_possible = min(required_charge_mw, max_charge_mw)
@@ -642,9 +642,10 @@ def run_heuristic_fallback(df, config, progress_callback=None):
                 discharge_possible = min(required_discharge_mw, max_discharge_mw)
                 charge_possible = 0
             else:
-                # Geen actie nodig
+                # Geen actie nodig of cyclus limiet bereikt voor laden
                 charge_possible = 0
                 discharge_possible = 0
+
             
             # Update SoC
             current_soc = current_soc + charge_possible * time_step_h * eff_ch - discharge_possible * time_step_h / eff_dis
