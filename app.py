@@ -456,6 +456,9 @@ def show_revenue_analysis_page():
                 st.success("Analysis complete!")
                 
                 summary = results["summary"]
+                # --- ADD THIS LINE ---
+                st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
+
                 st.metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
                 # Add more metrics from your summary dictionary here if needed
                 
