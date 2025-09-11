@@ -185,22 +185,33 @@ def run_battery_trading(config, progress_callback=None):
     
     # Doel: minimaliseer netwerkoverschrijdingen en grid feed-in, maximaliseer zelfconsumptie - ALLES IN MW/MWh
     def objective_rule(model):
-        # Straf netwerkoverschrijdingen zwaar (hoogste prioriteit) - MWh * 100000 voor juiste schaling
+        # This function now calculates the actual, total cost of energy in euros.
+        # The optimizer's goal is to make this number as small as possible.
+        total_cost = 0
+        for t in timesteps:
+            # Calculate net energy from the grid in MWh for this timestep
+            net_grid_exchange_mwh = ( (df_mw.iloc[t]['load_mwh'] - df_mw.iloc[t]['production_PV_mwh']) + 
+                                      (model.charge[t] - model.discharge[t]) * time_step_h )
+    
+            # Calculate costs based on grid exchange
+            cost_for_timestep = 0
+            price = df_mw.iloc[t]['price_day_ahead']
+    
+            # If buying from the grid (positive exchange)
+            if net_grid_exchange_mwh > 0:
+                cost_for_timestep = net_grid_exchange_mwh * (price + marginal_tax_rate + supply_costs + transport_costs)
+            # If selling to the grid (negative exchange)
+            else:
+                # We get paid the price, but still have supplier costs for the transaction
+                cost_for_timestep = net_grid_exchange_mwh * (price - supply_costs)
+            
+            total_cost += cost_for_timestep
+        
+        # Also, heavily penalize any grid limit violations
         violation_penalty = sum(model.feed_in_violation[t] + model.take_from_violation[t] for t in timesteps) * 100000
         
-        # Straf grid feed-in (PV-stroom liever opslaan dan terugleveren) - MWh * 1000 voor juiste schaling
-        grid_feed_in_penalty = sum(model.grid_feed_in[t] for t in timesteps) * 1000
-        
-        # Lineaire straf op totale activiteit (stimuleert efficiënt gebruik, voorkomt simultaan) - MW * 100 voor juiste schaling
-        total_activity_penalty = sum(model.charge[t] + model.discharge[t] for t in timesteps) * 100
-        
-        # Beloning voor laden bij PV overschot
-        pv_self_consumption_reward = 0
-        for t in timesteps:
-            if df_mw.iloc[t]['grid_excl_battery_mwh'] < 0:  # Er is PV netlevering (MWh)
-                pv_self_consumption_reward -= model.charge[t] * time_step_h * 10  # Beloning - MWh * 10 voor juiste schaling
-        
-        return violation_penalty + grid_feed_in_penalty + total_activity_penalty + pv_self_consumption_reward
+        return total_cost + violation_penalty
+
     
     model.objective = Objective(rule=objective_rule, sense=minimize)
     
