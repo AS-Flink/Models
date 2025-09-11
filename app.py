@@ -380,8 +380,8 @@ def generate_summary_chart(df, y_bar, y_line, title):
 
 # --- PAGE DISPLAY FUNCTIONS ---
 def show_home_page():
-    display_header("Flink Nederland EMS ☀️🔋")
-    st.subheader('EMS')
+    display_header("Flink Energy Management System (EMS) Simulation ")
+    st.subheader('Tools')
     st.write("Please select a tool to begin.")
     col1, col2, col3 = st.columns(3)
     with col1:
