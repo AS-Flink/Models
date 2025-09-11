@@ -467,7 +467,7 @@ def show_revenue_analysis_page():
                         "EFF_CH": eff_ch, "EFF_DIS": eff_dis,
                         "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
                         "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
-                        "STRATEGY_CHOICE": strategy_choice,, "TIME_STEP_H": 0.25,
+                        "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25,
                     }
                     params.pop("BATTERY_CONFIG", None) 
 
