@@ -5,5 +5,4 @@ numpy-financial
 plotly
 openpyxl
 Pyomo
-google-cloud-firestore
 Pillow  
