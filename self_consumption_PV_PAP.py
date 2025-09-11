@@ -29,7 +29,7 @@ def calculate_energy_tax(total_consumption_mwh, tax_table):
 
 def run_battery_trading(config, progress_callback=None):
     # Read Excel sheet
-    df = config.input_data.copy()
+    df = pd.read_excel(config.DATA_PATH, sheet_name='Export naar Python')
     datetime_col = None
     for col in df.columns:
         if col.strip().lower() == 'datetime':
@@ -185,33 +185,22 @@ def run_battery_trading(config, progress_callback=None):
     
     # Doel: minimaliseer netwerkoverschrijdingen en grid feed-in, maximaliseer zelfconsumptie - ALLES IN MW/MWh
     def objective_rule(model):
-        # This function now calculates the actual, total cost of energy in euros.
-        # The optimizer's goal is to make this number as small as possible.
-        total_cost = 0
-        for t in timesteps:
-            # Calculate net energy from the grid in MWh for this timestep
-            net_grid_exchange_mwh = ( (df_mw.iloc[t]['load_mwh'] - df_mw.iloc[t]['production_PV_mwh']) + 
-                                      (model.charge[t] - model.discharge[t]) * time_step_h )
-    
-            # Calculate costs based on grid exchange
-            cost_for_timestep = 0
-            price = df_mw.iloc[t]['price_day_ahead']
-    
-            # If buying from the grid (positive exchange)
-            if net_grid_exchange_mwh > 0:
-                cost_for_timestep = net_grid_exchange_mwh * (price + marginal_tax_rate + supply_costs + transport_costs)
-            # If selling to the grid (negative exchange)
-            else:
-                # We get paid the price, but still have supplier costs for the transaction
-                cost_for_timestep = net_grid_exchange_mwh * (price - supply_costs)
-            
-            total_cost += cost_for_timestep
-        
-        # Also, heavily penalize any grid limit violations
+        # Straf netwerkoverschrijdingen zwaar (hoogste prioriteit) - MWh * 100000 voor juiste schaling
         violation_penalty = sum(model.feed_in_violation[t] + model.take_from_violation[t] for t in timesteps) * 100000
         
-        return total_cost + violation_penalty
-
+        # Straf grid feed-in (PV-stroom liever opslaan dan terugleveren) - MWh * 1000 voor juiste schaling
+        grid_feed_in_penalty = sum(model.grid_feed_in[t] for t in timesteps) * 1000
+        
+        # Lineaire straf op totale activiteit (stimuleert efficiënt gebruik, voorkomt simultaan) - MW * 100 voor juiste schaling
+        total_activity_penalty = sum(model.charge[t] + model.discharge[t] for t in timesteps) * 100
+        
+        # Beloning voor laden bij PV overschot
+        pv_self_consumption_reward = 0
+        for t in timesteps:
+            if df_mw.iloc[t]['grid_excl_battery_mwh'] < 0:  # Er is PV netlevering (MWh)
+                pv_self_consumption_reward -= model.charge[t] * time_step_h * 10  # Beloning - MWh * 10 voor juiste schaling
+        
+        return violation_penalty + grid_feed_in_penalty + total_activity_penalty + pv_self_consumption_reward
     
     model.objective = Objective(rule=objective_rule, sense=minimize)
     
@@ -281,7 +270,6 @@ def run_battery_trading(config, progress_callback=None):
         charge_list = [value(model.charge[t]) for t in timesteps]  # MW
         discharge_list = [value(model.discharge[t]) for t in timesteps]  # MW
         soc_list = [value(model.soc[t]) for t in timesteps]  # MWh
-        soc_list = [min(max(s, min_soc), max_soc) for s in soc_list]
         feed_in_violations = [value(model.feed_in_violation[t]) for t in timesteps]  # MWh
         take_from_violations = [value(model.take_from_violation[t]) for t in timesteps]  # MWh
         
@@ -713,6 +701,6 @@ def run_heuristic_fallback(df, config, progress_callback=None):
     if 'max_take_from_grid' not in final_df.columns:
         final_df['max_take_from_grid'] = 0
     
-    return final_df, total_cycles, []
+    return final_df, 0, []
 
 
