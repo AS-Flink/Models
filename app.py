@@ -380,13 +380,46 @@ def show_revenue_analysis_page():
         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
 
         # 2. Battery Configuration Selector
-        battery_config_options = [
-            "Day-ahead trading, minimaliseer energiekosten",
-            "Onbalanshandel, alleen batterij op SAP",
-            "Onbalanshandel, alles op onbalansprijzen",
-            "Verhogen eigen verbruik PV, alles op day-ahead",
-        ]
-        battery_config = st.selectbox("Battery Strategy", battery_config_options)
+        # battery_config_options = [
+        #     "Day-ahead trading, minimaliseer energiekosten",
+        #     "Onbalanshandel, alleen batterij op SAP",
+        #     "Onbalanshandel, alles op onbalansprijzen",
+        #     "Verhogen eigen verbruik PV, alles op day-ahead",
+        # ]
+        # battery_config = st.selectbox("Battery Strategy", battery_config_options)
+
+
+        # --- Add this NEW section in its place ---
+        st.subheader("Optimization Strategy")
+        
+        # Step 1: User chooses the primary goal
+        goal_choice = st.radio(
+            "What is your primary financial goal?",
+            ("Minimize My Energy Bill", "Generate Revenue Through Market Trading"),
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+        
+        # Step 2: Based on the goal, show relevant strategies
+        if goal_choice == "Minimize My Energy Bill":
+            st.write("_Use assets to reduce overall energy costs by smartly using solar power and avoiding high grid prices._")
+            strategy_choice = st.selectbox(
+                "Select a cost-minimization strategy:",
+                (
+                    "Prioritize Self-Consumption", # -> self_consumption_PV_PAP.py
+                    "Optimize on Day-Ahead Market"   # -> day_ahead_trading_PAP.py
+                )
+            )
+        else: # Generate Revenue
+            st.write("_Actively use assets to trade on energy markets and generate direct profit._")
+            strategy_choice = st.selectbox(
+                "Select a revenue-generation strategy:",
+                (
+                    "Simple Battery Trading (Imbalance)",     # -> imbalance_algorithm_SAP.py
+                    "Advanced Whole-System Trading (Imbalance)" # -> imbalance_everything_PAP.py
+                )
+    )
+
 
         # 3. Parameter Inputs
         st.subheader("Battery Parameters")
@@ -434,8 +467,9 @@ def show_revenue_analysis_page():
                         "EFF_CH": eff_ch, "EFF_DIS": eff_dis,
                         "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
                         "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
-                        "BATTERY_CONFIG": battery_config, "TIME_STEP_H": 0.25,
+                        "STRATEGY_CHOICE": strategy_choice,, "TIME_STEP_H": 0.25,
                     }
+                    params.pop("BATTERY_CONFIG", None) 
 
                     status_placeholder = st.empty()
                     def progress_callback(msg):
