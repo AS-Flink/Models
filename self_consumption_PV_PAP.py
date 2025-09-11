@@ -701,6 +701,6 @@ def run_heuristic_fallback(df, config, progress_callback=None):
     if 'max_take_from_grid' not in final_df.columns:
         final_df['max_take_from_grid'] = 0
     
-    return final_df, 0, []
+    return final_df, total_cycles, []
 
 
