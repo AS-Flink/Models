@@ -204,10 +204,65 @@ def run_battery_trading(config, progress_callback=None):
     
     model.objective = Objective(rule=objective_rule, sense=minimize)
     
-    # Los het model op
-    if progress_callback:
-        progress_callback("Pyomo optimalisatie uitvoeren...")
+    # # Los het model op
+    # if progress_callback:
+    #     progress_callback("Pyomo optimalisatie uitvoeren...")
     
+    # # Los het model op via de NEOS Server
+    # if progress_callback:
+    #     progress_callback("Pyomo optimalisatie uitvoeren via NEOS Server...")
+    
+    # try:
+    #     # Create a solver manager to connect to the NEOS server
+    #     solver_manager = SolverManagerFactory('neos')
+        
+    #     # Send the model to NEOS and ask it to use the 'cbc' solver
+    #     # This may take a moment as it uploads, solves, and then downloads the results.
+    #     results_pyomo = solver_manager.solve(model, opt='cbc')
+        
+    #     termination_condition = results_pyomo.solver.termination_condition
+    #     if progress_callback:
+    #         progress_callback(f"✅ NEOS Server finished with status: {termination_condition}")
+    
+    # except Exception as e:
+    #     if progress_callback:
+    #         progress_callback(f"❌ CRITICAL: Error communicating with NEOS Server: {e}")
+    #     results_pyomo = None # Ensure results_pyomo is None so the fallback runs
+    #     termination_condition = "solver_crash"
+
+    
+    # if solver is None:
+    #     try:
+    #         solver = SolverFactory('cbc')
+    #         if progress_callback:
+    #             progress_callback("Standaard CBC solver gebruikt")
+    #     except Exception as e:
+    #         if progress_callback:
+    #             progress_callback(f"Fout bij laden standaard CBC: {e}")
+    #         raise ValueError("Geen CBC solver beschikbaar")
+    
+    # try:
+    #     # Configureer solver voor lineair probleem (LP)
+    #     solver.options['presolve'] = 'on'
+    #     solver.options['scaling'] = 'on'
+    #     solver.options['primalT'] = 1e-6
+    #     solver.options['dualT'] = 1e-6
+    #     solver.options['timeLimit'] = 300  # 5 minuten timeout
+        
+    #     if progress_callback:
+    #         progress_callback(f"Model statistieken: {len(timesteps)} tijdstappen")
+        
+    #     results_pyomo = solver.solve(model, tee=True)
+        
+    #     if progress_callback and results_pyomo:
+    #         progress_callback(f"Solver status: {results_pyomo.solver.status}")
+    #         progress_callback(f"Termination condition: {results_pyomo.solver.termination_condition}")
+    # except Exception as e:
+    #     if progress_callback:
+    #         progress_callback(f"CBC solver fout: {str(e)}. Gebruik fallback heuristiek...")
+    #     results_pyomo = None
+
+
     # Los het model op via de NEOS Server
     if progress_callback:
         progress_callback("Pyomo optimalisatie uitvoeren via NEOS Server...")
@@ -227,40 +282,10 @@ def run_battery_trading(config, progress_callback=None):
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ CRITICAL: Error communicating with NEOS Server: {e}")
-        results_pyomo = None # Ensure results_pyomo is None so the fallback runs
+        results_pyomo = None 
         termination_condition = "solver_crash"
 
-    
-    if solver is None:
-        try:
-            solver = SolverFactory('cbc')
-            if progress_callback:
-                progress_callback("Standaard CBC solver gebruikt")
-        except Exception as e:
-            if progress_callback:
-                progress_callback(f"Fout bij laden standaard CBC: {e}")
-            raise ValueError("Geen CBC solver beschikbaar")
-    
-    try:
-        # Configureer solver voor lineair probleem (LP)
-        solver.options['presolve'] = 'on'
-        solver.options['scaling'] = 'on'
-        solver.options['primalT'] = 1e-6
-        solver.options['dualT'] = 1e-6
-        solver.options['timeLimit'] = 300  # 5 minuten timeout
-        
-        if progress_callback:
-            progress_callback(f"Model statistieken: {len(timesteps)} tijdstappen")
-        
-        results_pyomo = solver.solve(model, tee=True)
-        
-        if progress_callback and results_pyomo:
-            progress_callback(f"Solver status: {results_pyomo.solver.status}")
-            progress_callback(f"Termination condition: {results_pyomo.solver.termination_condition}")
-    except Exception as e:
-        if progress_callback:
-            progress_callback(f"CBC solver fout: {str(e)}. Gebruik fallback heuristiek...")
-        results_pyomo = None
+
     
     # Accepteer optimale en feasible oplossingen
     acceptable_conditions = [
