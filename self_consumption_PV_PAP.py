@@ -270,6 +270,7 @@ def run_battery_trading(config, progress_callback=None):
         charge_list = [value(model.charge[t]) for t in timesteps]  # MW
         discharge_list = [value(model.discharge[t]) for t in timesteps]  # MW
         soc_list = [value(model.soc[t]) for t in timesteps]  # MWh
+        soc_list = [min(max(s, min_soc), max_soc) for s in soc_list]
         feed_in_violations = [value(model.feed_in_violation[t]) for t in timesteps]  # MWh
         take_from_violations = [value(model.take_from_violation[t]) for t in timesteps]  # MWh
         
@@ -701,6 +702,6 @@ def run_heuristic_fallback(df, config, progress_callback=None):
     if 'max_take_from_grid' not in final_df.columns:
         final_df['max_take_from_grid'] = 0
     
-    return final_df, 0, []
+    return final_df, total_cycles, []
 
 
