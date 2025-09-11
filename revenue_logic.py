@@ -320,6 +320,7 @@ def run_revenue_model(params, input_df, progress_callback):
         progress_callback("Output file generated successfully!")
         
         return {
+            "df": df,
             "summary": summary,
             "output_file_bytes": output_buffer.getvalue(),
             "warnings": warnings,
