@@ -9,9 +9,9 @@ import json
 import os
 import copy
 from datetime import datetime
-from google.cloud import firestore
-from google.oauth2 import service_account
-import json
+# from google.cloud import firestore
+# from google.oauth2 import service_account
+# import json
 
 
 # --- IMPORTANT: Add this new import for the revenue tool ---
@@ -135,69 +135,69 @@ if 'page' not in st.session_state:
 
 PROJECTS_FILE = "flink_ems_projects.json"
 
-# def save_projects():
-#     with open(PROJECTS_FILE, 'w') as f:
-#         projects_for_save = copy.deepcopy(st.session_state.projects)
-#         for proj_name, proj_data in projects_for_save.items():
-#             if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
-#                 projects_for_save[proj_name]['results']['df'] = proj_data['results']['df'].to_json()
-#         json.dump(projects_for_save, f, indent=4)
-
-# def load_projects():
-#     if os.path.exists(PROJECTS_FILE):
-#         try:
-#             with open(PROJECTS_FILE, 'r') as f:
-#                 if os.path.getsize(PROJECTS_FILE) > 0:
-#                     loaded_projects = json.load(f)
-#                     for proj_name, proj_data in loaded_projects.items():
-#                         if 'results' in proj_data and isinstance(proj_data['results'].get('df'), str):
-#                             proj_data['results']['df'] = pd.read_json(proj_data['results']['df'])
-#                     st.session_state.projects = loaded_projects
-#                     st.sidebar.success("Projects loaded!")
-#                 else: st.session_state.projects = {}
-#         except json.JSONDecodeError:
-#             st.sidebar.error("Could not load projects. Save file may be corrupt.")
-#             st.session_state.projects = {}
-#     else:
-#         st.sidebar.warning("No saved projects file found.")
-# Authenticate to Firestore with the credentials stored in st.secrets
-@st.cache_resource
-def get_firestore_client():
-    creds_dict = st.secrets["firestore"]
-    creds = service_account.Credentials.from_service_account_info(creds_dict)
-    db = firestore.Client(credentials=creds)
-    return db
-
-db = get_firestore_client()
-PROJECTS_COLLECTION = "projects" # Name of the collection in Firestore
-
 def save_projects():
-    """Saves all projects from session state to Firestore."""
-    projects_for_save = copy.deepcopy(st.session_state.projects)
-    for proj_name, proj_data in projects_for_save.items():
-        # Convert pandas DataFrame to JSON string before saving
-        if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
-            proj_data['results']['df'] = proj_data['results']['df'].to_json()
-        
-        # In Firestore, each project is a "document" in the "projects" collection
-        doc_ref = db.collection(PROJECTS_COLLECTION).document(proj_name)
-        doc_ref.set(proj_data)
-    st.toast("Projects saved to the cloud!")
+    with open(PROJECTS_FILE, 'w') as f:
+        projects_for_save = copy.deepcopy(st.session_state.projects)
+        for proj_name, proj_data in projects_for_save.items():
+            if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
+                projects_for_save[proj_name]['results']['df'] = proj_data['results']['df'].to_json()
+        json.dump(projects_for_save, f, indent=4)
 
 def load_projects():
-    """Loads all projects from Firestore into session state."""
-    projects_from_db = {}
-    docs = db.collection(PROJECTS_COLLECTION).stream()
-    for doc in docs:
-        proj_data = doc.to_dict()
-        # Convert JSON string back to pandas DataFrame after loading
-        if 'results' in proj_data and isinstance(proj_data['results'].get('df'), str):
-            proj_data['results']['df'] = pd.read_json(proj_data['results']['df'])
-        projects_from_db[doc.id] = proj_data
+    if os.path.exists(PROJECTS_FILE):
+        try:
+            with open(PROJECTS_FILE, 'r') as f:
+                if os.path.getsize(PROJECTS_FILE) > 0:
+                    loaded_projects = json.load(f)
+                    for proj_name, proj_data in loaded_projects.items():
+                        if 'results' in proj_data and isinstance(proj_data['results'].get('df'), str):
+                            proj_data['results']['df'] = pd.read_json(proj_data['results']['df'])
+                    st.session_state.projects = loaded_projects
+                    st.sidebar.success("Projects loaded!")
+                else: st.session_state.projects = {}
+        except json.JSONDecodeError:
+            st.sidebar.error("Could not load projects. Save file may be corrupt.")
+            st.session_state.projects = {}
+    else:
+        st.sidebar.warning("No saved projects file found.")
+# # Authenticate to Firestore with the credentials stored in st.secrets
+# @st.cache_resource
+# def get_firestore_client():
+#     creds_dict = st.secrets["firestore"]
+#     creds = service_account.Credentials.from_service_account_info(creds_dict)
+#     db = firestore.Client(credentials=creds)
+#     return db
+
+# db = get_firestore_client()
+# PROJECTS_COLLECTION = "projects" # Name of the collection in Firestore
+
+# def save_projects():
+#     """Saves all projects from session state to Firestore."""
+#     projects_for_save = copy.deepcopy(st.session_state.projects)
+#     for proj_name, proj_data in projects_for_save.items():
+#         # Convert pandas DataFrame to JSON string before saving
+#         if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
+#             proj_data['results']['df'] = proj_data['results']['df'].to_json()
+        
+#         # In Firestore, each project is a "document" in the "projects" collection
+#         doc_ref = db.collection(PROJECTS_COLLECTION).document(proj_name)
+#         doc_ref.set(proj_data)
+#     st.toast("Projects saved to the cloud!")
+
+# def load_projects():
+#     """Loads all projects from Firestore into session state."""
+#     projects_from_db = {}
+#     docs = db.collection(PROJECTS_COLLECTION).stream()
+#     for doc in docs:
+#         proj_data = doc.to_dict()
+#         # Convert JSON string back to pandas DataFrame after loading
+#         if 'results' in proj_data and isinstance(proj_data['results'].get('df'), str):
+#             proj_data['results']['df'] = pd.read_json(proj_data['results']['df'])
+#         projects_from_db[doc.id] = proj_data
     
-    st.session_state.projects = projects_from_db
-    if projects_from_db:
-        st.sidebar.success("Projects loaded from the cloud!")
+#     st.session_state.projects = projects_from_db
+#     if projects_from_db:
+#         st.sidebar.success("Projects loaded from the cloud!")
 
 # --- UI HELPER ---
 def display_header(title):
