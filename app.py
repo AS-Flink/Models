@@ -203,7 +203,7 @@ def load_projects():
 def display_header(title):
     col1, col2 = st.columns([1, 4])
     with col1:
-        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=140)
+        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=10000)
     with col2:
         st.title(title)
     st.markdown("---")
