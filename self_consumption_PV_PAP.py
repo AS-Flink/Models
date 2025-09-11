@@ -192,13 +192,13 @@ def run_battery_trading(config, progress_callback=None):
         grid_feed_in_penalty = sum(model.grid_feed_in[t] for t in timesteps) * 1000
         
         # Lineaire straf op totale activiteit (stimuleert efficiënt gebruik, voorkomt simultaan) - MW * 100 voor juiste schaling
-        total_activity_penalty = sum(model.charge[t] + model.discharge[t] for t in timesteps) * 100
+        total_activity_penalty = sum(model.charge[t] + model.discharge[t] for t in timesteps) * 1
         
         # Beloning voor laden bij PV overschot
         pv_self_consumption_reward = 0
         for t in timesteps:
             if df_mw.iloc[t]['grid_excl_battery_mwh'] < 0:  # Er is PV netlevering (MWh)
-                pv_self_consumption_reward -= model.charge[t] * time_step_h * 10  # Beloning - MWh * 10 voor juiste schaling
+                pv_self_consumption_reward -= model.charge[t] * time_step_h * 500  # Beloning - MWh * 10 voor juiste schaling
         
         return violation_penalty + grid_feed_in_penalty + total_activity_penalty + pv_self_consumption_reward
     
