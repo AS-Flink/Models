@@ -277,9 +277,39 @@ def run_battery_trading(config, progress_callback=None):
             model.charge[T-1] * time_step_h * eff_ch - model.discharge[T-1] * time_step_h * eff_dis) <= max_soc)
 
         # Solve
-        cbc_path = os.path.join(os.path.dirname(__file__), 'Cbc-releases.2.10.12-w64-msvc16-md', 'bin', 'cbc.exe')
-        solver = SolverFactory('cbc', executable=cbc_path)
+        # --- Start of new, robust code ---
+        
+        solver = None # Initialize solver as None
+        
+        # 1. First, try to use the local Windows executable.
+        #    This might work on your local computer.
+        local_cbc_path = os.path.join(os.path.dirname(__file__), 'Cbc-releases.2.10.12-w64-msvc16-md', 'bin', 'cbc.exe')
+        
+        if os.path.exists(local_cbc_path):
+            try:
+                solver = SolverFactory('cbc', executable=local_cbc_path)
+                print("Using local CBC solver.")
+            except Exception as e:
+                print(f"Failed to use local CBC solver: {e}")
+                solver = None # Ensure solver is None if it fails
+        
+        # 2. If the first attempt failed (solver is still None), fall back to the system solver.
+        #    This will work on your web app's Linux server.
+        if solver is None:
+            try:
+                solver = SolverFactory('cbc')
+                print("Using system-wide CBC solver.")
+            except ApplicationError:
+                # This error is raised if no solver can be found at all
+                raise ValueError(
+                    "CBC solver not found. Ensure it is installed and in your system's PATH, "
+                    "or include the executable with your app."
+                )
+        
+        # Now, you can safely use the solver
         result = solver.solve(model)
+        
+        # --- End of new code ---
         # Check for infeasibility
         if (result.solver.status != SolverStatus.ok) or (result.solver.termination_condition == TerminationCondition.infeasible):
             # Controleer eerst of het een kleine SoC overschrijding betreft die we kunnen tolereren
