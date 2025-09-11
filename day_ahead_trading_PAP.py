@@ -747,20 +747,21 @@ def run_heuristic_fallback(df, config, progress_callback=None):
             
             additional_costs = tax_costs + transport_costs_all + supply_costs_all
             
+            # Voeg detail kolommen toe voor transparantie (EERST maken voordat ze gebruikt worden)
+            final_df['dummy1'] = 0
+            final_df['dummy2'] = 0
+            final_df['day_ahead_result'] = day_ahead_costs # Kan positief (inkomsten) of negatief (kosten) zijn
+            final_df['dummy3'] = 0
+            final_df['energy_tax'] = np.where(net_grid_consumption_mwh > 0, -net_grid_consumption_mwh * marginal_tax_rate, 0) # Altijd negatief (kosten)
+            final_df['supplier_costs'] = -np.abs(net_grid_consumption_mwh) * supply_costs # Altijd negatief (kosten)
+            final_df['transport_costs'] = np.where(net_grid_consumption_mwh > 0, -net_grid_consumption_mwh * transport_costs, 0) # Altijd negatief (kosten)
+            
             # Totale kosten = day-ahead + alle extra kosten (nu met correcte voortekens)
             final_df['total_result_day_ahead_trading'] = (day_ahead_costs + 
                                                           final_df['energy_tax'] + 
                                                           final_df['supplier_costs'] + 
                                                           final_df['transport_costs'])
-            
-            # Voeg detail kolommen toe voor transparantie
-            final_df['dummy1'] = 0
-            final_df['dummy2'] = 0
-            final_df['day_ahead_result'] = day_ahead_costs  # Kan positief (inkomsten) of negatief (kosten) zijn
-            final_df['dummy3'] = 0
-            final_df['energy_tax'] = np.where(net_grid_consumption_mwh > 0, -net_grid_consumption_mwh * marginal_tax_rate, 0)  # Altijd negatief (kosten)
-            final_df['supplier_costs'] = -np.abs(net_grid_consumption_mwh) * supply_costs  # Altijd negatief (kosten)
-            final_df['transport_costs'] = np.where(net_grid_consumption_mwh > 0, -net_grid_consumption_mwh * transport_costs, 0)  # Altijd negatief (kosten)
+
         else:
             final_df['total_result_day_ahead_trading'] = 0
             final_df['dummy1'] = 0
