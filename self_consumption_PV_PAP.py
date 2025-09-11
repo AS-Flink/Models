@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 from pyomo.environ import *
-from pyomo.opt import SolverFactory
+from pyomo.opt import SolverFactory, SolverManagerFactory 
 
 def get_energy_tax_table():
     """
@@ -208,18 +208,28 @@ def run_battery_trading(config, progress_callback=None):
     if progress_callback:
         progress_callback("Pyomo optimalisatie uitvoeren...")
     
-    # Probeer eerst de lokale CBC solver
-    cbc_path = os.path.join(os.path.dirname(__file__), 'Cbc-releases.2.10.12-w64-msvc16-md', 'bin', 'cbc.exe')
-    solver = None
+    # Los het model op via de NEOS Server
+    if progress_callback:
+        progress_callback("Pyomo optimalisatie uitvoeren via NEOS Server...")
     
-    if os.path.exists(cbc_path):
-        try:
-            solver = SolverFactory('cbc', executable=cbc_path)
-            if progress_callback:
-                progress_callback(f"Lokale CBC solver gevonden: {cbc_path}")
-        except Exception as e:
-            if progress_callback:
-                progress_callback(f"Fout bij laden lokale CBC: {e}")
+    try:
+        # Create a solver manager to connect to the NEOS server
+        solver_manager = SolverManagerFactory('neos')
+        
+        # Send the model to NEOS and ask it to use the 'cbc' solver
+        # This may take a moment as it uploads, solves, and then downloads the results.
+        results_pyomo = solver_manager.solve(model, opt='cbc')
+        
+        termination_condition = results_pyomo.solver.termination_condition
+        if progress_callback:
+            progress_callback(f"✅ NEOS Server finished with status: {termination_condition}")
+    
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"❌ CRITICAL: Error communicating with NEOS Server: {e}")
+        results_pyomo = None # Ensure results_pyomo is None so the fallback runs
+        termination_condition = "solver_crash"
+
     
     if solver is None:
         try:
