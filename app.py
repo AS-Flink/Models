@@ -66,7 +66,7 @@ def resample_data(df, resolution):
 st.set_page_config(
     layout="wide",
     page_title="Flink EMS",
-    page_icon="Flink_logo.png" 
+    page_icon="https://i.postimg.cc/3Ncw69QP/SCHILD-LOGO-REGULAR-BLAUW150.webp" 
 )
 # --- DATA (Connections, Defaults for Financial Model) ---
 @st.cache_data
