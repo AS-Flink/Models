@@ -13,6 +13,49 @@ from datetime import datetime
 # --- IMPORTANT: Add this new import for the revenue tool ---
 from revenue_logic import run_revenue_model
 
+# --- Add these new helper functions to your main app script ---
+
+def find_total_result_column(df):
+    """Finds the correct total result column in the DataFrame."""
+    possible_cols = [
+        'total_result_imbalance_PAP',
+        'total_result_imbalance_SAP',
+        'total_result_day_ahead_trading',
+        'total_result_self_consumption'
+    ]
+    for col in possible_cols:
+        if col in df.columns:
+            return col
+    return None
+
+def resample_data(df, resolution):
+    """Resamples the DataFrame to the specified time resolution."""
+    # Ensure the index is a DatetimeIndex
+    if not isinstance(df.index, pd.DatetimeIndex):
+        # Attempt to convert it if it's not
+        try:
+            df.index = pd.to_datetime(df.index)
+        except Exception:
+            st.error("Could not process the DataFrame index as dates. Please ensure the 'datetime' column is correct.")
+            return pd.DataFrame() # Return empty df on error
+
+    resolution_map = {
+        'Hourly': 'H',
+        'Daily': 'D',
+        'Monthly': 'M',
+        'Yearly': 'Y'
+    }
+    
+    if resolution == '15 Min (Original)':
+        return df
+        
+    rule = resolution_map.get(resolution)
+    if rule:
+        # Use .sum() for aggregation; it works for both financial and energy data
+        return df.resample(rule).sum()
+    
+    return df
+
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Flink EMS")
@@ -480,34 +523,132 @@ def show_revenue_analysis_page():
                     status_placeholder.empty()
                 st.rerun()
 
+    # with col2:
+    #     st.subheader("Results")
+    #     results = st.session_state.revenue_results
+    #     if results:
+    #         if results["error"]:
+    #             st.error(results["error"])
+    #         else:
+    #             st.success("Analysis complete!")
+                
+    #             summary = results["summary"]
+    #             # --- ADD THIS LINE ---
+    #             st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
+
+    #             st.metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
+    #             # Add more metrics from your summary dictionary here if needed
+                
+    #             for warning in results["warnings"]:
+    #                 st.warning(warning)
+                
+    #             st.download_button(
+    #                 label="📥 Download Results (Excel)",
+    #                 data=results["output_file_bytes"],
+    #                 file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+    #                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    #             )
+    #     else:
+    #         st.info("Configure parameters and click 'Run Analysis' to see results.")
+
     with col2:
         st.subheader("Results")
         results = st.session_state.revenue_results
-        if results:
-            if results["error"]:
-                st.error(results["error"])
-            else:
-                st.success("Analysis complete!")
-                
-                summary = results["summary"]
-                # --- ADD THIS LINE ---
-                st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
-
-                st.metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
-                # Add more metrics from your summary dictionary here if needed
-                
-                for warning in results["warnings"]:
-                    st.warning(warning)
-                
-                st.download_button(
-                    label="📥 Download Results (Excel)",
-                    data=results["output_file_bytes"],
-                    file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-        else:
+        if not results:
             st.info("Configure parameters and click 'Run Analysis' to see results.")
+        elif results["error"]:
+            st.error(results["error"])
+        else:
+            st.success("Analysis complete!")
+            summary = results["summary"]
+            df_original = results["df"] # The original, high-resolution data
+    
+            # --- Display Summary Metrics & Download Button ---
+            st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
+            
+            summary_cols = st.columns(3)
+            total_revenue = summary.get('total_revenue', 0) if 'total_revenue' in summary else summary.get('net_result_euros', 0)
+            summary_cols[0].metric("Net Result / Revenue", f"€ {total_revenue:,.0f}")
+            summary_cols[1].metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
+            summary_cols[2].metric("Infeasible Days", f"{len(summary.get('infeasible_days', []))}")
+            
+            for warning in results["warnings"]:
+                st.warning(warning)
+    
+            st.download_button(
+                label="📥 Download Full Results (Excel)",
+                data=results["output_file_bytes"],
+                file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            st.markdown("---")
+    
+    
+            # --- Interactive Plotting Section ---
+            st.subheader("📊 Interactive Charts")
+    
+            # 1. UI: Create the resolution selector
+            resolution = st.selectbox(
+                "Select Chart Time Resolution",
+                ('15 Min (Original)', 'Hourly', 'Daily', 'Monthly', 'Yearly')
+            )
+    
+            # 2. DATA: Resample data based on user's choice
+            df_resampled = resample_data(df_original.copy(), resolution)
+    
+            # 3. PLOTS: Create tabs and display the charts
+            tab1, tab2, tab3 = st.tabs(["💰 Financial Results", "⚡ Energy Profiles", "🔋 Battery SoC"])
+    
+            with tab1:
+                # Find the correct financial column to plot
+                total_result_col = find_total_result_column(df_resampled)
+                if total_result_col:
+                    fig_finance = px.line(
+                        df_resampled, 
+                        x=df_resampled.index, 
+                        y=total_result_col,
+                        title=f"Financial Result ({resolution})",
+                        labels={"x": "Date", "y": "Amount (€)"}
+                    )
+                    st.plotly_chart(fig_finance, use_container_width=True)
+                else:
+                    st.warning("Could not find a 'total_result' column to plot.")
+    
+            with tab2:
+                st.markdown("#### Production & Consumption")
+                # Use the resampled data for these plots
+                fig_pv = px.line(
+                    df_resampled, 
+                    x=df_resampled.index, 
+                    y='production_PV',
+                    title=f"PV Production ({resolution})",
+                    labels={"x": "Date", "y": "Energy (kWh)"}
+                )
+                st.plotly_chart(fig_pv, use_container_width=True)
+    
+                fig_load = px.line(
+                    df_resampled, 
+                    x=df_resampled.index, 
+                    y='load',
+                    title=f"Load ({resolution})",
+                    labels={"x": "Date", "y": "Energy (kWh)"}
+                )
+                st.plotly_chart(fig_load, use_container_width=True)
+    
+            with tab3:
+                st.markdown("#### Battery State of Charge (SoC)")
+                st.info("This chart is always shown in the original 15-minute resolution.")
+                # IMPORTANT: Use the ORIGINAL DataFrame for this plot
+                fig_soc = px.line(
+                    df_original, 
+                    x=df_original.index, 
+                    y='SoC_kWh',
+                    title="Battery SoC (15 Min Resolution)",
+                    labels={"x": "Date", "y": "State of Charge (kWh)"}
+                )
+            st.plotly_chart(fig_soc, use_container_width=True)
 
+    
     if st.button("⬅️ Back to Home"):
         st.session_state.page = "Home"
         st.session_state.revenue_results = None # Clear results on exit
