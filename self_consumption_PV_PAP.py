@@ -183,27 +183,41 @@ def run_battery_trading(config, progress_callback=None):
             progress_callback(f"Cycle constraint: max {max_energy_allowed:.2f} MWh geladen per jaar")
         model.cycle_limit = Constraint(expr=total_charged_energy * eff_ch <= max_energy_allowed)
     
-    # Doel: minimaliseer netwerkoverschrijdingen en grid feed-in, maximaliseer zelfconsumptie - ALLES IN MW/MWh
+    # Doel: minimaliseer de totale energiekosten op basis van day-ahead prijzen
     def objective_rule(model):
-        # Straf netwerkoverschrijdingen zwaar (hoogste prioriteit) - MWh * 100000 voor juiste schaling
+        # 1. Bereken de totale energiekosten voor elke tijdstap
+        total_cost = 0
+        for t in timesteps:
+            # Netto verbruik van het net in MWh
+            net_grid_consumption_mwh = (
+                df_mw.iloc[t]['load_mwh'] - 
+                df_mw.iloc[t]['production_PV_mwh'] + 
+                (model.charge[t] * time_step_h) - 
+                (model.discharge[t] * time_step_h)
+            )
+            
+            # Basiskosten van day-ahead markt
+            day_ahead_cost = net_grid_consumption_mwh * df_mw.iloc[t]['price_day_ahead']
+            
+            # Extra kosten (alleen bij afname van het net)
+            additional_costs = 0
+            if net_grid_consumption_mwh > 0:
+                tax_cost = net_grid_consumption_mwh * marginal_tax_rate
+                transport_cost = net_grid_consumption_mwh * transport_costs
+                additional_costs = tax_cost + transport_cost
+    
+            # Leveringskosten zijn van toepassing op alle energie die over de aansluiting gaat (afname en invoeding)
+            supplier_cost = abs(net_grid_consumption_mwh) * supply_costs
+    
+            total_cost += day_ahead_cost + additional_costs + supplier_cost
+        
+        # 2. Straf netwerkoverschrijdingen nog steeds heel zwaar
         violation_penalty = sum(model.feed_in_violation[t] + model.take_from_violation[t] for t in timesteps) * 100000
         
-        # Straf grid feed-in (PV-stroom liever opslaan dan terugleveren) - MWh * 1000 voor juiste schaling
-        grid_feed_in_penalty = sum(model.grid_feed_in[t] for t in timesteps) * 1000
-        
-        # Lineaire straf op totale activiteit (stimuleert efficiënt gebruik, voorkomt simultaan) - MW * 100 voor juiste schaling
-        total_activity_penalty = sum(model.charge[t] + model.discharge[t] for t in timesteps) * 100
-        
-        # Beloning voor laden bij PV overschot
-        pv_self_consumption_reward = 0
-        for t in timesteps:
-            if df_mw.iloc[t]['grid_excl_battery_mwh'] < 0:  # Er is PV netlevering (MWh)
-                pv_self_consumption_reward -= model.charge[t] * time_step_h * 10  # Beloning - MWh * 10 voor juiste schaling
-        
-        return violation_penalty + grid_feed_in_penalty + total_activity_penalty + pv_self_consumption_reward
+        return total_cost + violation_penalty
     
     model.objective = Objective(rule=objective_rule, sense=minimize)
-    
+        
     # Los het model op
     if progress_callback:
         progress_callback("Pyomo optimalisatie uitvoeren...")
