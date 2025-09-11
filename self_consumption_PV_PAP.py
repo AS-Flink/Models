@@ -242,7 +242,7 @@ def run_battery_trading(config, progress_callback=None):
         if progress_callback:
             progress_callback(f"Model statistieken: {len(timesteps)} tijdstappen")
         
-        results_pyomo = solver.solve(model, tee=False)
+        results_pyomo = solver.solve(model, tee=True)
         
         if progress_callback and results_pyomo:
             progress_callback(f"Solver status: {results_pyomo.solver.status}")
