@@ -128,7 +128,13 @@ def run_battery_trading(config, progress_callback=None):
     model.feed_in_violation = Var(timesteps, domain=NonNegativeReals, bounds=(0, 1.0))  # MWh - slack voor feed-in overschrijding
     model.take_from_violation = Var(timesteps, domain=NonNegativeReals, bounds=(0, 1.0))  # MWh - slack voor take-from overschrijding
     model.grid_feed_in = Var(timesteps, domain=NonNegativeReals, bounds=(0, 1.0))  # MWh - hoeveelheid grid feed-in per tijdstap
-    
+    # --- ADD THESE NEW VARIABLES ---
+    # Represents energy taken FROM the grid (afname) in MWh
+    model.grid_import = Var(timesteps, domain=NonNegativeReals)
+    # Represents energy sent TO the grid (invoeding) in MWh
+    model.grid_export = Var(timesteps, domain=NonNegativeReals)
+    # --- END OF ADDITION ---
+
     # Fix initial SoC
     current_soc = start_soc
     model.soc[0].fix(current_soc)
@@ -147,7 +153,24 @@ def run_battery_trading(config, progress_callback=None):
             model.discharge[t-1] * time_step_h / eff_dis)
     
     model.soc_balance = Constraint(timesteps, rule=soc_balance_rule)
+
+    # --- ADD THIS NEW CONSTRAINT ---
+    # Links net consumption to our new import/export variables
+    def net_grid_balance_rule(model, t):
+        # This is the same calculation for net exchange used before
+        net_consumption = (
+            df_mw.iloc[t]['load_mwh'] - 
+            df_mw.iloc[t]['production_PV_mwh'] + 
+            (model.charge[t] * time_step_h) - 
+            (model.discharge[t] * time_step_h)
+        )
+        # The net result must equal the difference between import and export
+        return net_consumption == model.grid_import[t] - model.grid_export[t]
     
+    model.net_grid_balance = Constraint(timesteps, rule=net_grid_balance_rule)
+    # --- END OF ADDITION ---
+
+
     # Netwerk grenzen met slack variabelen - ALLES IN MWh
     def network_feed_in_rule(model, t):
         grid_excl = df_mw.iloc[t]['grid_excl_battery_mwh']  # MWh
@@ -184,40 +207,30 @@ def run_battery_trading(config, progress_callback=None):
         model.cycle_limit = Constraint(expr=total_charged_energy * eff_ch <= max_energy_allowed)
     
     # Doel: minimaliseer de totale energiekosten op basis van day-ahead prijzen
+    # --- REPLACE your old objective_rule with this one ---
     def objective_rule(model):
-        # 1. Bereken de totale energiekosten voor elke tijdstap
-        total_cost = 0
-        for t in timesteps:
-            # Netto verbruik van het net in MWh
-            net_grid_consumption_mwh = (
-                df_mw.iloc[t]['load_mwh'] - 
-                df_mw.iloc[t]['production_PV_mwh'] + 
-                (model.charge[t] * time_step_h) - 
-                (model.discharge[t] * time_step_h)
-            )
+        # Calculate total cost using the new import/export variables
+        total_cost = sum(
+            # 1. Day-ahead costs apply to the net exchange (import is cost, export is revenue)
+            (model.grid_import[t] - model.grid_export[t]) * df_mw.iloc[t]['price_day_ahead'] +
             
-            # Basiskosten van day-ahead markt
-            day_ahead_cost = net_grid_consumption_mwh * df_mw.iloc[t]['price_day_ahead']
+            # 2. Tax and Transport costs apply to IMPORTS only
+            model.grid_import[t] * (marginal_tax_rate + transport_costs) +
             
-            # Extra kosten (alleen bij afname van het net)
-            additional_costs = 0
-            if net_grid_consumption_mwh > 0:
-                tax_cost = net_grid_consumption_mwh * marginal_tax_rate
-                transport_cost = net_grid_consumption_mwh * transport_costs
-                additional_costs = tax_cost + transport_cost
-    
-            # Leveringskosten zijn van toepassing op alle energie die over de aansluiting gaat (afname en invoeding)
-            supplier_cost = abs(net_grid_consumption_mwh) * supply_costs
-    
-            total_cost += day_ahead_cost + additional_costs + supplier_cost
+            # 3. Supplier costs apply to the absolute volume of exchange (import + export)
+            (model.grid_import[t] + model.grid_export[t]) * supply_costs
+            
+            for t in timesteps
+        )
         
-        # 2. Straf netwerkoverschrijdingen nog steeds heel zwaar
+        # The penalty for grid violations remains the highest priority
         violation_penalty = sum(model.feed_in_violation[t] + model.take_from_violation[t] for t in timesteps) * 100000
         
         return total_cost + violation_penalty
     
     model.objective = Objective(rule=objective_rule, sense=minimize)
-        
+    # --- END OF REPLACEMENT ---
+            
     # Los het model op
     if progress_callback:
         progress_callback("Pyomo optimalisatie uitvoeren...")
