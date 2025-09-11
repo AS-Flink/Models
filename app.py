@@ -567,11 +567,21 @@ def show_revenue_analysis_page():
             st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
             
             summary_cols = st.columns(3)
-            total_revenue = summary.get('total_revenue', 0) if 'total_revenue' in summary else summary.get('net_result_euros', 0)
-            summary_cols[0].metric("Net Result / Revenue", f"€ {total_revenue:,.0f}")
+    
+            # --- CORRECTED LOGIC ---
+            # 1. Find the name of the final result column in the DataFrame
+            total_result_col = find_total_result_column(df_original)
+            
+            # 2. Calculate the net result by summing that column
+            net_result = 0 # Default to 0
+            if total_result_col:
+                net_result = df_original[total_result_col].sum()
+            # --- END OF CORRECTION ---
+    
+            summary_cols[0].metric("Net Result / Revenue", f"€ {net_result:,.0f}")
             summary_cols[1].metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
             summary_cols[2].metric("Infeasible Days", f"{len(summary.get('infeasible_days', []))}")
-            
+                
             for warning in results["warnings"]:
                 st.warning(warning)
     
