@@ -29,7 +29,7 @@ def calculate_energy_tax(total_consumption_mwh, tax_table):
 
 def run_battery_trading(config, progress_callback=None):
     # Read Excel sheet
-    df = config.input_data.copy()
+    df = pd.read_excel(config.DATA_PATH, sheet_name='Export naar Python')
     datetime_col = None
     for col in df.columns:
         if col.strip().lower() == 'datetime':
@@ -410,7 +410,6 @@ def run_battery_trading(config, progress_callback=None):
 
 
 
-# REPLACE your old fallback function with this CORRECTED version
 def run_heuristic_fallback(df, config, progress_callback=None):
     """Fallback heuristische methode als Pyomo faalt"""
     # Configuratie
@@ -429,119 +428,191 @@ def run_heuristic_fallback(df, config, progress_callback=None):
     else:
         current_soc = 0.5 * capacity_mwh
     usable_capacity = capacity_mwh * (max_soc_frac - min_soc_frac)
-
-    # Energiebelasting en leveringskosten
+    
+    # Energiebelasting en leveringskosten (hergebruik van hoofdfunctie)
     tax_table = get_energy_tax_table()
+    
+    # Haal leveringskosten uit config
     if hasattr(config, 'SUPPLY_COSTS'):
         supply_costs = config.SUPPLY_COSTS
     else:
-        supply_costs = 20.0
+        supply_costs = 20.0  # Default waarde voor backward compatibility
+    
+    # Haal transportkosten uit config
     if hasattr(config, 'TRANSPORT_COSTS'):
         transport_costs = config.TRANSPORT_COSTS
     else:
-        transport_costs = 15.0
-
+        transport_costs = 15.0  # Default waarde voor backward compatibility
+    
     if len(df) > 0:
         avg_load_kwh = df['load'].mean()
-        estimated_annual_consumption_mwh = (avg_load_kwh * 8760) / 1000
+        hours_per_year = 8760
+        estimated_annual_consumption_mwh = (avg_load_kwh * hours_per_year) / 1000
         marginal_tax_rate = calculate_energy_tax(estimated_annual_consumption_mwh, tax_table)
     else:
         marginal_tax_rate = tax_table['consumption_brackets'][0]['tax_eur_per_mwh']
 
     # Initialisatie
     network_violations = []
+    cycle_history = []
     cumulative_cycles = 0
     results = []
 
     # Verwerk elke dag
+    total_days = len(df.groupby(pd.Grouper(freq='D')))
+    day_count = 0
+    
     for day, day_data in df.groupby(pd.Grouper(freq='D')):
         if len(day_data) == 0:
             continue
+        
+        day_count += 1
+        # Toon alleen elke 10e dag of de laatste dag
+        if day_count % 10 == 0 or day_count == total_days:
+            msg = f"Fallback heuristiek: {day_count}/{total_days} dagen verwerkt... Cycli gebruikt: {cumulative_cycles:.1f}/{max_cycles}"
+            if progress_callback:
+                progress_callback(msg)
+            else:
+                print(msg, end='\r')
 
+        soc_list = []
+        charge_list = []
+        discharge_list = []
         energy_charged_list = []
         energy_discharged_list = []
-        soc_list = []
         soc_frac_list = []
-
-        for idx, row in day_data.iterrows():
-            grid_excl_battery = row['grid_excl_battery']
-            max_feed_in = row['max_feed_in_grid']
-            max_take_from = row['max_take_from_grid']
-
+        
+        for i, (idx, row) in enumerate(day_data.iterrows()):
+            grid_excl_battery = row['grid_excl_battery']  # kWh
+            max_feed_in = row['max_feed_in_grid']  # kWh (negatief)
+            max_take_from = row['max_take_from_grid']  # kWh (positief)
+            
+            charge_possible = 0
+            discharge_possible = 0
+            
+            # Bepaal welke actie nodig is (laden OF ontladen, niet beide)
             action_needed = "none"
             required_charge_mw = 0
             required_discharge_mw = 0
-
-            # Prioriteit 1: Sla overtollige PV-stroom op
+            
+            # Stap 1: Als er netlevering van PV is (grid_excl_battery negatief), laad om de PV op te slaan
             if grid_excl_battery < 0:
-                required_charge_mw = abs(grid_excl_battery) / (time_step_h * 1000)
+                # Bereken hoeveel we kunnen laden om de PV op te slaan
+                available_pv_kwh = abs(grid_excl_battery)  # kWh
+                required_charge_kwh = available_pv_kwh
+                required_charge_mw = required_charge_kwh / time_step_h / 1000  # MW
                 action_needed = "charge"
-
-            # Prioriteit 2: Voorkom netwerkoverschrijdingen
+            
+            # Stap 2: Los vermogensoverschrijdingen op (alleen als we nog geen actie hebben)
             if action_needed == "none":
+                # Overschrijding afname: grid_excl_battery > max_take_from_grid
                 if grid_excl_battery > max_take_from:
-                    required_discharge_mw = (grid_excl_battery - max_take_from) / (time_step_h * 1000)
+                    # We moeten ontladen om afname te verminderen
+                    overschrijding_kwh = grid_excl_battery - max_take_from
+                    required_discharge_kwh = overschrijding_kwh
+                    required_discharge_mw = required_discharge_kwh / time_step_h / 1000  # MW
                     action_needed = "discharge"
+                
+                # Overschrijding invoeding: grid_excl_battery < max_feed_in_grid
                 elif grid_excl_battery < max_feed_in:
-                    required_charge_mw = abs(grid_excl_battery - max_feed_in) / (time_step_h * 1000)
+                    # We moeten laden om invoeding te verminderen
+                    overschrijding_kwh = abs(grid_excl_battery - max_feed_in)
+                    required_charge_kwh = overschrijding_kwh
+                    required_charge_mw = required_charge_kwh / time_step_h / 1000  # MW
                     action_needed = "charge"
-
-            # Voer de gekozen actie uit, met respect voor de cycluslimiet
-            charge_possible = 0
-            discharge_possible = 0
-            if action_needed == "charge" and cumulative_cycles < max_cycles:
+            
+            # Stap 3: Proactieve acties om toekomstige overschrijdingen te voorkomen
+            if action_needed == "none":
+                # Als we dicht bij de grenzen zitten, handel proactief
+                margin_kwh = 10  # 10 kWh marge
+                
+                # Als we dicht bij afname overschrijding zitten
+                if grid_excl_battery > (max_take_from - margin_kwh):
+                    # Laad proactief om ruimte te maken
+                    required_charge_kwh = margin_kwh
+                    required_charge_mw = required_charge_kwh / time_step_h / 1000  # MW
+                    action_needed = "charge"
+                
+                # Als we dicht bij invoeding overschrijding zitten
+                elif grid_excl_battery < (max_feed_in + margin_kwh):
+                    # Ontlaad proactief om ruimte te maken
+                    required_discharge_kwh = margin_kwh
+                    required_discharge_mw = required_discharge_kwh / time_step_h / 1000  # MW
+                    action_needed = "discharge"
+            
+            # Voer de gekozen actie uit
+            if action_needed == "charge":
+                # Beperk door batterij vermogen en SoC
                 max_charge_mw = min(power_mw, (max_soc - current_soc) / (time_step_h * eff_ch))
                 charge_possible = min(required_charge_mw, max_charge_mw)
+                discharge_possible = 0
             elif action_needed == "discharge":
+                # Beperk door batterij vermogen en SoC
                 max_discharge_mw = min(power_mw, (current_soc - min_soc) * eff_dis / time_step_h)
                 discharge_possible = min(required_discharge_mw, max_discharge_mw)
-
+                charge_possible = 0
+            else:
+                # Geen actie nodig
+                charge_possible = 0
+                discharge_possible = 0
+            
             # Update SoC
-            current_soc += charge_possible * time_step_h * eff_ch - discharge_possible * time_step_h / eff_dis
+            current_soc = current_soc + charge_possible * time_step_h * eff_ch - discharge_possible * time_step_h / eff_dis
             current_soc = min(max(current_soc, min_soc), max_soc)
-
-            energy_charged_list.append(charge_possible * time_step_h * 1000)
-            energy_discharged_list.append(discharge_possible * time_step_h * 1000)
+            
             soc_list.append(current_soc)
-            soc_frac_list.append((current_soc - min_soc) / usable_capacity if usable_capacity > 0 else 0)
+            charge_list.append(charge_possible)
+            discharge_list.append(discharge_possible)
+            energy_charged_list.append(charge_possible * time_step_h * 1000)  # kWh
+            energy_discharged_list.append(discharge_possible * time_step_h * 1000)  # kWh
+            soc_frac_list.append((current_soc - min_soc) / (max_soc - min_soc))
+        
+        # Bereken cycli voor deze dag
+        total_charged_energy = sum(energy_charged_list) / 1000  # MWh
+        daily_cycle = (total_charged_energy * eff_ch) / usable_capacity if usable_capacity > 0 else 0
+        cumulative_cycles += daily_cycle
+        cycle_history.append(daily_cycle)
+        
+        day_data = day_data.copy()
+        day_data['energy_charged_kWh'] = energy_charged_list
+        day_data['energy_discharged_kWh'] = energy_discharged_list
+        day_data['SoC_kWh'] = [s * 1000 for s in soc_list]
+        day_data['SoC_pct'] = soc_frac_list
+        
+        # Controleer op netwerkoverschrijdingen na batterij acties
+        for i, (idx, row) in enumerate(day_data.iterrows()):
+            grid_excl_battery = row['grid_excl_battery']  # kWh
+            max_feed_in = row['max_feed_in_grid']  # kWh
+            max_take_from = row['max_take_from_grid']  # kWh
+            
+            # Netto uitwisseling met batterij
+            net_battery_exchange = (energy_charged_list[i] - energy_discharged_list[i])  # kWh
+            grid_incl_battery = grid_excl_battery + net_battery_exchange
+            
+            # Check overschrijdingen
+            if max_feed_in < 0 and grid_incl_battery < max_feed_in:
+                violation = {
+                    'datetime': idx,
+                    'type': 'feed_in',
+                    'max_allowed': abs(max_feed_in),
+                    'actual': abs(grid_incl_battery),
+                    'violation': abs(grid_incl_battery) - abs(max_feed_in)
+                }
+                network_violations.append(violation)
+            
+            if max_take_from > 0 and grid_incl_battery > max_take_from:
+                violation = {
+                    'datetime': idx,
+                    'type': 'take_from',
+                    'max_allowed': max_take_from,
+                    'actual': grid_incl_battery,
+                    'violation': grid_incl_battery - max_take_from
+                }
+                network_violations.append(violation)
+        
+        results.append(day_data)
 
-        # Update cycli voor de dag
-        daily_charged_mwh = sum(energy_charged_list) / 1000
-        cumulative_cycles += (daily_charged_mwh * eff_ch) / usable_capacity if usable_capacity > 0 else 0
-
-        day_results = day_data.copy()
-        day_results['energy_charged_kWh'] = energy_charged_list
-        day_results['energy_discharged_kWh'] = energy_discharged_list
-        day_results['SoC_kWh'] = [s * 1000 for s in soc_list]
-        day_results['SoC_pct'] = soc_frac_list
-        results.append(day_results)
-
-    final_df = pd.concat(results) if results else df.copy()
-
-    # --- CORRECTED CALCULATION BLOCK ---
-    # Bereken net uitwisseling
-    final_df['grid_exchange_kWh'] = (final_df['load'] - final_df['production_PV'] + final_df['energy_charged_kWh'] - final_df['energy_discharged_kWh'])
-    net_grid_consumption_mwh = final_df['grid_exchange_kWh'] / 1000
-
-    # Bereken kostencomponenten EERST
-    day_ahead_costs = net_grid_consumption_mwh * final_df['price_day_ahead']
-    final_df['dummy1'] = 0
-    final_df['dummy2'] = 0
-    final_df['day_ahead_result'] = day_ahead_costs
-    final_df['dummy3'] = 0
-    final_df['energy_tax'] = np.where(net_grid_consumption_mwh > 0, -net_grid_consumption_mwh * marginal_tax_rate, 0)
-    final_df['supplier_costs'] = -np.abs(net_grid_consumption_mwh) * supply_costs
-    final_df['transport_costs'] = np.where(net_grid_consumption_mwh > 0, -net_grid_consumption_mwh * transport_costs, 0)
-
-    # Bereken de totaalkolom NU
-    final_df['total_result_self_consumption'] = (final_df['day_ahead_result'] + final_df['energy_tax'] + final_df['supplier_costs'] + final_df['transport_costs'])
-
-    # Add compatibilty columns
-    final_df['space_for_charging_kWh'] = final_df['space available for charging (kWh)']
-    final_df['space_for_discharging_kWh'] = final_df['space available for discharging (kWh)']
-
-    return final_df, cumulative_cycles, network_violations
-    
+    final_df = pd.concat(results)
     total_cycles = cumulative_cycles
     
     # Voeg ontbrekende kolommen toe zoals in de hoofdfunctie
