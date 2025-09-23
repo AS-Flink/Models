@@ -33,11 +33,11 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates the detailed diagram using the safe, piece-by-piece HTML construction method.
+# Final Version: Creates a clean, logical diagram with clear interconnections.
 def create_detailed_diagram(selected_assets):
     """
-    Generates a dynamic HTML/SVG diagram with PNG icons and visible connecting lines.
-    This version builds the HTML step-by-step to avoid syntax highlighting errors.
+    Generates a dynamic HTML/SVG diagram with a clean layout and
+    dashed lines for internal asset interactions that do not overlap.
     """
     # Define paths to your icons
     icon_paths = {
@@ -63,19 +63,30 @@ def create_detailed_diagram(selected_assets):
     pv_batt_visibility = "visible" if "Solar PV" in selected_assets and "Battery" in selected_assets else "hidden"
     batt_load_visibility = "visible" if "Battery" in selected_assets and "Load" in selected_assets else "hidden"
 
-    # --- Build the HTML using a list of strings to avoid editor errors ---
+    # --- Build the HTML using a list of smaller strings ---
     html_parts = []
-    html_parts.append('<div style="position: relative; width: 100%; max-width: 650px; height: 380px; font-family: sans-serif; margin: auto;">')
+    html_parts.append('<div style="width: 100%; max-width: 700px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
 
     # SVG layer for drawing all connecting lines
     html_parts.append('<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
-    html_parts.append('<line x1="20%" y1="185" x2="44%" y2="185" stroke="#999" stroke-width="3"/>')
-    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="56%" y1="185" x2="80%" y2="55" stroke="#999" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="56%" y1="185" x2="80%" y2="185" stroke="#999" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="56%" y1="185" x2="80%" y2="315" stroke="#999" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {pv_load_visibility};"><line x1="90%" y1="65" x2="90%" y2="175" stroke="#999" stroke-width="2" stroke-dasharray="5, 5"/></g>')
-    html_parts.append(f'<g style="visibility: {batt_load_visibility};"><line x1="90%" y1="195" x2="90%" y2="305" stroke="#999" stroke-width="2" stroke-dasharray="5, 5"/></g>')
-    html_parts.append(f'<g style="visibility: {pv_batt_visibility};"><path d="M 585,55 C 520,185 520,185 585,315" stroke="#999" stroke-width="2" stroke-dasharray="5, 5" fill="none"/></g>')
+    # Main solid lines (thicker and shorter)
+    html_parts.append('<line x1="18%" y1="185" x2="45%" y2="185" stroke="#777" stroke-width="3"/>')
+    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="55%" y1="185" x2="82%" y2="55" stroke="#777" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="185" x2="82%" y2="185" stroke="#777" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="185" x2="82%" y2="315" stroke="#777" stroke-width="3"/></g>')
+
+    # Dashed interconnection lines that go AROUND assets
+    # These points create clean, right-angled paths
+    html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
+    html_parts.append('<polyline points="600,65 600,175" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('</g>')
+    html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
+    html_parts.append('<polyline points="600,195 600,305" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('</g>')
+    html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
+    html_parts.append('<polyline points="610,65 630,65 630,305 610,305" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('</g>')
+    
     html_parts.append('</svg>')
 
     # HTML layer for icons and labels
