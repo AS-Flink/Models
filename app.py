@@ -51,11 +51,12 @@ def create_detailed_diagram(selected_assets):
 
     # Define paths to your icons
     icon_paths = {
-        'grid': 'icons/power-line.png',
-        'alloc': 'icons/energy-meter.png',
-        'pv': 'icons/renewable-energy.png',
-        'batt': 'icons/energy-storage.png',
-        'load': 'icons/energy-consumption.png'
+        'grid': 'Assets/power-line.png',
+        'alloc': 'Assets/energy-meter.png',
+        'pv': 'Assets/renewable-energy.png',
+        'batt': 'Assets/energy-storage.png',
+        'load': 'Assets/energy-consumption.png'
+
     }
     
     # Prepare data for the template
