@@ -33,11 +33,11 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a clean diagram with straight, dashed interconnections.
+# Final Version: Creates a clean diagram with external, straight, dashed interconnections.
 def create_detailed_diagram(selected_assets):
     """
     Generates a dynamic HTML/SVG diagram with PNG icons and clean, straight,
-    dashed lines for internal asset interactions.
+    dashed lines for internal asset interactions that are drawn externally.
     """
     # Define paths to your icons (ensure these are correct)
     icon_paths = {
@@ -66,25 +66,26 @@ def create_detailed_diagram(selected_assets):
     html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
 
     # SVG layer for drawing all connecting lines
-    html_parts.append('<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
+    # Using a viewBox for a more consistent coordinate system
+    html_parts.append('<svg viewbox="0 0 800 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
     # Main solid lines
-    html_parts.append('<line x1="15%" y1="185" x2="45%" y2="185" stroke="#777" stroke-width="3"/>')
-    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="55%" y1="185" x2="85%" y2="55" stroke="#777" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="185" x2="85%" y2="185" stroke="#777" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="185" x2="85%" y2="315" stroke="#777" stroke-width="3"/></g>')
+    html_parts.append('<line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="3"/>')
+    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="3"/></g>')
 
-    # Dashed interconnection LINES
-    # PV -> Load
+    # Dashed interconnection LINES using a simple and robust method
+    # PV -> Load (Vertical dashed line)
     html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
-    html_parts.append('<line x1="90%" y1="85" x2="90%" y2="150" stroke="#777" stroke-width="2" stroke-dasharray="4, 4"/>')
+    html_parts.append('<line x1="710" y1="85" x2="710" y2="150" stroke="#777" stroke-width="2" stroke-dasharray="4, 4"/>')
     html_parts.append('</g>')
-    # Battery -> Load
+    # Battery -> Load (Vertical dashed line)
     html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
-    html_parts.append('<line x1="90%" y1="215" x2="90%" y2="310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4"/>')
+    html_parts.append('<line x1="710" y1="215" x2="710" y2="310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4"/>')
     html_parts.append('</g>')
-    # PV -> Battery (Right-angled path to go around the Load icon)
+    # PV -> Battery (Right-angled path made of two straight lines to go around the Load icon)
     html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
-    html_parts.append('<polyline points="680,85 720,85 720,310 680,310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<polyline points="740,80 760,80 760,310 740,310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     
     html_parts.append('</svg>')
