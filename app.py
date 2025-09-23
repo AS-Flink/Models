@@ -33,13 +33,13 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a clean, logical diagram with dashed CURVES for interconnections.
+# Final Version: Creates a clean diagram with external, curved, dashed interconnections.
 def create_detailed_diagram(selected_assets):
     """
     Generates a dynamic HTML/SVG diagram with PNG icons and clean, curved,
-    dashed lines for internal asset interactions.
+    dashed lines for internal asset interactions that are drawn externally.
     """
-    # Define paths to your icons (ensure this 'Assets' folder is correct)
+    # Define paths to your icons (ensure these are correct)
     icon_paths = {
         'grid': 'Assets/power-line.png',
         'alloc': 'Assets/energy-meter.png',
@@ -69,22 +69,22 @@ def create_detailed_diagram(selected_assets):
 
     # SVG layer for drawing all connecting lines
     html_parts.append('<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
-    # Main solid lines (thicker and shorter)
+    # Main solid lines
     html_parts.append('<line x1="18%" y1="185" x2="45%" y2="185" stroke="#777" stroke-width="3"/>')
     html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="55%" y1="185" x2="82%" y2="55" stroke="#777" stroke-width="3"/></g>')
     html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="185" x2="82%" y2="185" stroke="#777" stroke-width="3"/></g>')
     html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="185" x2="82%" y2="315" stroke="#777" stroke-width="3"/></g>')
 
-    # Dashed interconnection CURVES
-    # These <path> elements draw Bezier curves to connect assets cleanly.
+    # Dashed interconnection CURVES drawn OUTSIDE the assets
+    # These <path> elements use Bezier curves for a clean look.
     html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
-    html_parts.append('<path d="M 585 85 C 585 135, 585 135, 585 185" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 625 80 C 655 110, 655 150, 625 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
-    html_parts.append('<path d="M 585 215 C 585 265, 585 265, 585 315" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 625 310 C 655 280, 655 220, 625 190" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
-    html_parts.append('<path d="M 610 55 C 510 185, 510 185, 610 315" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 640 80 C 720 135, 720 235, 640 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     
     html_parts.append('</svg>')
