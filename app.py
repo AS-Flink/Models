@@ -33,11 +33,11 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a clean diagram with smaller, dashed interconnections.
+# Final Version: Creates a clean diagram with external, curved, dashed interconnections.
 def create_detailed_diagram(selected_assets):
     """
-    Generates a dynamic HTML/SVG diagram with PNG icons and fine,
-    dashed lines for internal asset interactions.
+    Generates a dynamic HTML/SVG diagram with PNG icons and clean, curved,
+    dashed lines for internal asset interactions that are drawn externally.
     """
     # Define paths to your icons (ensure these are correct)
     icon_paths = {
@@ -66,6 +66,7 @@ def create_detailed_diagram(selected_assets):
     html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
 
     # SVG layer for drawing all connecting lines
+    # Using a viewBox for a consistent coordinate system
     html_parts.append('<svg viewbox="0 0 800 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
     # Main solid lines
     html_parts.append('<line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="3"/>')
@@ -73,18 +74,16 @@ def create_detailed_diagram(selected_assets):
     html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="3"/></g>')
     html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="3"/></g>')
 
-    # Dashed interconnection LINES with smaller dashes
+    # Dashed interconnection CURVES drawn OUTSIDE the assets
+    # These <path> elements use Bezier curves: M(start) C(control1), (control2), (end)
     html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
-    # Changed stroke-dasharray from "4, 4" to "2, 2"
-    html_parts.append('<line x1="710" y1="85" x2="710" y2="150" stroke="#777" stroke-width="2" stroke-dasharray="2, 2"/>')
+    html_parts.append('<path d="M 710 80 C 740 110, 740 150, 710 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
-    # Changed stroke-dasharray from "4, 4" to "2, 2"
-    html_parts.append('<line x1="710" y1="215" x2="710" y2="310" stroke="#777" stroke-width="2" stroke-dasharray="2, 2"/>')
+    html_parts.append('<path d="M 710 210 C 740 240, 740 280, 710 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
-    # Changed stroke-dasharray from "4, 4" to "2, 2"
-    html_parts.append('<polyline points="740,80 760,80 760,310 740,310" stroke="#777" stroke-width="2" stroke-dasharray="2, 2" fill="none"/>')
+    html_parts.append('<path d="M 730 80 C 810 135, 810 235, 730 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     
     html_parts.append('</svg>')
