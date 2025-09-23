@@ -773,8 +773,10 @@ def show_revenue_analysis_page():
                 ("Simple Battery Trading (Imbalance)", "Advanced Whole-System Trading (Imbalance)")
             )
 
-        # This section is conditional on the "Battery" asset being selected
-        if "Battery" in selected_assets:
+        # --- THIS SECTION IS CORRECTED ---
+        # It now checks if "Battery" is in the selected situation's NAME string.
+        # .get() is used to prevent an error on the first run.
+        if "Battery" in st.session_state.get('selected_situation', ''):
             st.subheader("Battery Parameters")
             power_mw = st.number_input("Power (MW)", value=1.0, min_value=0.1, step=0.1)
             capacity_mwh = st.number_input("Capacity (MWh)", value=2.0, min_value=0.1, step=0.1)
@@ -784,8 +786,9 @@ def show_revenue_analysis_page():
             eff_dis = st.slider("Discharging Efficiency", 0.8, 1.0, 0.95)
             max_cycles = st.number_input("Max Cycles per Year", value=600, min_value=1)
         else:
-            # If no battery, set default zero/placeholder values
+            # If the selected situation does not contain a battery, set default zero/placeholder values
             power_mw, capacity_mwh, min_soc, max_soc, eff_ch, eff_dis, max_cycles = 0, 0, 0, 1, 1, 1, 0
+        # --- END OF CORRECTION ---
 
         st.subheader("Cost Parameters")
         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0)
@@ -798,7 +801,7 @@ def show_revenue_analysis_page():
     situation = st.session_state.get('selected_situation', "Situation 1: PV + Consumption on PAP")
     
     # Create and display the diagram for the selected situation
-    # The get_image_as_base64 function should be defined at the top of your script
+    # The get_image_as_base64 and create_advanced_diagram functions should be defined elsewhere in your script
     icons_b64 = {
         'grid': get_image_as_base64('Assets/power-line.png'),
         'alloc': get_image_as_base64('Assets/energy-meter.png'),
@@ -810,6 +813,7 @@ def show_revenue_analysis_page():
     st.markdown(html_diagram, unsafe_allow_html=True)
         
     st.markdown("---")
+
 
 
     # if not selected_assets:
