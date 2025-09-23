@@ -431,116 +431,379 @@ def get_image_as_base64(path):
 #     return "".join(html_parts)
 
 
-# Final Version: Creates a clean diagram with correct single and double-sided arrows.
+# # Final Version: Creates a clean diagram with correct single and double-sided arrows.
+# def create_detailed_diagram(situation_name, icons_b64):
+#     """
+#     Generates the correct and clean HTML/SVG diagram for any of the 7 situations,
+#     with all lines converted to directional arrows.
+#     """
+#     # Define SVG arrowhead markers. We'll use these to add arrows to our lines.
+#     arrow_defs = """
+#         <defs>
+#             <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+#             </marker>
+#             <marker id="arrow-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 10 0 L 0 5 L 10 10 z" fill="#777" />
+#             </marker>
+#             <marker id="arrow-end-dashed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+#             </marker>
+#         </defs>
+#     """
+
+#     # --- Reusable Node Component Functions ---
+#     def create_node(icon_name, label, x, y):
+#         node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
+#         icon_html = f'<image href="{icons_b64.get(icon_name, "")}" x="30" y="10" width="60" height="60"/>'
+#         return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">{label}</text>{icon_html}</g>'
+
+#     # Initialize lists to hold the components for the selected situation
+#     nodes_to_draw = [create_node('grid', 'Grid Connection', 50, 150)]
+#     lines_to_draw = []
+
+#     # --- Configure the diagram for each situation ---
+#     if "Situation 1" in situation_name:
+#         nodes_to_draw.extend([create_node('alloc', 'PAP', 350, 150), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150)])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="200" x2="350" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<line x1="470" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
+#             '<line x1="470" y1="200" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 2" in situation_name:
+#         nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP', 460, 20), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150)])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>'
+#         ])
+#     elif "Situation 3" in situation_name:
+#         nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP', 460, 280), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="380" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
+#             '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 4" in situation_name:
+#         nodes_to_draw.extend([create_node('alloc', 'PAP', 350, 150), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="200" x2="350" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<line x1="470" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
+#             '<line x1="470" y1="200" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="470" y1="200" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<path d="M 690 85 C 740 125, 740 165, 690 190" class="dashed-line" marker-end="url(#arrow-end-dashed)"/>',
+#             '<path d="M 690 215 C 740 250, 740 285, 690 320" class="dashed-line" marker-start="url(#arrow-start-dashed)"/>',
+#             '<path d="M 720 80 C 780 145, 780 245, 720 310" class="dashed-line" marker-start="url(#arrow-start-dashed)" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 5" in situation_name:
+#         nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP', 460, 20), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
+#             '<line x1="520" y1="120" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<path d="M 690 85 C 740 155, 740 245, 690 320" class="dashed-line" marker-start="url(#arrow-start-dashed)" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 6" in situation_name:
+#         nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP 1', 460, 280), create_node('alloc', 'SAP 2', 460, 20), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
+#             '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
+#             '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>'
+#         ])
+#     elif "Situation 7" in situation_name:
+#         nodes_to_draw.extend([create_node('alloc', 'PAP', 350, 150), create_node('pv', 'Solar PV', 650, 20), create_node('batt', 'Battery', 650, 280)])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="200" x2="350" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<line x1="470" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
+#             '<line x1="470" y1="200" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
+#             '<path d="M 700 85 C 750 155, 750 245, 700 320" class="interaction-line" marker-start="url(#arrow-start-dashed)" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+
+#     # --- Build the final HTML string ---
+#     svg_content = "\n".join(lines_to_draw + nodes_to_draw)
+    
+#     html_parts = []
+#     html_parts.append('<div style="width: 100%; max-width: 850px; height: 400px; font-family: sans-serif; position: relative; margin: auto;">')
+#     html_parts.append('<svg viewBox="0 0 850 400" style="width: 100%; height: 100%;">')
+#     html_parts.append(arrow_defs)
+#     html_parts.append(svg_content)
+#     html_parts.append('</svg>')
+#     html_parts.append('</div>')
+
+#     return "".join(html_parts)
+
 def create_detailed_diagram(situation_name, icons_b64):
     """
-    Generates the correct and clean HTML/SVG diagram for any of the 7 situations,
-    with all lines converted to directional arrows.
+    Generates the HTML/SVG diagram for any of the 7 situations,
+    mirroring the provided visual layouts with correct arrows and meters.
     """
-    # Define SVG arrowhead markers. We'll use these to add arrows to our lines.
+    # Define SVG arrow markers based on your images
     arrow_defs = """
         <defs>
-            <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+            <marker id="arrow-yellow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#FDB813" />
             </marker>
-            <marker id="arrow-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 10 0 L 0 5 L 10 10 z" fill="#777" />
-            </marker>
-            <marker id="arrow-end-dashed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+            <marker id="arrow-yellow-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 10 0 L 0 5 L 10 10 z" fill="#FDB813" />
             </marker>
         </defs>
     """
 
-    # --- Reusable Node Component Functions ---
-    def create_node(icon_name, label, x, y):
-        node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
-        icon_html = f'<image href="{icons_b64.get(icon_name, "")}" x="30" y="10" width="60" height="60"/>'
-        return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">{label}</text>{icon_html}</g>'
+    # --- Reusable Component Functions ---
+    def create_blue_box(label, x, y):
+        return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="70" rx="8" fill="#1C3F5E" stroke="#1C3F5E" stroke-width="1.5"/><text x="60" y="40" text-anchor="middle" font-weight="bold" font-size="14px" fill="white">{label}</text></g>'
 
-    # Initialize lists to hold the components for the selected situation
-    nodes_to_draw = [create_node('grid', 'Grid Connection', 50, 150)]
+    def create_gray_meter(label, x, y):
+        return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="70" rx="8" fill="#6c757d" stroke="#5a6268" stroke-width="1.5"/><text x="60" y="40" text-anchor="middle" font-weight="bold" font-size="14px" fill="white">{label}</text></g>'
+    
+    def create_dark_blue_meter(label, x, y):
+        return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="70" rx="8" fill="#1C3F5E" stroke="#1C3F5E" stroke-width="1.5"/><text x="60" y="40" text-anchor="middle" font-weight="bold" font-size="14px" fill="white">{label}</text></g>'
+
+    def create_purple_box(label, x, y):
+        return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="70" rx="8" fill="#6f42c1" stroke="#5a32a3" stroke-width="1.5"/><text x="60" y="40" text-anchor="middle" font-weight="bold" font-size="14px" fill="white">{label}</text></g>'
+    
+    # Initialize drawing lists
+    nodes_to_draw = []
     lines_to_draw = []
 
-    # --- Configure the diagram for each situation ---
+    # Common components that appear in most diagrams
+    common_nodes = {
+        'PV': create_blue_box('PV', 100, 50),
+        'Verbruik gebouw': create_blue_box('Verbruik\ngebouw', 300, 50),
+        'meter PV': create_gray_meter('meter PV', 100, 150),
+        'Hoofdmeter': create_gray_meter('Hoofdmeter', 300, 350),
+        'stroomnet': create_purple_box('stroomnet', 300, 450)
+    }
+
+    # Line drawing helper (adjusted for common style in your images)
+    # Most arrows are yellow, solid, and single-ended unless specified or clearly double-ended in images.
+    def draw_line(x1, y1, x2, y2, start_marker="", end_marker=""):
+        return f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#FDB813" stroke-width="4" {start_marker} {end_marker}/>'
+
+    def draw_path(d_attr, start_marker="", end_marker=""):
+        return f'<path d="{d_attr}" stroke="#FDB813" stroke-width="4" fill="none" {start_marker} {end_marker}/>'
+
+    # --- Diagram configurations based on situation_name ---
     if "Situation 1" in situation_name:
-        nodes_to_draw.extend([create_node('alloc', 'PAP', 350, 150), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150)])
-        lines_to_draw.extend([
-            '<line x1="170" y1="200" x2="350" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<line x1="470" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
-            '<line x1="470" y1="200" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+        nodes_to_draw.extend([
+            common_nodes['PV'],
+            common_nodes['Verbruik gebouw'],
+            common_nodes['meter PV'],
+            create_dark_blue_meter('PAP', 450, 250),
+            common_nodes['Hoofdmeter'],
+            common_nodes['stroomnet']
         ])
-    elif "Situation 2" in situation_name:
-        nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP', 460, 20), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150)])
         lines_to_draw.extend([
-            '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>'
-        ])
-    elif "Situation 3" in situation_name:
-        nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP', 460, 280), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
-        lines_to_draw.extend([
-            '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="380" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
-            '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
-        ])
-    elif "Situation 4" in situation_name:
-        nodes_to_draw.extend([create_node('alloc', 'PAP', 350, 150), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
-        lines_to_draw.extend([
-            '<line x1="170" y1="200" x2="350" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<line x1="470" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
-            '<line x1="470" y1="200" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="470" y1="200" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<path d="M 690 85 C 740 125, 740 165, 690 190" class="dashed-line" marker-end="url(#arrow-end-dashed)"/>',
-            '<path d="M 690 215 C 740 250, 740 285, 690 320" class="dashed-line" marker-start="url(#arrow-start-dashed)"/>',
-            '<path d="M 720 80 C 780 145, 780 245, 720 310" class="dashed-line" marker-start="url(#arrow-start-dashed)" marker-end="url(#arrow-end-dashed)"/>'
-        ])
-    elif "Situation 5" in situation_name:
-        nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP', 460, 20), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
-        lines_to_draw.extend([
-            '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
-            '<line x1="520" y1="120" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<path d="M 690 85 C 740 155, 740 245, 690 320" class="dashed-line" marker-start="url(#arrow-start-dashed)" marker-end="url(#arrow-end-dashed)"/>'
-        ])
-    elif "Situation 6" in situation_name:
-        nodes_to_draw.extend([create_node('alloc', 'PAP', 260, 150), create_node('alloc', 'SAP 1', 460, 280), create_node('alloc', 'SAP 2', 460, 20), create_node('pv', 'Solar PV', 650, 20), create_node('load', 'Base Load', 650, 150), create_node('batt', 'Battery', 650, 280)])
-        lines_to_draw.extend([
-            '<line x1="170" y1="200" x2="260" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<line x1="380" y1="200" x2="650" y2="200" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end)"/>',
-            '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
-            '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>'
-        ])
-    elif "Situation 7" in situation_name:
-        nodes_to_draw.extend([create_node('alloc', 'PAP', 350, 150), create_node('pv', 'Solar PV', 650, 20), create_node('batt', 'Battery', 650, 280)])
-        lines_to_draw.extend([
-            '<line x1="170" y1="200" x2="350" y2="200" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<line x1="470" y1="200" x2="650" y2="70" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)"/>',
-            '<line x1="470" y1="200" x2="650" y2="320" stroke="#777" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>',
-            '<path d="M 700 85 C 750 155, 750 245, 700 320" class="interaction-line" marker-start="url(#arrow-start-dashed)" marker-end="url(#arrow-end-dashed)"/>'
+            # PV -> meter PV
+            draw_line(160, 120, 160, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Verbruik gebouw -> Hoofdmeter via curve
+            draw_path('M 360 120 V 200 H 480 V 250', end_marker='marker-end="url(#arrow-yellow-end)"'), # Corrected path
+            # meter PV -> PAP
+            draw_line(160, 220, 450, 285, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PAP -> Hoofdmeter
+            draw_line(510, 320, 360, 350, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Hoofdmeter <-> stroomnet (double-sided)
+            draw_line(360, 420, 360, 450, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"')
         ])
 
-    # --- Build the final HTML string ---
-    svg_content = "\n".join(lines_to_draw + nodes_to_draw)
-    
+    elif "Situation 2" in situation_name:
+        nodes_to_draw.extend([
+            common_nodes['PV'],
+            common_nodes['Verbruik gebouw'],
+            common_nodes['meter PV'],
+            create_dark_blue_meter('SAP', 200, 250), # SAP moved to match image 2
+            create_dark_blue_meter('PAP', 400, 250), # PAP moved to match image 2
+            common_nodes['Hoofdmeter'],
+            common_nodes['stroomnet']
+        ])
+        lines_to_draw.extend([
+            # PV -> meter PV
+            draw_line(160, 120, 160, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Verbruik gebouw -> PAP (via curve)
+            draw_path('M 360 120 V 200 H 460 V 250', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter PV -> SAP
+            draw_line(160, 220, 260, 250, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # SAP -> PAP
+            draw_line(260, 285, 400, 285, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PAP -> Hoofdmeter
+            draw_line(460, 320, 360, 350, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Hoofdmeter <-> stroomnet (double-sided)
+            draw_line(360, 420, 360, 450, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"')
+        ])
+
+    elif "Situation 3" in situation_name:
+        nodes_to_draw.extend([
+            common_nodes['PV'],
+            common_nodes['Verbruik gebouw'],
+            create_blue_box('Batterij', 500, 50),
+            common_nodes['meter PV'],
+            create_gray_meter('meter batterij', 500, 150),
+            create_dark_blue_meter('PAP', 300, 250), # Centered PAP
+            create_dark_blue_meter('SAP', 450, 250), # SAP to the right of PAP
+            common_nodes['Hoofdmeter'],
+            common_nodes['stroomnet']
+        ])
+        lines_to_draw.extend([
+            # PV -> meter PV
+            draw_line(160, 120, 160, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Verbruik gebouw -> PAP (curve)
+            draw_path('M 360 120 V 200 H 360 V 250', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Batterij -> meter batterij
+            draw_line(560, 120, 560, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter PV -> PAP
+            draw_line(160, 220, 300, 285, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter batterij -> SAP
+            draw_line(560, 220, 510, 250, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # SAP -> PAP
+            draw_line(450, 285, 360, 285, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PAP -> Hoofdmeter
+            draw_line(360, 320, 360, 350, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Hoofdmeter <-> stroomnet (double-sided)
+            draw_line(360, 420, 360, 450, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"')
+        ])
+
+    elif "Situation 4" in situation_name:
+        nodes_to_draw.extend([
+            common_nodes['PV'],
+            common_nodes['Verbruik gebouw'],
+            create_blue_box('Batterij', 500, 50),
+            common_nodes['meter PV'],
+            create_gray_meter('meter batterij', 500, 150),
+            common_nodes['Hoofdmeter'],
+            create_dark_blue_meter('PAP', 300, 450), # PAP below Hoofdmeter
+            common_nodes['stroomnet']
+        ])
+        lines_to_draw.extend([
+            # PV -> meter PV
+            draw_line(160, 120, 160, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Verbruik gebouw -> Hoofdmeter (curve)
+            draw_path('M 360 120 V 200 H 360 V 350', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Batterij -> meter batterij
+            draw_line(560, 120, 560, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter PV -> Hoofdmeter (curve)
+            draw_path('M 160 220 V 300 H 360 V 350', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter batterij -> Hoofdmeter (curve, double-sided based on image)
+            draw_path('M 560 220 V 300 H 360 V 350', start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Hoofdmeter <-> PAP (double-sided)
+            draw_line(360, 420, 360, 450, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PAP <-> stroomnet (double-sided)
+            draw_line(360, 520, 360, 550, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"') # Placeholder for stroomnet below PAP
+        ])
+        
+    elif "Situation 5" in situation_name:
+        nodes_to_draw.extend([
+            common_nodes['Verbruik gebouw'], # Verbruik gebouw is on left for sit 5
+            common_nodes['PV'],
+            create_blue_box('Batterij', 500, 50),
+            common_nodes['meter PV'],
+            create_gray_meter('meter batterij', 500, 150),
+            create_dark_blue_meter('PAP', 100, 250), # PAP on left
+            create_dark_blue_meter('SAP', 250, 250), # SAP to the right of PAP
+            common_nodes['Hoofdmeter'],
+            common_nodes['stroomnet']
+        ])
+        lines_to_draw.extend([
+            # Verbruik gebouw -> PAP
+            draw_line(160, 120, 160, 250, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PV -> meter PV
+            draw_line(360, 120, 360, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Batterij -> meter batterij
+            draw_line(560, 120, 560, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter PV -> SAP
+            draw_line(360, 220, 310, 250, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter batterij -> SAP (double-sided)
+            draw_line(560, 220, 380, 285, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # SAP -> PAP
+            draw_line(310, 285, 220, 285, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PAP -> Hoofdmeter
+            draw_line(160, 320, 360, 350, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Hoofdmeter <-> stroomnet (double-sided)
+            draw_line(360, 420, 360, 450, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"')
+        ])
+
+    elif "Situation 6" in situation_name:
+        nodes_to_draw.extend([
+            common_nodes['Verbruik gebouw'], # Verbruik gebouw on left
+            common_nodes['PV'],
+            create_blue_box('Batterij', 500, 50),
+            common_nodes['meter PV'],
+            create_gray_meter('meter batterij', 500, 150),
+            create_dark_blue_meter('PAP', 100, 250), # PAP on left
+            create_dark_blue_meter('SAP1', 250, 250), # SAP1 center-left
+            create_dark_blue_meter('SAP2', 400, 250), # SAP2 center-right
+            common_nodes['Hoofdmeter'],
+            common_nodes['stroomnet']
+        ])
+        lines_to_draw.extend([
+            # Verbruik gebouw -> PAP
+            draw_line(160, 120, 160, 250, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PV -> meter PV
+            draw_line(360, 120, 360, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Batterij -> meter batterij
+            draw_line(560, 120, 560, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter PV -> SAP1
+            draw_line(360, 220, 310, 250, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter batterij -> SAP2 (double-sided)
+            draw_line(560, 220, 460, 285, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # SAP1 -> PAP
+            draw_line(310, 285, 220, 285, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # SAP2 -> PAP
+            draw_line(460, 285, 360, 285, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PAP -> Hoofdmeter
+            draw_line(160, 320, 360, 350, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Hoofdmeter <-> stroomnet (double-sided)
+            draw_line(360, 420, 360, 450, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"')
+        ])
+
+    elif "Situation 7" in situation_name:
+        nodes_to_draw.extend([
+            common_nodes['PV'],
+            create_blue_box('Batterij', 300, 50),
+            common_nodes['meter PV'],
+            create_gray_meter('meter batterij', 300, 150),
+            common_nodes['Hoofdmeter'],
+            create_dark_blue_meter('PAP', 300, 450), # PAP below Hoofdmeter
+            common_nodes['stroomnet']
+        ])
+        lines_to_draw.extend([
+            # PV -> meter PV
+            draw_line(160, 120, 160, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Batterij -> meter batterij
+            draw_line(360, 120, 360, 150, end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter PV -> Hoofdmeter (curve)
+            draw_path('M 160 220 V 300 H 360 V 350', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # meter batterij -> Hoofdmeter (curve, double-sided)
+            draw_path('M 360 220 V 300 H 360 V 350', start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # Hoofdmeter <-> PAP (double-sided)
+            draw_line(360, 420, 360, 450, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"'),
+            # PAP <-> stroomnet (double-sided)
+            draw_line(360, 520, 360, 550, start_marker='marker-start="url(#arrow-yellow-start)"', end_marker='marker-end="url(#arrow-yellow-end)"') # Placeholder for stroomnet below PAP
+        ])
+
+
+    # --- Assemble the final SVG and HTML ---
+    svg_content = "\n".join(nodes_to_draw + lines_to_draw)
+
     html_parts = []
-    html_parts.append('<div style="width: 100%; max-width: 850px; height: 400px; font-family: sans-serif; position: relative; margin: auto;">')
-    html_parts.append('<svg viewBox="0 0 850 400" style="width: 100%; height: 100%;">')
+    html_parts.append('<div style="width: 100%; max-width: 800px; height: 600px; font-family: sans-serif; position: relative; margin: auto;">')
+    html_parts.append('<svg viewBox="0 0 800 600" style="width: 100%; height: 100%;">') # Adjusted viewBox height
     html_parts.append(arrow_defs)
     html_parts.append(svg_content)
     html_parts.append('</svg>')
     html_parts.append('</div>')
 
     return "".join(html_parts)
+
 # --- Add these new helper functions to your main app script ---
 
 def find_total_result_column(df):
