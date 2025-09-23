@@ -116,110 +116,84 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final, Advanced Diagram Function - Corrected for AttributeError
-def create_detailed_diagram(situation_name, icons_b64):
+# Final Version: Creates a complete diagram using the safe, piece-by-piece HTML/SVG construction method.
+def create_advanced_diagram(situation_name, icons_b64):
     """
-    Generates the correct and clean HTML/SVG diagram for any of the 7 situations.
-    This version fixes the AttributeError by correctly joining the list of SVG elements.
+    Generates the correct and clean HTML/SVG diagram for any of the 7 situations
+    using a piece-by-piece method to avoid editor syntax errors.
     """
-    # This list will hold all the SVG elements (nodes and lines) for the selected situation.
-    svg_elements = []
-    
-    # Define a common style for the rounded boxes
-    node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
-
-    # Define the SVG code for each node once, to be used in the situations below
-    nodes = {
-        'grid': f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>',
-        'pap': f'<g transform="translate(350, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>',
-        'pap_alt': f'<g transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>',
-        'pv': f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>',
-        'load': f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Base Load</text></g>',
-        'batt': f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Battery</text></g>',
-        'sap': f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP</text></g>',
-        'sap_alt': f'<g transform="translate(460, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP</text></g>',
-        'sap1': f'<g transform="translate(460, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP 1</text></g>',
-        'sap2': f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP 2</text></g>',
+    # 1. Initialize visibility for all components to 'hidden'
+    vis = {
+        'grid': 'visible', 'pv': 'hidden', 'load': 'hidden', 'batt': 'hidden',
+        'pap': 'hidden', 'sap1': 'hidden', 'sap2': 'hidden',
+        'line_grid_pap': 'hidden', 'line_pap_load': 'hidden',
+        'line_pap_pv': 'hidden', 'line_pap_batt': 'hidden',
+        'line_pap_sap1': 'hidden', 'line_pap_sap2': 'hidden',
+        'line_sap1_batt': 'hidden', 'line_sap2_pv': 'hidden',
+        'dash_pv_load': 'hidden', 'dash_batt_load': 'hidden', 'dash_pv_batt': 'hidden',
+        'dash_pap_sap': 'hidden'
     }
 
-    # --- Define the layout and connections for EACH situation ---
-    svg_elements.append(nodes['grid']) # Grid is always present
-
+    # 2. Set components to 'visible' based on the selected situation
     if "Situation 1" in situation_name:
-        svg_elements.extend([nodes['pap'], nodes['pv'], nodes['load']])
-        svg_elements.append('<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="470" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>')
-
+        vis.update({'pap': 'visible', 'pv': 'visible', 'load': 'visible', 'line_grid_pap': 'visible', 'line_pap_pv': 'visible', 'line_pap_load': 'visible', 'dash_pv_load': 'visible'})
     elif "Situation 2" in situation_name:
-        svg_elements.extend([nodes['pap_alt'], nodes['sap'], nodes['pv'], nodes['load']])
-        svg_elements.append('<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2"/>')
-
+        vis.update({'pap': 'visible', 'sap1': 'visible', 'pv': 'visible', 'load': 'visible', 'line_grid_pap': 'visible', 'line_pap_load': 'visible', 'line_pap_sap1': 'visible', 'line_sap1_pv': 'visible'})
     elif "Situation 3" in situation_name:
-        svg_elements.extend([nodes['pap_alt'], nodes['sap_alt'], nodes['pv'], nodes['load'], nodes['batt']])
-        svg_elements.append('<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="380" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
-        svg_elements.append('<path d="M 350 250 C 420 270, 420 270, 460 300" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
-
+        vis.update({'pap': 'visible', 'sap1': 'visible', 'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'line_grid_pap': 'visible', 'line_pap_load': 'visible', 'line_pap_pv': 'visible', 'line_pap_sap1': 'visible', 'line_sap1_batt': 'visible', 'dash_pv_load': 'visible', 'dash_pap_sap': 'visible'})
     elif "Situation 4" in situation_name:
-        svg_elements.extend([nodes['pap'], nodes['pv'], nodes['load'], nodes['batt']])
-        svg_elements.append('<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="470" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none"/>')
-        svg_elements.append('<path d="M 690 215 C 740 250, 740 285, 690 320" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none"/>')
-        svg_elements.append('<path d="M 720 80 C 780 145, 780 245, 720 310" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none"/>')
-
+        vis.update({'pap': 'visible', 'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'line_grid_pap': 'visible', 'line_pap_pv': 'visible', 'line_pap_load': 'visible', 'line_pap_batt': 'visible', 'dash_pv_load': 'visible', 'dash_batt_load': 'visible', 'dash_pv_batt': 'visible'})
     elif "Situation 5" in situation_name:
-        svg_elements.extend([nodes['pap_alt'], nodes['sap'], nodes['pv'], nodes['load'], nodes['batt']])
-        svg_elements.append('<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="520" y1="120" x2="650" y2="320" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<path d="M 690 85 C 740 155, 740 245, 690 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
-
+        vis.update({'pap': 'visible', 'sap1': 'visible', 'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'line_grid_pap': 'visible', 'line_pap_load': 'visible', 'line_pap_sap1': 'visible', 'line_sap1_pv': 'visible', 'line_sap1_batt': 'visible', 'dash_pv_batt': 'visible'})
     elif "Situation 6" in situation_name:
-        svg_elements.extend([nodes['pap_alt'], nodes['sap1'], nodes['sap2'], nodes['pv'], nodes['load'], nodes['batt']])
-        svg_elements.append('<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2"/>')
-    
+        vis.update({'pap': 'visible', 'sap1': 'visible', 'sap2': 'visible', 'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'line_grid_pap': 'visible', 'line_pap_load': 'visible', 'line_pap_sap2': 'visible', 'line_pap_sap1': 'visible', 'line_sap2_pv': 'visible', 'line_sap1_batt': 'visible'})
     elif "Situation 7" in situation_name:
-        svg_elements.extend([nodes['pap'], nodes['pv'], nodes['batt']])
-        svg_elements.append('<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2"/>')
-        svg_elements.append('<path d="M 700 85 C 750 155, 750 245, 700 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+        vis.update({'pap': 'visible', 'pv': 'visible', 'batt': 'visible', 'line_grid_pap': 'visible', 'line_pap_pv': 'visible', 'line_pap_batt': 'visible', 'dash_pv_batt': 'visible'})
 
-    # --- Build the final HTML from the collected SVG parts ---
-    # CORRECTED LINE: Join the list of svg_elements directly.
-    svg_content = "\n".join(svg_elements)
+    # 3. Build the HTML and SVG string piece by piece
+    html_parts = []
+    html_parts.append('<div style="width: 100%; max-width: 850px; height: 400px; font-family: sans-serif; position: relative; margin: auto;">')
+    html_parts.append('<svg viewBox="0 0 850 400" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 13px;">')
+    html_parts.append("""
+        <style>
+            .node-text { text-anchor: middle; font-weight: bold; fill: #333; }
+            .solid-line { stroke: #777; stroke-width: 2; }
+            .dashed-line { stroke: #777; stroke-width: 1.5; stroke-dasharray: 4, 4; fill: none; }
+            .interaction-line { stroke: #FDB813; stroke-width: 3; stroke-dasharray: 5, 5; fill: none; }
+        </style>
+    """)
+    # Append Lines
+    html_parts.append(f'<g visibility="{vis["line_grid_pap"]}"><line x1="170" y1="200" x2="260" y2="200" class="solid-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["line_pap_load"]}"><line x1="380" y1="200" x2="650" y2="200" class="solid-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["line_pap_pv"]}"><line x1="380" y1="200" x2="650" y2="70" class="solid-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["line_pap_batt"]}"><line x1="380" y1="200" x2="650" y2="330" class="solid-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["line_pap_sap1"]}"><line x1="320" y1="250" x2="460" y2="320" class="solid-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["line_pap_sap2"]}"><line x1="320" y1="150" x2="460" y2="80" class="solid-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["line_sap1_batt"]}"><line x1="580" y1="320" x2="650" y2="320" class="solid-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["line_sap2_pv"]}"><line x1="580" y1="80" x2="650" y2="70" class="solid-line"/></g>')
     
-    html = f"""
-    <div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">
-        <svg viewBox="0 0 800 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 13px;">
-            <style>
-                .node text {{ text-anchor: middle; font-weight: bold; fill: #333; }}
-            </style>
-            
-            {svg_content}
-        </svg>
-    </div>
-    """
-    return html
+    # Append Dashed Interactions
+    html_parts.append(f'<g visibility="{vis["dash_pv_load"]}"><path d="M 690 135 C 740 155, 740 175, 690 195" class="dashed-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["dash_batt_load"]}"><path d="M 690 225 C 740 245, 740 275, 690 295" class="dashed-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["dash_pv_batt"]}"><path d="M 720 80 C 780 145, 780 245, 720 310" class="dashed-line"/></g>')
+    html_parts.append(f'<g visibility="{vis["dash_pap_sap"]}"><path d="M 350 250 C 420 270, 420 270, 460 300" class="interaction-line"/></g>')
+
+    # Append Nodes
+    node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
+    html_parts.append(f'<g visibility="{vis["grid"]}" transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text class="node-text" x="60" y="90">Grid Connection</text></g>')
+    html_parts.append(f'<g visibility="{vis["pap"]}" transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text class="node-text" x="60" y="90">PAP</text></g>')
+    html_parts.append(f'<g visibility="{vis["sap1"]}" transform="translate(460, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text class="node-text" x="60" y="90">SAP 1</text></g>')
+    html_parts.append(f'<g visibility="{vis["sap2"]}" transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text class="node-text" x="60" y="90">SAP 2</text></g>')
+    html_parts.append(f'<g visibility="{vis["pv"]}" transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text class="node-text" x="60" y="90">Solar PV</text></g>')
+    html_parts.append(f'<g visibility="{vis["load"]}" transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text class="node-text" x="60" y="90">Base Load</text></g>')
+    html_parts.append(f'<g visibility="{vis["batt"]}" transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text class="node-text" x="60" y="90">Battery</text></g>')
+    
+    # Close SVG and div tags
+    html_parts.append('</svg>')
+    html_parts.append('</div>')
+    
+    # Join all the pieces into a single, valid HTML string
+    return "".join(html_parts)
     
 # --- Add these new helper functions to your main app script ---
 
