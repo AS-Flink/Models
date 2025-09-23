@@ -103,127 +103,157 @@ def get_image_as_base64(path):
 #     # Join all the pieces into a single HTML string and return it
 #     return "".join(html_parts)
 # Final, Advanced Diagram Function - Handles all 7 Situations
-# Final, Advanced Diagram Function - Handles all 7 Situations
-def create_detailed_diagram(situation_name, icons_b64):
+# Final Version: Creates a complete and robust diagram within a single SVG element.
+def create_advanced_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations.
     This version builds the entire visual inside a single SVG for precise control.
     """
-    # Default visibility for all optional assets and points
-    vis = {
-        'pv': 'hidden', 'load': 'hidden', 'batt': 'hidden',
-        'pap': 'hidden', 'sap1': 'hidden', 'sap2': 'hidden'
+    # This dictionary will hold the SVG code parts for each visible element.
+    svg_elements = {
+        'grid_node': '', 'pap_node': '', 'sap1_node': '', 'sap2_node': '',
+        'pv_node': '', 'load_node': '', 'batt_node': '', 'lines': ''
     }
-    lines = "" # This will hold the SVG code for the lines
+
+    # Define common node style for the rounded boxes
+    node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
 
     # --- Define the layout and connections for EACH situation ---
 
     # Situation 1: PV + Consumption on PAP
     if "Situation 1" in situation_name:
-        vis.update({'pv': 'visible', 'load': 'visible', 'pap': 'visible'})
-        lines = """
-            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
-            <path d="M 690 85 C 720 120, 720 150, 690 180" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+        svg_elements['pap_node'] = f'<g transform="translate(350, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>'
+        svg_elements['grid_node'] = f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>'
+        svg_elements['pv_node'] = f'<g transform="translate(630, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>'
+        svg_elements['load_node'] = f'<g transform="translate(630, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Base Load</text></g>'
+        svg_elements['lines'] = """
+            <line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="470" y1="190" x2="650" y2="70" stroke="#777" stroke-width="2"/>
+            <line x1="470" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>
+            <path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none"/>
         """
 
     # Situation 2: PV on SAP, Consumption on PAP
     elif "Situation 2" in situation_name:
-        vis.update({'pv': 'visible', 'load': 'visible', 'pap': 'visible', 'sap1': 'visible'})
-        lines = """
-            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="390" y1="150" x2="500" y2="80" stroke="#777" stroke-width="2"/>
-            <line x1="580" y1="80" x2="680" y2="50" stroke="#777" stroke-width="2"/>
+        svg_elements['pap_node'] = f'<g transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>'
+        svg_elements['sap1_node'] = f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP</text></g>'
+        svg_elements['grid_node'] = f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>'
+        svg_elements['pv_node'] = f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>'
+        svg_elements['load_node'] = f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Base Load</text></g>'
+        svg_elements['lines'] = """
+            <line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2"/>
         """
 
     # Situation 3: PV+Consumption on PAP, Battery on SAP
     elif "Situation 3" in situation_name:
-        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible'})
-        lines = """
-            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="390" y1="210" x2="500" y2="280" stroke="#777" stroke-width="2"/>
-            <line x1="580" y1="280" x2="680" y2="310" stroke="#777" stroke-width="2"/>
-            <path d="M 690 85 C 720 120, 720 150, 690 180" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
-            <path d="M 420 200 C 470 230, 520 240, 560 270" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+        svg_elements['pap_node'] = f'<g transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>'
+        svg_elements['sap1_node'] = f'<g transform="translate(460, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP</text></g>'
+        svg_elements['grid_node'] = f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>'
+        svg_elements['pv_node'] = f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>'
+        svg_elements['load_node'] = f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Base Load</text></g>'
+        svg_elements['batt_node'] = f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Battery</text></g>'
+        svg_elements['lines'] = """
+            <line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="380" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2"/>
+            <path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
+            <path d="M 350 250 C 420 270, 420 270, 460 300" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
         """
 
     # Situation 4: Everything on PAP
     elif "Situation 4" in situation_name:
-        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible'})
-        lines = """
-            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="2"/>
-            <path d="M 690 85 C 720 120, 720 150, 690 180" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
-            <path d="M 690 210 C 720 240, 720 280, 690 310" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
-            <path d="M 720 80 C 780 145, 780 245, 720 310" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
+        svg_elements['pap_node'] = f'<g transform="translate(350, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>'
+        svg_elements['grid_node'] = f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>'
+        svg_elements['pv_node'] = f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>'
+        svg_elements['load_node'] = f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Base Load</text></g>'
+        svg_elements['batt_node'] = f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Battery</text></g>'
+        svg_elements['lines'] = """
+            <line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="470" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2"/>
+            <path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none"/>
+            <path d="M 690 215 C 740 250, 740 285, 690 320" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none"/>
+            <path d="M 720 80 C 780 145, 780 245, 720 310" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none"/>
         """
 
     # Situation 5: Consumption on PAP, Battery+PV on SAP
     elif "Situation 5" in situation_name:
-        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible'})
-        lines = """
-            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="390" y1="150" x2="500" y2="80" stroke="#777" stroke-width="2"/>
-            <line x1="580" y1="80" x2="680" y2="50" stroke="#777" stroke-width="2"/>
-            <line x1="580" y1="80" x2="680" y2="310" stroke="#777" stroke-width="2"/>
-            <path d="M 700 80 C 740 155, 740 245, 700 310" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+        svg_elements['pap_node'] = f'<g transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>'
+        svg_elements['sap1_node'] = f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP</text></g>'
+        svg_elements['grid_node'] = f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>'
+        svg_elements['pv_node'] = f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>'
+        svg_elements['load_node'] = f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Base Load</text></g>'
+        svg_elements['batt_node'] = f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Battery</text></g>'
+        svg_elements['lines'] = """
+            <line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="520" y1="120" x2="650" y2="320" stroke="#777" stroke-width="2"/>
+            <path d="M 690 85 C 740 155, 740 245, 690 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
         """
-        
+
     # Situation 6: Consumption on PAP, Battery on SAP1, PV on SAP2
     elif "Situation 6" in situation_name:
-        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible', 'sap2': 'visible'})
-        lines = """
-            <line x1="160" y1="180" x2="260" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="340" y1="180" x2="650" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="290" y1="150" x2="460" y2="50" stroke="#777" stroke-width="2"/>
-            <line x1="290" y1="210" x2="460" y2="310" stroke="#777" stroke-width="2"/>
-            <line x1="540" y1="50" x2="650" y2="50" stroke="#777" stroke-width="2"/>
-            <line x1="540" y1="310" x2="650" y2="310" stroke="#777" stroke-width="2"/>
+        svg_elements['pap_node'] = f'<g transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>'
+        svg_elements['sap1_node'] = f'<g transform="translate(460, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP 1</text></g>'
+        svg_elements['sap2_node'] = f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">SAP 2</text></g>'
+        svg_elements['grid_node'] = f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>'
+        svg_elements['pv_node'] = f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>'
+        svg_elements['load_node'] = f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Base Load</text></g>'
+        svg_elements['batt_node'] = f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Battery</text></g>'
+        svg_elements['lines'] = """
+            <line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2"/>
         """
 
     # Situation 7: PV + Battery on PAP
     elif "Situation 7" in situation_name:
         vis.update({'pv': 'visible', 'batt': 'visible', 'pap': 'visible'})
-        lines = """
-            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
-            <line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="2"/>
-            <path d="M 700 80 C 740 155, 740 245, 700 310" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+        svg_elements['pap_node'] = f'<g transform="translate(350, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>'
+        svg_elements['grid_node'] = f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>'
+        svg_elements['pv_node'] = f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Solar PV</text></g>'
+        svg_elements['batt_node'] = f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Battery</text></g>'
+        svg_elements['lines'] = """
+            <line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2"/>
+            <line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2"/>
+            <line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2"/>
+            <path d="M 700 85 C 750 155, 750 245, 700 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
         """
 
     # --- Build the final HTML from the parts ---
     html_parts = []
     html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
-    html_parts.append("""
-        <style>
-            .node {
-                position: absolute; text-align: center; width: 120px;
-                background-color: #f8f9fa; border: 1px solid #dee2e6;
-                border-radius: 12px; padding: 10px 5px; box-sizing: border-box;
-            }
-            .node img { width: 50px; height: 50px; }
-            .node p { font-weight: bold; font-size: 13px; margin: 5px 0 0 0; color: #333;}
-        </style>
+    html_parts.append(f"""
+        <svg viewbox="0 0 800 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 13px;">
+            <style>
+                .node {{ visibility: hidden; }} /* Hide all by default */
+                .node image {{ width: 50px; height: 50px; }}
+                .node rect {{ fill: #f8f9fa; stroke: #dee2e6; stroke-width: 1; rx:12; }}
+                .node text {{ text-anchor: middle; font-weight: bold; fill: #333; }}
+            </style>
+            {svg_elements['lines']}
+            {svg_elements['grid_node']}
+            {svg_elements['pap_node']}
+            {svg_elements['sap1_node']}
+            {svg_elements['sap2_node']}
+            {svg_elements['pv_node']}
+            {svg_elements['load_node']}
+            {svg_elements['batt_node']}
+        </svg>
     """)
-    html_parts.append(f'<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;">{lines}</svg>')
-    html_parts.append('<div style="position: relative; z-index: 1;">')
-    html_parts.append(f'<div class="node" style="top: 140px; left: 5%;"><img src="{icons_b64["grid"]}"><p>Grid Connection</p></div>')
-    html_parts.append(f'<div class="node" style="top: 140px; left: 48%; transform: translateX(-50%); visibility: {vis["pap"]};"><img src="{icons_b64["alloc"]}"><p>PAP</p></div>')
-    html_parts.append(f'<div class="node" style="top: 20px; right: 5%; visibility: {vis["pv"]};"><img src="{icons_b64["pv"]}"><p>Solar PV</p></div>')
-    html_parts.append(f'<div class="node" style="top: 140px; right: 5%; visibility: {vis["load"]};"><img src="{icons_b64["load"]}"><p>Base Load</p></div>')
-    html_parts.append(f'<div class="node" style="top: 260px; right: 5%; visibility: {vis["batt"]};"><img src="{icons_b64["batt"]}"><p>Battery</p></div>')
-    html_parts.append(f'<div class="node" style="top: 50px; left: 68%; visibility: {vis["sap1"]};"><img src="{icons_b64["alloc"]}"><p>SAP 1</p></div>')
-    html_parts.append(f'<div class="node" style="top: 250px; left: 68%; visibility: {vis["sap2"]};"><img src="{icons_b64["alloc"]}"><p>SAP 2</p></div>')
     html_parts.append('</div>')
-    html_parts.append('</div>')
-
+    
     return "".join(html_parts)
     
 # --- Add these new helper functions to your main app script ---
