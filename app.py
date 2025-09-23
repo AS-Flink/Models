@@ -17,15 +17,15 @@ import streamlit as st
 import base64
 import os
 
-@st.cache_data
-def get_image_as_base64(path):
-    """Encodes an image to base64 for embedding in HTML."""
-    if not os.path.exists(path):
-        st.error(f"Icon file not found at: {path}")
-        return None
-    with open(path, "rb") as f:
-        data = f.read()
-    return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+# @st.cache_data
+# def get_image_as_base64(path):
+#     """Encodes an image to base64 for embedding in HTML."""
+#     if not os.path.exists(path):
+#         st.error(f"Icon file not found at: {path}")
+#         return None
+#     with open(path, "rb") as f:
+#         data = f.read()
+#     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
 # # Final Version: Creates a complete diagram using the safe, piece-by-piece HTML/SVG construction method,
 # # with all lines converted to arrows and meters removed.
@@ -153,6 +153,17 @@ def get_image_as_base64(path):
 #     html_parts.append('</div>')
 
 #     return "".join(html_parts)
+
+
+@st.cache_data
+def get_image_as_base64(path):
+    """Encodes an image file to a Base64 string for embedding."""
+    if not os.path.exists(path):
+        st.error(f"Icon file not found at: {path}")
+        return None
+    with open(path, "rb") as f:
+        data = f.read()
+    return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
 # Final, Comprehensive Diagram Function - With all situations, meters, and correct arrows.
 def create_detailed_diagram(situation_name, icons_b64):
