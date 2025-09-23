@@ -736,14 +736,13 @@ def show_revenue_analysis_page():
     if not selected_assets:
         st.warning("Please select at least one asset in the sidebar to build your configuration.")
     else:
-        # 1. Call your Python function to generate the HTML string
+        # Create the HTML diagram based on the user's selection
         html_diagram = create_detailed_diagram(selected_assets)
-        
-        # 2. Display the generated HTML using st.markdown
-        #    This is the critical part that renders the diagram.
-        st.markdown(html_diagram, unsafe_allow_html=True)
+        # Display the diagram using st.markdown
+        st.markdown(html_diagram, unsafe_allow_html=True) # <--- MAKE SURE THIS LINE IS CORRECT
         
     st.markdown("---")
+
 
     
     # --- PART 1: SIMULATION CONTROLS (Top of the main page) ---
