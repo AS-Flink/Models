@@ -33,13 +33,13 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a compact diagram with wider, external, dashed curves.
+# Final Version: Creates a large, clean diagram with external, curved, dashed interconnections.
 def create_detailed_diagram(selected_assets):
     """
-    Generates a dynamic HTML/SVG diagram with a compact layout and clean,
+    Generates a dynamic HTML/SVG diagram with a large, clean layout and
     external, curved, dashed lines for internal asset interactions.
     """
-    # Define paths to your icons
+    # Define paths to your icons (ensure these are correct)
     icon_paths = {
         'grid': 'Assets/power-line.png',
         'alloc': 'Assets/energy-meter.png',
@@ -61,43 +61,45 @@ def create_detailed_diagram(selected_assets):
     pv_batt_visibility = "visible" if "Solar PV" in selected_assets and "Battery" in selected_assets else "hidden"
     batt_load_visibility = "visible" if "Battery" in selected_assets and "Load" in selected_assets else "hidden"
 
-    # Build the HTML using a list of smaller strings
+    # --- Build the HTML using a list of smaller strings ---
     html_parts = []
-    html_parts.append('<div style="width: 100%; max-width: 600px; height: 350px; font-family: sans-serif; position: relative; margin: auto;">')
+    # Main container is now wider for a better layout
+    html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
 
     # SVG layer for drawing all connecting lines
     html_parts.append('<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
-    # Main solid lines
-    html_parts.append('<line x1="22%" y1="175" x2="45%" y2="175" stroke="#777" stroke-width="3"/>')
-    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="55%" y1="175" x2="80%" y2="55" stroke="#777" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="175" x2="80%" y2="175" stroke="#777" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="175" x2="80%" y2="295" stroke="#777" stroke-width="3"/></g>')
+    # Main solid lines - coordinates adjusted for the wider 800px layout
+    html_parts.append('<line x1="15%" y1="185" x2="45%" y2="185" stroke="#777" stroke-width="3"/>')
+    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="55%" y1="185" x2="85%" y2="55" stroke="#777" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="185" x2="85%" y2="185" stroke="#777" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="185" x2="85%" y2="315" stroke="#777" stroke-width="3"/></g>')
 
-    # Dashed interconnection CURVES drawn OUTSIDE the assets
+    # Dashed interconnection CURVES drawn OUTSIDE the assets - coordinates adjusted for the wider layout
     html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
-    html_parts.append('<path d="M 500 80 C 530 110, 530 145, 500 175" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 685 80 C 725 110, 725 150, 685 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
-    html_parts.append('<path d="M 500 205 C 530 235, 530 270, 500 300" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 685 215 C 725 245, 725 280, 685 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
-    html_parts.append('<path d="M 520 80 C 600 135, 600 235, 520 290" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 700 80 C 780 135, 780 235, 700 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     
     html_parts.append('</svg>')
 
-    # HTML layer for icons and labels
+    # HTML layer for icons and labels - coordinates adjusted for the wider layout
     html_parts.append('<div style="position: relative; z-index: 1;">')
-    html_parts.append(f'<div style="position: absolute; top: 140px; left: 5%; text-align: center; width: 120px;"><img src="{icons_b64["grid"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Grid Connection</p></div>')
-    html_parts.append(f'<div style="position: absolute; top: 140px; left: 50%; transform: translateX(-50%); text-align: center; width: 120px;"><img src="{icons_b64["alloc"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Allocation Point</p></div>')
+    html_parts.append(f'<div style="position: absolute; top: 150px; left: 5%; text-align: center; width: 120px;"><img src="{icons_b64["grid"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Grid Connection</p></div>')
+    html_parts.append(f'<div style="position: absolute; top: 150px; left: 50%; transform: translateX(-50%); text-align: center; width: 120px;"><img src="{icons_b64["alloc"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Allocation Point</p></div>')
     html_parts.append(f'<div style="position: absolute; top: 20px; right: 5%; text-align: center; width: 120px; visibility: {pv_visibility};"><img src="{icons_b64["pv"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Solar PV</p></div>')
-    html_parts.append(f'<div style="position: absolute; top: 140px; right: 5%; text-align: center; width: 120px; visibility: {load_visibility};"><img src="{icons_b64["load"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Base Load</p></div>')
-    html_parts.append(f'<div style="position: absolute; top: 260px; right: 5%; text-align: center; width: 120px; visibility: {batt_visibility};"><img src="{icons_b64["batt"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Battery</p></div>')
+    html_parts.append(f'<div style="position: absolute; top: 150px; right: 5%; text-align: center; width: 120px; visibility: {load_visibility};"><img src="{icons_b64["load"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Base Load</p></div>')
+    html_parts.append(f'<div style="position: absolute; top: 280px; right: 5%; text-align: center; width: 120px; visibility: {batt_visibility};"><img src="{icons_b64["batt"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Battery</p></div>')
     html_parts.append('</div>')
 
     # Close the main container
     html_parts.append('</div>')
     
+    # Join all the pieces into a single HTML string and return it
     return "".join(html_parts)
 
 # --- Add these new helper functions to your main app script ---
