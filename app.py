@@ -196,7 +196,7 @@ def get_image_as_base64(path):
 #     return "".join(html_parts)
 
 # Final, Advanced Diagram Function - Corrected to avoid all syntax highlighting issues.
-def create_advanced_diagram(situation_name, icons_b64):
+def create_detailed_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations
     using a piece-by-piece method to avoid editor errors.
