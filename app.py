@@ -36,11 +36,10 @@ def get_image_as_base64(path):
 # Function 2: Creates the dynamic HTML and CSS diagram
 def create_detailed_diagram(selected_assets):
     """
-    Generates a dynamic HTML/CSS diagram using a robust CSS Grid layout
-    and includes all interaction labels.
+    Generates a dynamic HTML/CSS diagram using a robust layout.
+    This version builds the HTML step-by-step to avoid syntax highlighting errors.
     """
-    # Define paths to your icons. Ensure this 'Assets' folder exists
-    # in the same directory as your app.py script.
+    # Define paths to your icons
     icon_paths = {
         'grid': 'Assets/power-line.png',
         'alloc': 'Assets/energy-meter.png',
@@ -49,84 +48,62 @@ def create_detailed_diagram(selected_assets):
         'load': 'Assets/energy-consumption.png'
     }
     
-    # Load all icons into Base64 format
+    # Load icons into Base64 format
     icons_b64 = {name: get_image_as_base64(path) for name, path in icon_paths.items()}
     if None in icons_b64.values():
         return "<div>Error: One or more icon files are missing. Please check the 'Assets' folder.</div>"
 
-    # Determine visibility for optional assets based on user's selection
+    # Determine visibility for optional assets
     pv_visibility = "visible" if "Solar PV" in selected_assets else "hidden"
     batt_visibility = "visible" if "Battery" in selected_assets else "hidden"
     load_visibility = "visible" if "Load" in selected_assets else "hidden"
 
-    # Build the complete HTML and CSS string
-    html = f"""
-    <div style="width: 100%; display: flex; justify-content: center;">
-        <div style="position: relative; width: 800px; height: 380px; font-family: sans-serif; color: #333;">
+    # --- Build the HTML using a list of strings ---
+    html_parts = []
+    html_parts.append('<div style="width: 100%; display: flex; justify-content: center;">')
+    html_parts.append('<div style="position: relative; width: 800px; height: 380px; font-family: sans-serif; color: #333;">')
+    
+    # Add the CSS styles
+    html_parts.append("""
+        <style>
+            .node { position: absolute; text-align: center; width: 120px; }
+            .node img { width: 60px; height: 60px; }
+            .node p { font-weight: bold; font-size: 13px; margin: 5px 0 0 0; }
+            .data-label { position: absolute; font-size: 11px; color: #555; text-align: center; line-height: 1.2; }
+            .line { position: absolute; background-color: #B0B0B0; z-index: -1; }
+            .arrow-red { border-top: 2px solid #D9534F; border-right: 2px solid #D9534F; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }
+            .arrow-green { border-top: 2px solid #5CB85C; border-right: 2px solid #5CB85C; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }
+        </style>
+    """)
 
-            <style>
-                .node {{
-                    position: absolute; text-align: center; width: 120px;
-                }}
-                .node img {{ width: 60px; height: 60px; }}
-                .node p {{ font-weight: bold; font-size: 13px; margin: 5px 0 0 0; }}
-                .data-label {{
-                    position: absolute; font-size: 11px; color: #555;
-                    text-align: center; line-height: 1.2;
-                }}
-                .line {{ position: absolute; background-color: #B0B0B0; z-index: -1; }}
-                /* CSS for creating colored arrows */
-                .arrow-red {{ 
-                    border-top: 2px solid #D9534F; border-right: 2px solid #D9534F; 
-                    transform: rotate(45deg); width: 8px; height: 8px; position: absolute; 
-                }}
-                .arrow-green {{ 
-                    border-top: 2px solid #5CB85C; border-right: 2px solid #5CB85C; 
-                    transform: rotate(45deg); width: 8px; height: 8px; position: absolute; 
-                }}
-            </style>
+    # Add the Nodes (Icons and Labels)
+    html_parts.append(f'<div class="node" style="top: 150px; left: 5%;"><img src="{icons_b64["grid"]}"><p>Grid Connection</p></div>')
+    html_parts.append(f'<div class="node" style="top: 150px; left: 50%; transform: translateX(-50%);"><img src="{icons_b64["alloc"]}"><p>Allocation Point</p></div>')
+    html_parts.append(f'<div class="node" style="top: 20px; right: 5%; visibility: {pv_visibility};"><img src="{icons_b64["pv"]}"><p>Solar PV</p><p class="data-label" style="width:100%;">production_PV</p></div>')
+    html_parts.append(f'<div class="node" style="top: 150px; right: 5%; visibility: {load_visibility};"><img src="{icons_b64["load"]}"><p>Base Load</p><p class="data-label" style="width:100%;">load</p></div>')
+    html_parts.append(f'<div class="node" style="top: 280px; right: 5%; visibility: {batt_visibility};"><img src="{icons_b64["batt"]}"><p>Battery</p><p class="data-label" style="width:100%;">POWER_MW<br>CAPACITY_MWH</p></div>')
 
-            <div class="node" style="top: 150px; left: 5%;">
-                <img src="{icons_b64['grid']}">
-                <p>Grid Connection</p>
-            </div>
-            <div class="node" style="top: 150px; left: 50%; transform: translateX(-50%);">
-                <img src="{icons_b64['alloc']}">
-                <p>Allocation Point</p>
-            </div>
-            <div class="node" style="top: 20px; right: 5%; visibility: {pv_visibility};">
-                <img src="{icons_b64['pv']}">
-                <p>Solar PV</p>
-                <p class="data-label" style="width:100%;">production_PV</p>
-            </div>
-            <div class="node" style="top: 150px; right: 5%; visibility: {load_visibility};">
-                <img src="{icons_b64['load']}">
-                <p>Base Load</p>
-                <p class="data-label" style="width:100%;">load</p>
-            </div>
-            <div class="node" style="top: 280px; right: 5%; visibility: {batt_visibility};">
-                <img src="{icons_b64['batt']}">
-                <p>Battery</p>
-                <p class="data-label" style="width:100%;">POWER_MW<br>CAPACITY_MWH</p>
-            </div>
+    # Add the Lines and Data Flow Labels
+    html_parts.append('<div class="line" style="top: 190px; left: 18%; width: 23%; height: 3px; background-color: #D9534F;"></div>')
+    html_parts.append('<div class="arrow-red" style="top: 186px; left: 40%;"></div>')
+    html_parts.append('<div class="data-label" style="top: 200px; left: 18%;"><b>Power Import (Buy)</b><br>price, tax, costs</div>')
+    
+    html_parts.append('<div class="line" style="top: 170px; left: 18%; width: 23%; height: 3px; background-color: #5CB85C;"></div>')
+    html_parts.append('<div class="arrow-green" style="top: 166px; left: 18%; transform: rotate(-135deg);"></div>')
+    html_parts.append('<div class="data-label" style="top: 135px; left: 18%;"><b>Power Feed-in (Sell)</b><br>price, supply_costs</div>')
 
-            <div class="line" style="top: 190px; left: 18%; width: 23%; height: 3px; background-color: #D9534F;"></div>
-            <div class="arrow-red" style="top: 186px; left: 40%;"></div>
-            <div class="data-label" style="top: 200px; left: 18%;"><b>Power Import (Buy)</b><br>price, tax, costs</div>
-            
-            <div class="line" style="top: 170px; left: 18%; width: 23%; height: 3px; background-color: #5CB85C;"></div>
-            <div class="arrow-green" style="top: 166px; left: 18%; transform: rotate(-135deg);"></div>
-            <div class="data-label" style="top: 135px; left: 18%;"><b>Power Feed-in (Sell)</b><br>price, supply_costs</div>
-
-            <div class="data-label" style="top: 115px; left: 32%;">Day-ahet price<br>Grid Limits</div>
-
-            <div class="line" style="top: 180px; left: 59%; width: 23%; height: 2px; visibility: {load_visibility};"></div>
-            <div class="line" style="top: 105px; left: 59%; width: 21%; height: 2px; transform: rotate(-35deg); transform-origin: left top; visibility: {pv_visibility};"></div>
-            <div class="line" style="top: 250px; left: 59%; width: 21%; height: 2px; transform: rotate(35deg); transform-origin: left bottom; visibility: {batt_visibility};"></div>
-        </div>
-    </div>
-    """
-    return html
+    html_parts.append('<div class="data-label" style="top: 115px; left: 32%;">Day-ahet price<br>Grid Limits</div>')
+    
+    html_parts.append(f'<div class="line" style="top: 180px; left: 59%; width: 23%; height: 2px; visibility: {load_visibility};"></div>')
+    html_parts.append(f'<div class="line" style="top: 105px; left: 59%; width: 21%; height: 2px; transform: rotate(-35deg); transform-origin: left top; visibility: {pv_visibility};"></div>')
+    html_parts.append(f'<div class="line" style="top: 250px; left: 59%; width: 21%; height: 2px; transform: rotate(35deg); transform-origin: left bottom; visibility: {batt_visibility};"></div>')
+    
+    # Close the main containers
+    html_parts.append('</div>')
+    html_parts.append('</div>')
+    
+    # Join all the pieces into a single HTML string and return it
+    return "".join(html_parts)
 
 # --- Add these new helper functions to your main app script ---
 
