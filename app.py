@@ -103,9 +103,11 @@ def get_image_as_base64(path):
 #     # Join all the pieces into a single HTML string and return it
 #     return "".join(html_parts)
 # Final, Advanced Diagram Function - Handles all 7 Situations
-def create_advanced_diagram(situation_name, icons_b64):
+# Final, Advanced Diagram Function - Handles all 7 Situations
+def create_detailed_diagram(situation_name, icons_b64):
     """
-    Generates the correct HTML/SVG diagram for any of the 7 situations.
+    Generates the correct and clean HTML/SVG diagram for any of the 7 situations.
+    This version builds the entire visual inside a single SVG for precise control.
     """
     # Default visibility for all optional assets and points
     vis = {
@@ -120,82 +122,83 @@ def create_advanced_diagram(situation_name, icons_b64):
     if "Situation 1" in situation_name:
         vis.update({'pv': 'visible', 'load': 'visible', 'pap': 'visible'})
         lines = """
-            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
-            <path d="M 685 80 C 725 110, 725 150, 685 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
+            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
+            <path d="M 690 85 C 720 120, 720 150, 690 180" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
         """
 
     # Situation 2: PV on SAP, Consumption on PAP
     elif "Situation 2" in situation_name:
         vis.update({'pv': 'visible', 'load': 'visible', 'pap': 'visible', 'sap1': 'visible'})
         lines = """
-            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="45%" y1="180" x2="63%" y2="115" stroke="#777" stroke-width="3"/>
-            <line x1="73%" y1="115" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
+            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="390" y1="150" x2="500" y2="80" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="80" x2="680" y2="50" stroke="#777" stroke-width="2"/>
         """
 
     # Situation 3: PV+Consumption on PAP, Battery on SAP
     elif "Situation 3" in situation_name:
         vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible'})
         lines = """
-            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="45%" y1="180" x2="63%" y2="245" stroke="#777" stroke-width="3"/>
-            <line x1="73%" y1="245" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
-            <path d="M 400 215 C 480 235, 580 235, 660 245" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="390" y1="210" x2="500" y2="280" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="280" x2="680" y2="310" stroke="#777" stroke-width="2"/>
+            <path d="M 690 85 C 720 120, 720 150, 690 180" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+            <path d="M 420 200 C 470 230, 520 240, 560 270" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
         """
 
     # Situation 4: Everything on PAP
     elif "Situation 4" in situation_name:
         vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible'})
         lines = """
-            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="82%" y2="55" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="82%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="82%" y2="310" stroke="#777" stroke-width="3"/>
-            <g><polyline points="710,85 710,150" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/></g>
-            <g><polyline points="710,215 710,310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/></g>
-            <g><polyline points="740,80 760,80 760,310 740,310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/></g>
+            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="2"/>
+            <path d="M 690 85 C 720 120, 720 150, 690 180" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
+            <path d="M 690 210 C 720 240, 720 280, 690 310" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
+            <path d="M 720 80 C 780 145, 780 245, 720 310" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
         """
 
     # Situation 5: Consumption on PAP, Battery+PV on SAP
     elif "Situation 5" in situation_name:
         vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible'})
         lines = """
-            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="45%" y1="180" x2="63%" y2="115" stroke="#777" stroke-width="3"/>
-            <line x1="73%" y1="115" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
-            <line x1="73%" y1="115" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
-            <path d="M 700 80 C 740 185, 740 255, 700 310" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="390" y1="150" x2="500" y2="80" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="80" x2="680" y2="50" stroke="#777" stroke-width="2"/>
+            <line x1="580" y1="80" x2="680" y2="310" stroke="#777" stroke-width="2"/>
+            <path d="M 700 80 C 740 155, 740 245, 700 310" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
         """
-
+        
     # Situation 6: Consumption on PAP, Battery on SAP1, PV on SAP2
     elif "Situation 6" in situation_name:
         vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible', 'sap2': 'visible'})
         lines = """
-            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="45%" y1="180" x2="63%" y2="115" stroke="#777" stroke-width="3"/>
-            <line x1="45%" y1="180" x2="63%" y2="245" stroke="#777" stroke-width="3"/>
-            <line x1="73%" y1="115" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
-            <line x1="73%" y1="245" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
+            <line x1="160" y1="180" x2="260" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="340" y1="180" x2="650" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="290" y1="150" x2="460" y2="50" stroke="#777" stroke-width="2"/>
+            <line x1="290" y1="210" x2="460" y2="310" stroke="#777" stroke-width="2"/>
+            <line x1="540" y1="50" x2="650" y2="50" stroke="#777" stroke-width="2"/>
+            <line x1="540" y1="310" x2="650" y2="310" stroke="#777" stroke-width="2"/>
         """
 
     # Situation 7: PV + Battery on PAP
     elif "Situation 7" in situation_name:
         vis.update({'pv': 'visible', 'batt': 'visible', 'pap': 'visible'})
         lines = """
-            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
-            <line x1="55%" y1="180" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
+            <line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="2"/>
+            <line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="2"/>
             <path d="M 700 80 C 740 155, 740 245, 700 310" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
         """
-        
-    # --- Build the final HTML using the selected lines and visibilities ---
+
+    # --- Build the final HTML from the parts ---
     html_parts = []
     html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
     html_parts.append("""
@@ -216,8 +219,8 @@ def create_advanced_diagram(situation_name, icons_b64):
     html_parts.append(f'<div class="node" style="top: 20px; right: 5%; visibility: {vis["pv"]};"><img src="{icons_b64["pv"]}"><p>Solar PV</p></div>')
     html_parts.append(f'<div class="node" style="top: 140px; right: 5%; visibility: {vis["load"]};"><img src="{icons_b64["load"]}"><p>Base Load</p></div>')
     html_parts.append(f'<div class="node" style="top: 260px; right: 5%; visibility: {vis["batt"]};"><img src="{icons_b64["batt"]}"><p>Battery</p></div>')
-    html_parts.append(f'<div class="node" style="top: 80px; left: 68%; visibility: {vis["sap1"]};"><img src="{icons_b64["alloc"]}"><p>SAP 1</p></div>')
-    html_parts.append(f'<div class="node" style="top: 200px; left: 68%; visibility: {vis["sap2"]};"><img src="{icons_b64["alloc"]}"><p>SAP 2</p></div>')
+    html_parts.append(f'<div class="node" style="top: 50px; left: 68%; visibility: {vis["sap1"]};"><img src="{icons_b64["alloc"]}"><p>SAP 1</p></div>')
+    html_parts.append(f'<div class="node" style="top: 250px; left: 68%; visibility: {vis["sap2"]};"><img src="{icons_b64["alloc"]}"><p>SAP 2</p></div>')
     html_parts.append('</div>')
     html_parts.append('</div>')
 
