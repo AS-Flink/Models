@@ -698,14 +698,14 @@ def show_revenue_analysis_page():
     # st.markdown("---")
 
     if not selected_assets:
-        st.warning("Please select at least one asset in the sidebar to build your configuration.")
+        st.warning("Please select at least one asset in the sidebar.")
     else:
-        # Create the HTML diagram based on the user's selection
+        # This call will now use the new, corrected function
         html_diagram = create_detailed_diagram(selected_assets)
-        # Display the diagram using st.markdown
-        st.markdown(html_diagram, unsafe_allow_html=True) # <--- MAKE SURE THIS LINE IS CORRECT
+        st.markdown(html_diagram, unsafe_allow_html=True)
         
     st.markdown("---")
+
 
 
     
