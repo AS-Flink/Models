@@ -116,11 +116,11 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final, Advanced Diagram Function - Corrected for all syntax and rendering issues.
-def create_detailed_diagram(situation_name, icons_b64):
+# Final, Advanced Diagram Function - Corrected for AttributeError
+def create_advanced_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations.
-    This version builds the entire visual inside a single SVG for precise control.
+    This version fixes the AttributeError by correctly joining the list of SVG elements.
     """
     # This list will hold all the SVG elements (nodes and lines) for the selected situation.
     svg_elements = []
@@ -128,8 +128,7 @@ def create_detailed_diagram(situation_name, icons_b64):
     # Define a common style for the rounded boxes
     node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
 
-    # Define the SVG code for each node once, to be used in the situations below.
-    # We use .format() here to safely insert the style and icon data.
+    # Define the SVG code for each node once, to be used in the situations below
     nodes = {
         'grid': f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle">Grid Connection</text></g>',
         'pap': f'<g transform="translate(350, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold">PAP</text></g>',
@@ -144,7 +143,6 @@ def create_detailed_diagram(situation_name, icons_b64):
     }
 
     # --- Define the layout and connections for EACH situation ---
-    # We append the required node and line strings to the svg_elements list
     svg_elements.append(nodes['grid']) # Grid is always present
 
     if "Situation 1" in situation_name:
@@ -206,11 +204,17 @@ def create_detailed_diagram(situation_name, icons_b64):
         svg_elements.append('<line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2"/>')
         svg_elements.append('<path d="M 700 85 C 750 155, 750 245, 700 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
 
-    # --- Build the final HTML using the selected elements ---
-    svg_content = "\n".join(svg_elements.values())
+    # --- Build the final HTML from the collected SVG parts ---
+    # CORRECTED LINE: Join the list of svg_elements directly.
+    svg_content = "\n".join(svg_elements)
+    
     html = f"""
     <div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">
         <svg viewBox="0 0 800 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 13px;">
+            <style>
+                .node text {{ text-anchor: middle; font-weight: bold; fill: #333; }}
+            </style>
+            
             {svg_content}
         </svg>
     </div>
