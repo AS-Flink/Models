@@ -33,11 +33,11 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a large, clean diagram with external, curved, dashed interconnections.
+# Final Version: Creates a clean diagram with straight, dashed interconnections.
 def create_detailed_diagram(selected_assets):
     """
-    Generates a dynamic HTML/SVG diagram with a large, clean layout and
-    external, curved, dashed lines for internal asset interactions.
+    Generates a dynamic HTML/SVG diagram with PNG icons and clean, straight,
+    dashed lines for internal asset interactions.
     """
     # Define paths to your icons (ensure these are correct)
     icon_paths = {
@@ -63,31 +63,33 @@ def create_detailed_diagram(selected_assets):
 
     # --- Build the HTML using a list of smaller strings ---
     html_parts = []
-    # Main container is now wider for a better layout
     html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
 
     # SVG layer for drawing all connecting lines
     html_parts.append('<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
-    # Main solid lines - coordinates adjusted for the wider 800px layout
+    # Main solid lines
     html_parts.append('<line x1="15%" y1="185" x2="45%" y2="185" stroke="#777" stroke-width="3"/>')
     html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="55%" y1="185" x2="85%" y2="55" stroke="#777" stroke-width="3"/></g>')
     html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="185" x2="85%" y2="185" stroke="#777" stroke-width="3"/></g>')
     html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="185" x2="85%" y2="315" stroke="#777" stroke-width="3"/></g>')
 
-    # Dashed interconnection CURVES drawn OUTSIDE the assets - coordinates adjusted for the wider layout
+    # Dashed interconnection LINES
+    # PV -> Load
     html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
-    html_parts.append('<path d="M 685 80 C 725 110, 725 150, 685 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<line x1="90%" y1="85" x2="90%" y2="150" stroke="#777" stroke-width="2" stroke-dasharray="4, 4"/>')
     html_parts.append('</g>')
+    # Battery -> Load
     html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
-    html_parts.append('<path d="M 685 215 C 725 245, 725 280, 685 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<line x1="90%" y1="215" x2="90%" y2="310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4"/>')
     html_parts.append('</g>')
+    # PV -> Battery (Right-angled path to go around the Load icon)
     html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
-    html_parts.append('<path d="M 700 80 C 780 135, 780 235, 700 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<polyline points="680,85 720,85 720,310 680,310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     
     html_parts.append('</svg>')
 
-    # HTML layer for icons and labels - coordinates adjusted for the wider layout
+    # HTML layer for icons and labels
     html_parts.append('<div style="position: relative; z-index: 1;">')
     html_parts.append(f'<div style="position: absolute; top: 150px; left: 5%; text-align: center; width: 120px;"><img src="{icons_b64["grid"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Grid Connection</p></div>')
     html_parts.append(f'<div style="position: absolute; top: 150px; left: 50%; transform: translateX(-50%); text-align: center; width: 120px;"><img src="{icons_b64["alloc"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Allocation Point</p></div>')
