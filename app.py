@@ -248,7 +248,7 @@ def get_image_as_base64(path):
 
 
 # Final, Comprehensive Diagram Function - Handles all 7 Situations with Meters and Arrows
-def create_advanced_diagram(situation_name, icons_b64):
+def create_detailed_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations,
     including all meters, assets, and directional arrows based on the provided schematics.
