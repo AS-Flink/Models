@@ -33,13 +33,13 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a clean, logical diagram with clear interconnections.
+# Final Version: Creates a clean, logical diagram with dashed CURVES for interconnections.
 def create_detailed_diagram(selected_assets):
     """
-    Generates a dynamic HTML/SVG diagram with a clean layout and
-    dashed lines for internal asset interactions that do not overlap.
+    Generates a dynamic HTML/SVG diagram with PNG icons and clean, curved,
+    dashed lines for internal asset interactions.
     """
-    # Define paths to your icons
+    # Define paths to your icons (ensure this 'Assets' folder is correct)
     icon_paths = {
         'grid': 'Assets/power-line.png',
         'alloc': 'Assets/energy-meter.png',
@@ -75,16 +75,16 @@ def create_detailed_diagram(selected_assets):
     html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="185" x2="82%" y2="185" stroke="#777" stroke-width="3"/></g>')
     html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="185" x2="82%" y2="315" stroke="#777" stroke-width="3"/></g>')
 
-    # Dashed interconnection lines that go AROUND assets
-    # These points create clean, right-angled paths
+    # Dashed interconnection CURVES
+    # These <path> elements draw Bezier curves to connect assets cleanly.
     html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
-    html_parts.append('<polyline points="600,65 600,175" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 585 85 C 585 135, 585 135, 585 185" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
-    html_parts.append('<polyline points="600,195 600,305" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 585 215 C 585 265, 585 265, 585 315" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
-    html_parts.append('<polyline points="610,65 630,65 630,305 610,305" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+    html_parts.append('<path d="M 610 55 C 510 185, 510 185, 610 315" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
     html_parts.append('</g>')
     
     html_parts.append('</svg>')
