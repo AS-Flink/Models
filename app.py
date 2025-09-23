@@ -303,7 +303,7 @@ def get_image_as_base64(path):
 #     return "".join(html_parts)
 
 # Final Version: Creates a complete, clean diagram for all 7 situations
-def create_advanced_diagram(situation_name, icons_b64):
+def create_detailed_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations,
     including all meters, assets, and directional arrows.
