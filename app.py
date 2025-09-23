@@ -117,7 +117,7 @@ def get_image_as_base64(path):
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
 # Final, Advanced Diagram Function - Corrected for all syntax and rendering issues.
-def create_advanced_diagram(situation_name, icons_b64):
+def create_detailed_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations.
     This version builds the entire visual inside a single SVG for precise control.
