@@ -13,24 +13,65 @@ from datetime import datetime
 # from google.oauth2 import service_account
 # import json
 
-
-# --- IMPORTANT: Add this new import for the revenue tool ---
 from revenue_logic import run_revenue_model
 
 
 import streamlit as st
 import base64
 import os
+import jinja2 
 
 # This function reads an image file and converts it to a Base64 string
 # The cache ensures each image is only loaded from disk once.
+
 @st.cache_data
 def get_image_as_base64(path):
     if not os.path.exists(path):
+        st.error(f"Icon file not found at: {path}")
         return None
     with open(path, "rb") as f:
         data = f.read()
-    return base64.b64encode(data).decode()
+    return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+
+@st.cache_resource
+def get_svg_template(path):
+    if not os.path.exists(path):
+        st.error(f"SVG template not found at: {path}")
+        return None
+    with open(path, 'r') as f:
+        return f.read()
+
+def create_detailed_diagram(selected_assets):
+    """
+    Renders the detailed SVG diagram using Jinja2.
+    """
+    svg_template_string = get_svg_template("detailed_diagram_template.svg")
+    if not svg_template_string:
+        return "<div>Error: SVG Template file is missing.</div>"
+
+    # Define paths to your icons
+    icon_paths = {
+        'grid': 'icons/power-line.png',
+        'alloc': 'icons/energy-meter.png',
+        'pv': 'icons/renewable-energy.png',
+        'batt': 'icons/energy-storage.png',
+        'load': 'icons/energy-consumption.png'
+    }
+    
+    # Prepare data for the template
+    template_data = {
+        "icons": {name: get_image_as_base64(path) for name, path in icon_paths.items()},
+        "visibility": {
+            "pv": "block" if "Solar PV" in selected_assets else "none",
+            "batt": "block" if "Battery" in selected_assets else "none",
+            "load": "block" if "Load" in selected_assets else "none",
+        }
+    }
+
+    # Render the SVG
+    template = jinja2.Template(svg_template_string)
+    return template.render(template_data)
+
 
 def create_html_diagram(selected_assets):
     """
@@ -716,22 +757,29 @@ def show_revenue_analysis_page():
         st.subheader("Cost Parameters")
         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0)
         transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0)
-
-    # --- Main Page Content ---
     
     # --- Main Page Content ---
     st.subheader("Selected Configuration")
 
+    # if not selected_assets:
+    #     st.warning("Please select at least one asset in the sidebar to build your configuration.")
+    # else:
+    #     # Create the HTML diagram based on the user's selection
+    #     html_diagram = create_html_diagram(selected_assets)
+    #     # Display the diagram using st.markdown
+    #     st.markdown(html_diagram, unsafe_allow_html=True)
+        
+    # st.markdown("---")
+
     if not selected_assets:
-        st.warning("Please select at least one asset in the sidebar to build your configuration.")
+        st.warning("Please select at least one asset in the sidebar.")
     else:
-        # Create the HTML diagram based on the user's selection
-        html_diagram = create_html_diagram(selected_assets)
-        # Display the diagram using st.markdown
+        # Create and display the detailed HTML diagram
+        html_diagram = create_detailed_diagram(selected_assets)
         st.markdown(html_diagram, unsafe_allow_html=True)
         
     st.markdown("---")
-
+    
     # --- PART 1: SIMULATION CONTROLS (Top of the main page) ---
     st.subheader("Run Simulation")
     if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
