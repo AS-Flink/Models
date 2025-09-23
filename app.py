@@ -18,47 +18,148 @@ from datetime import datetime
 from revenue_logic import run_revenue_model
 
 
-# Add this new function to your app.py
-import graphviz
+import streamlit as st
+import base64
+import os
 
-def generate_configuration_diagram(selected_assets):
-    """
-    Generates a Graphviz diagram based on the list of selected assets.
-    """
-    # Create a new directed graph
-    dot = graphviz.Digraph(comment='Energy System Configuration')
-    dot.attr(rankdir='LR', splines='ortho') # Arrange from Left to Right, use straight-line connectors
+# This function reads an image file and converts it to a Base64 string
+# The cache ensures each image is only loaded from disk once.
+@st.cache_data
+def get_image_as_base64(path):
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
 
-    # Define a style for the nodes to match your blue example
-    node_style = {
-        'shape': 'box',
-        'style': 'rounded,filled',
-        'fillcolor': '#3b82f6', # A nice blue color
-        'fontcolor': 'white',
-        'fontname': 'sans-serif'
+def create_html_diagram(selected_assets):
+    """
+    Generates a dynamic HTML/CSS diagram using Base64 encoded PNGs.
+    """
+    # --- 1. Load your PNG icons from your 'icons' folder ---
+    #    Update these paths if your folder/filenames are different.
+    icon_paths = {
+        'grid': 'Assets/power-line.png',
+        'alloc': 'Assets/energy-meter.png',
+        'pv': 'Assets/renewable-energy.png',
+        'batt': 'Assets/energy-storage.png',
+        'load': 'Assets/energy-consumption.png'
     }
+    
+    # Convert all available icons to Base64
+    icons_b64 = {name: get_image_as_base64(path) for name, path in icon_paths.items()}
 
-    # Add the core, non-optional nodes
-    dot.node('grid', 'Grid Connection 1', **node_style)
-    dot.node('alloc', 'Allocation Point 1', **node_style)
-    dot.edge('grid', 'alloc')
+    # Check if any icons are missing
+    if None in icons_b64.values():
+        return "<p>Error: One or more icon files are missing from the 'icons' folder.</p>"
 
-    # Add nodes and connections only for the assets the user selected
-    if "Solar PV" in selected_assets:
-        dot.node('pv', 'Solar PV 1', **node_style)
-        dot.edge('alloc', 'pv')
+    # --- 2. Define visibility for optional assets ---
+    pv_display = "block" if "Solar PV" in selected_assets else "none"
+    batt_display = "block" if "Battery" in selected_assets else "none"
+    load_display = "block" if "Load" in selected_assets else "none"
 
-    if "Battery" in selected_assets:
-        dot.node('batt', 'Battery 1', **node_style)
-        dot.edge('alloc', 'batt')
+    # --- 3. Build the HTML and CSS string ---
+    html = f"""
+    <style>
+        .diagram-container {{
+            position: relative;
+            width: 100%;
+            height: 320px; /* Adjust height as needed */
+            font-family: sans-serif;
+            text-align: center;
+        }}
+        .node {{
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+        }}
+        .node img {{
+            width: 60px; /* Icon size */
+            height: 60px;
+        }}
+        .node p {{
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }}
+        /* --- Positioning of Nodes --- */
+        .grid-node {{ top: 120px; left: 20px; }}
+        .alloc-node {{ top: 120px; left: 240px; }}
+        .pv-node {{ top: 20px; right: 20px; display: {pv_display}; }}
+        .batt-node {{ top: 120px; right: 20px; display: {batt_display}; }}
+        .load-node {{ top: 220px; right: 20px; display: {load_display}; }}
 
-    if "Load" in selected_assets:
-        dot.node('load', 'Base Load 1', **node_style)
-        dot.edge('alloc', 'load')
+        /* --- Drawing the Connecting Lines --- */
+        .line {{
+            position: absolute;
+            background-color: #a0a0a0;
+            z-index: -1;
+        }}
+        .line-grid-alloc {{
+            top: 149px; /* Vertically center with icons */
+            left: 140px; /* Start after grid icon */
+            width: 100px; /* Length of the line */
+            height: 2px;
+        }}
+        /* Line from Alloc to Battery */
+        .line-alloc-batt {{
+            top: 149px;
+            left: 360px;
+            width: 100px;
+            height: 2px;
+            display: {batt_display};
+        }}
+        /* Angled line for PV and Load */
+        .line-alloc-pv {{
+            top: 99px;
+            left: 360px;
+            width: 141px; /* Hypotenuse for a 100x100 box */
+            height: 2px;
+            transform: rotate(-45deg);
+            transform-origin: left top;
+            display: {pv_display};
+        }}
+        .line-alloc-load {{
+            top: 199px;
+            left: 360px;
+            width: 141px;
+            height: 2px;
+            transform: rotate(45deg);
+            transform-origin: left bottom;
+            display: {load_display};
+        }}
+    </style>
 
-    return dot
-
-
+    <div class="diagram-container">
+        <div class="node grid-node">
+            <img src="data:image/png;base64,{icons_b64['grid']}">
+            <p>Grid Connection</p>
+        </div>
+        <div class="node alloc-node">
+            <img src="data:image/png;base64,{icons_b64['alloc']}">
+            <p>Allocation Point</p>
+        </div>
+        <div class="node pv-node">
+            <img src="data:image/png;base64,{icons_b64['pv']}">
+            <p>Solar PV</p>
+        </div>
+        <div class="node batt-node">
+            <img src="data:image/png;base64,{icons_b64['batt']}">
+            <p>Battery</p>
+        </div>
+        <div class="node load-node">
+            <img src="data:image/png;base64,{icons_b64['load']}">
+            <p>Load</p>
+        </div>
+        <div class="line line-grid-alloc"></div>
+        <div class="line line-alloc-pv"></div>
+        <div class="line line-alloc-batt"></div>
+        <div class="line line-alloc-load"></div>
+    </div>
+    """
+    return html
 
 # --- Add these new helper functions to your main app script ---
 
@@ -553,6 +654,9 @@ def show_project_selection_page():
 #     st.markdown("---")
 
 
+# Make sure you have this import at the top of your app.py
+import os
+
 def show_revenue_analysis_page():
     display_header("Battery Revenue Analysis 🔋")
     st.write("Configure your simulation in the sidebar, and the system diagram will appear below.")
@@ -609,30 +713,25 @@ def show_revenue_analysis_page():
             # If no battery, set default zero/placeholder values
             power_mw, capacity_mwh, min_soc, max_soc, eff_ch, eff_dis, max_cycles = 0, 0, 0, 1, 1, 1, 0
 
-
         st.subheader("Cost Parameters")
         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0)
         transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0)
 
     # --- Main Page Content ---
     
-    # --- THIS ENTIRE BLOCK IS REPLACED ---
+    # --- Main Page Content ---
     st.subheader("Selected Configuration")
+
     if not selected_assets:
         st.warning("Please select at least one asset in the sidebar to build your configuration.")
     else:
-        # 1. Generate the diagram object based on the user's selection
-        config_diagram = generate_configuration_diagram(selected_assets)
+        # Create the HTML diagram based on the user's selection
+        html_diagram = create_html_diagram(selected_assets)
+        # Display the diagram using st.markdown
+        st.markdown(html_diagram, unsafe_allow_html=True)
         
-        # 2. Display the diagram using Streamlit's built-in function
-        st.graphviz_chart(config_diagram, use_container_width=True)
-    # --- END OF REPLACED BLOCK ---
-
     st.markdown("---")
 
-    
-
-    
     # --- PART 1: SIMULATION CONTROLS (Top of the main page) ---
     st.subheader("Run Simulation")
     if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
