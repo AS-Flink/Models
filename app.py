@@ -74,135 +74,100 @@ def create_detailed_diagram(selected_assets):
     return template.render(template_data)
 
 
-def create_html_diagram(selected_assets):
+# Function 2 (Corrected Version): Creates the dynamic HTML and CSS for your diagram
+def create_detailed_diagram(selected_assets):
     """
     Generates a dynamic HTML/CSS diagram using Base64 encoded PNGs.
     """
-    # --- 1. Load your PNG icons from your 'icons' folder ---
-    #    Update these paths if your folder/filenames are different.
+    # Define paths to your icons
     icon_paths = {
-        'grid': 'Assets/power-line.png',
-        'alloc': 'Assets/energy-meter.png',
-        'pv': 'Assets/renewable-energy.png',
-        'batt': 'Assets/energy-storage.png',
-        'load': 'Assets/energy-consumption.png'
+        'grid': 'icons/power-line.png',
+        'alloc': 'icons/energy-meter.png',
+        'pv': 'icons/renewable-energy.png',
+        'batt': 'icons/energy-storage.png',
+        'load': 'icons/energy-consumption.png'
     }
     
-    # Convert all available icons to Base64
+    # Load all icons and check for missing files
     icons_b64 = {name: get_image_as_base64(path) for name, path in icon_paths.items()}
-
-    # Check if any icons are missing
     if None in icons_b64.values():
-        return "<p>Error: One or more icon files are missing from the 'icons' folder.</p>"
+        return "<div>Error: One or more icon files are missing or have incorrect filenames in the 'icons' folder.</div>"
 
-    # --- 2. Define visibility for optional assets ---
-    pv_display = "block" if "Solar PV" in selected_assets else "none"
-    batt_display = "block" if "Battery" in selected_assets else "none"
-    load_display = "block" if "Load" in selected_assets else "none"
+    # Determine visibility for optional assets
+    pv_visibility = "visible" if "Solar PV" in selected_assets else "hidden"
+    batt_visibility = "visible" if "Battery" in selected_assets else "hidden"
+    load_visibility = "visible" if "Load" in selected_assets else "hidden"
 
-    # --- 3. Build the HTML and CSS string ---
+    # Build the complete HTML and CSS string
     html = f"""
-    <style>
-        .diagram-container {{
-            position: relative;
-            width: 100%;
-            height: 320px; /* Adjust height as needed */
-            font-family: sans-serif;
-            text-align: center;
-        }}
-        .node {{
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 120px;
-        }}
-        .node img {{
-            width: 60px; /* Icon size */
-            height: 60px;
-        }}
-        .node p {{
-            margin-top: 5px;
-            font-size: 12px;
-            font-weight: bold;
-        }}
-        /* --- Positioning of Nodes --- */
-        .grid-node {{ top: 120px; left: 20px; }}
-        .alloc-node {{ top: 120px; left: 240px; }}
-        .pv-node {{ top: 20px; right: 20px; display: {pv_display}; }}
-        .batt-node {{ top: 120px; right: 20px; display: {batt_display}; }}
-        .load-node {{ top: 220px; right: 20px; display: {load_display}; }}
+    <div style="position: relative; width: 100%; height: 380px; font-family: sans-serif; color: #333;">
 
-        /* --- Drawing the Connecting Lines --- */
-        .line {{
-            position: absolute;
-            background-color: #a0a0a0;
-            z-index: -1;
-        }}
-        .line-grid-alloc {{
-            top: 149px; /* Vertically center with icons */
-            left: 140px; /* Start after grid icon */
-            width: 100px; /* Length of the line */
-            height: 2px;
-        }}
-        /* Line from Alloc to Battery */
-        .line-alloc-batt {{
-            top: 149px;
-            left: 360px;
-            width: 100px;
-            height: 2px;
-            display: {batt_display};
-        }}
-        /* Angled line for PV and Load */
-        .line-alloc-pv {{
-            top: 99px;
-            left: 360px;
-            width: 141px; /* Hypotenuse for a 100x100 box */
-            height: 2px;
-            transform: rotate(-45deg);
-            transform-origin: left top;
-            display: {pv_display};
-        }}
-        .line-alloc-load {{
-            top: 199px;
-            left: 360px;
-            width: 141px;
-            height: 2px;
-            transform: rotate(45deg);
-            transform-origin: left bottom;
-            display: {load_display};
-        }}
-    </style>
+        <style>
+            .node {{
+                position: absolute;
+                text-align: center;
+                width: 120px;
+            }}
+            .node img {{
+                width: 60px;
+                height: 60px;
+            }}
+            .node p {{
+                font-weight: bold;
+                font-size: 13px;
+                margin-top: 5px;
+            }}
+            .data-label {{
+                position: absolute;
+                font-size: 11px;
+                color: #555;
+                text-align: center;
+                line-height: 1.2;
+            }}
+            .line {{
+                position: absolute;
+                background-color: #B0B0B0;
+                z-index: -1;
+            }}
+            .arrow-red {{ border-top: 2px solid #D9534F; border-right: 2px solid #D9534F; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }}
+            .arrow-green {{ border-top: 2px solid #5CB85C; border-right: 2px solid #5CB85C; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }}
+        </style>
 
-    <div class="diagram-container">
-        <div class="node grid-node">
-            <img src="data:image/png;base64,{icons_b64['grid']}">
+        <div class="node" style="top: 150px; left: 5%;">
+            <img src="{icons_b64['grid']}">
             <p>Grid Connection</p>
         </div>
-        <div class="node alloc-node">
-            <img src="data:image/png;base64,{icons_b64['alloc']}">
+        <div class="node" style="top: 150px; left: 50%; transform: translateX(-50%);">
+            <img src="{icons_b64['alloc']}">
             <p>Allocation Point</p>
         </div>
-        <div class="node pv-node">
-            <img src="data:image/png;base64,{icons_b64['pv']}">
+        <div class="node" style="top: 20px; right: 5%; visibility: {pv_visibility};">
+            <img src="{icons_b64['pv']}">
             <p>Solar PV</p>
         </div>
-        <div class="node batt-node">
-            <img src="data:image/png;base64,{icons_b64['batt']}">
+        <div class="node" style="top: 150px; right: 5%; visibility: {load_visibility};">
+            <img src="{icons_b64['load']}">
+            <p>Base Load</p>
+        </div>
+        <div class="node" style="top: 280px; right: 5%; visibility: {batt_visibility};">
+            <img src="{icons_b64['batt']}">
             <p>Battery</p>
         </div>
-        <div class="node load-node">
-            <img src="data:image/png;base64,{icons_b64['load']}">
-            <p>Load</p>
-        </div>
-        <div class="line line-grid-alloc"></div>
-        <div class="line line-alloc-pv"></div>
-        <div class="line line-alloc-batt"></div>
-        <div class="line line-alloc-load"></div>
+
+        <div class="line" style="top: 190px; left: 18%; width: 23%; height: 3px; background-color: #D9534F;"></div>
+        <div class="arrow-red" style="top: 186px; left: 40%;"></div>
+        <div class="data-label" style="top: 200px; left: 18%;">Power Import (Buy)<br>price, tax, costs</div>
+        
+        <div class="line" style="top: 170px; left: 18%; width: 23%; height: 3px; background-color: #5CB85C;"></div>
+        <div class="arrow-green" style="top: 166px; left: 18%;"></div>
+        <div class="data-label" style="top: 135px; left: 18%;">Power Feed-in (Sell)<br>price, supply_costs</div>
+
+        <div class="line" style="top: 180px; left: 59%; width: 23%; height: 2px; visibility: {load_visibility};"></div>
+        <div class="line" style="top: 100px; left: 59%; width: 21%; height: 2px; transform: rotate(-35deg); transform-origin: left top; visibility: {pv_visibility};"></div>
+        <div class="line" style="top: 265px; left: 59%; width: 21%; height: 2px; transform: rotate(35deg); transform-origin: left bottom; visibility: {batt_visibility};"></div>
     </div>
     """
     return html
-
 # --- Add these new helper functions to your main app script ---
 
 def find_total_result_column(df):
