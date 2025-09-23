@@ -942,7 +942,7 @@ def show_revenue_analysis_page():
         'batt': get_image_as_base64('Assets/energy-storage.png'),
         'load': get_image_as_base64('Assets/energy-consumption.png')
     }
-    html_diagram = create_advanced_diagram(situation, icons_b64)
+    html_diagram = create_detailed_diagram(situation, icons_b64)
     st.markdown(html_diagram, unsafe_allow_html=True)
         
     st.markdown("---")
