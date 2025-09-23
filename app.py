@@ -61,6 +61,14 @@ def resample_data(df, resolution):
     return df
 
 
+# Add this dictionary to your script
+ASSET_ICONS = {
+    "Solar PV": "☀️",
+    "Battery": "🔋",
+    "Load": "💡",
+    "Grid": "⚡️" # The grid is always implicitly included
+}
+
 # --- Page Configuration ---
 # --- Page Configuration ---
 st.set_page_config(
@@ -160,44 +168,6 @@ def load_projects():
             st.session_state.projects = {}
     else:
         st.sidebar.warning("No saved projects file found.")
-# # Authenticate to Firestore with the credentials stored in st.secrets
-# @st.cache_resource
-# def get_firestore_client():
-#     creds_dict = st.secrets["firestore"]
-#     creds = service_account.Credentials.from_service_account_info(creds_dict)
-#     db = firestore.Client(credentials=creds)
-#     return db
-
-# db = get_firestore_client()
-# PROJECTS_COLLECTION = "projects" # Name of the collection in Firestore
-
-# def save_projects():
-#     """Saves all projects from session state to Firestore."""
-#     projects_for_save = copy.deepcopy(st.session_state.projects)
-#     for proj_name, proj_data in projects_for_save.items():
-#         # Convert pandas DataFrame to JSON string before saving
-#         if 'results' in proj_data and isinstance(proj_data['results'].get('df'), pd.DataFrame):
-#             proj_data['results']['df'] = proj_data['results']['df'].to_json()
-        
-#         # In Firestore, each project is a "document" in the "projects" collection
-#         doc_ref = db.collection(PROJECTS_COLLECTION).document(proj_name)
-#         doc_ref.set(proj_data)
-#     st.toast("Projects saved to the cloud!")
-
-# def load_projects():
-#     """Loads all projects from Firestore into session state."""
-#     projects_from_db = {}
-#     docs = db.collection(PROJECTS_COLLECTION).stream()
-#     for doc in docs:
-#         proj_data = doc.to_dict()
-#         # Convert JSON string back to pandas DataFrame after loading
-#         if 'results' in proj_data and isinstance(proj_data['results'].get('df'), str):
-#             proj_data['results']['df'] = pd.read_json(proj_data['results']['df'])
-#         projects_from_db[doc.id] = proj_data
-    
-#     st.session_state.projects = projects_from_db
-#     if projects_from_db:
-#         st.sidebar.success("Projects loaded from the cloud!")
 
 # --- UI HELPER ---
 def display_header(title):
@@ -457,259 +427,6 @@ def show_project_selection_page():
                         if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
 
 
-# --- NEW PAGE FUNCTION for REVENUE ANALYSIS ---
-# def show_revenue_analysis_page():
-#     display_header("Battery Revenue Analysis 🔋")
-#     st.write("Upload a data file and configure the battery parameters to run a revenue simulation.")
-
-#     with st.sidebar:
-#         st.header("⚙️ Configuration")
-
-#         # 1. File Uploader
-#         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
-
-#         # 2. Battery Configuration Selector
-#         # battery_config_options = [
-#         #     "Day-ahead trading, minimaliseer energiekosten",
-#         #     "Onbalanshandel, alleen batterij op SAP",
-#         #     "Onbalanshandel, alles op onbalansprijzen",
-#         #     "Verhogen eigen verbruik PV, alles op day-ahead",
-#         # ]
-#         # battery_config = st.selectbox("Battery Strategy", battery_config_options)
-
-
-#         # --- Add this NEW section in its place ---
-#         st.subheader("Optimization Strategy")
-        
-#         # Step 1: User chooses the primary goal
-#         goal_choice = st.radio(
-#             "What is your primary financial goal?",
-#             ("Minimize My Energy Bill", "Generate Revenue Through Market Trading"),
-#             horizontal=True,
-#             label_visibility="collapsed"
-#         )
-        
-#         # Step 2: Based on the goal, show relevant strategies
-#         if goal_choice == "Minimize My Energy Bill":
-#             st.write("_Use assets to reduce overall energy costs by smartly using solar power and avoiding high grid prices._")
-#             strategy_choice = st.selectbox(
-#                 "Select a cost-minimization strategy:",
-#                 (
-#                     "Prioritize Self-Consumption", # -> self_consumption_PV_PAP.py
-#                     "Optimize on Day-Ahead Market"   # -> day_ahead_trading_PAP.py
-#                 )
-#             )
-#         else: # Generate Revenue
-#             st.write("_Actively use assets to trade on energy markets and generate direct profit._")
-#             strategy_choice = st.selectbox(
-#                 "Select a revenue-generation strategy:",
-#                 (
-#                     "Simple Battery Trading (Imbalance)",     # -> imbalance_algorithm_SAP.py
-#                     "Advanced Whole-System Trading (Imbalance)" # -> imbalance_everything_PAP.py
-#                 )
-#     )
-
-
-#         # 3. Parameter Inputs
-#         st.subheader("Battery Parameters")
-#         power_mw = st.number_input("Vermogen batterij (MW)", value=1.0, min_value=0.1, step=0.1)
-#         capacity_mwh = st.number_input("Capaciteit batterij (MWh)", value=2.0, min_value=0.1, step=0.1)
-#         min_soc = st.slider("Minimum SoC", 0.0, 1.0, 0.05)
-#         max_soc = st.slider("Maximum SoC", 0.0, 1.0, 0.95)
-#         eff_ch = st.slider("Efficiëntie opladen", 0.8, 1.0, 0.95)
-#         eff_dis = st.slider("Efficiëntie ontladen", 0.8, 1.0, 0.95)
-
-#         st.subheader("Cost & Other Parameters")
-#         max_cycles = st.number_input("Max cycli per jaar", value=600, min_value=1)
-#         supply_costs = st.number_input("Kosten energieleverancier (€/MWh)", value=20.0)
-#         transport_costs = st.number_input("Transportkosten afname (€/MWh)", value=15.0)
-
-#     # Main page layout
-#     col1, col2 = st.columns([2, 3])
-
-#     with col1:
-#         st.subheader("Run Simulation")
-#         if st.button("🚀 Run Analysis", type="primary"):
-#             if uploaded_file is None:
-#                 st.error("Please upload an input file.")
-#             else:
-#                 with st.spinner("Reading data and running model... Please wait."):
-#                     try:
-#                         if uploaded_file.name.endswith('.csv'):
-#                             # For CSV files
-#                             input_df = pd.read_csv(uploaded_file, header=0)
-#                         else:
-#                             # For Excel files, using the CORRECT sheet name now
-#                             input_df = pd.read_excel(
-#                                 uploaded_file,
-#                                 sheet_name='Export naar Python', # <-- CORRECTED NAME
-#                                 header=0
-#                             )
-#                     except Exception as e:
-#                         st.error(f"Error reading file: {e}. Ensure it contains a sheet named 'Export naar Python'.")
-#                         st.stop()
-
-
-#                     params = {
-#                         "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
-#                         "MIN_SOC": min_soc, "MAX_SOC": max_soc,
-#                         "EFF_CH": eff_ch, "EFF_DIS": eff_dis,
-#                         "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
-#                         "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
-#                         "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25,
-#                     }
-#                     params.pop("BATTERY_CONFIG", None) 
-
-#                     status_placeholder = st.empty()
-#                     def progress_callback(msg):
-#                         status_placeholder.info(f"⏳ {msg}")
-                    
-#                     results = run_revenue_model(params, input_df, progress_callback)
-#                     st.session_state.revenue_results = results
-#                     status_placeholder.empty()
-#                 st.rerun()
-
-#     # with col2:
-#     #     st.subheader("Results")
-#     #     results = st.session_state.revenue_results
-#     #     if results:
-#     #         if results["error"]:
-#     #             st.error(results["error"])
-#     #         else:
-#     #             st.success("Analysis complete!")
-                
-#     #             summary = results["summary"]
-#     #             # --- ADD THIS LINE ---
-#     #             st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
-
-#     #             st.metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
-#     #             # Add more metrics from your summary dictionary here if needed
-                
-#     #             for warning in results["warnings"]:
-#     #                 st.warning(warning)
-                
-#     #             st.download_button(
-#     #                 label="📥 Download Results (Excel)",
-#     #                 data=results["output_file_bytes"],
-#     #                 file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-#     #                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-#     #             )
-#     #     else:
-#     #         st.info("Configure parameters and click 'Run Analysis' to see results.")
-
-#     with col2:
-#         st.subheader("Results")
-#         results = st.session_state.revenue_results
-#         if not results:
-#             st.info("Configure parameters and click 'Run Analysis' to see results.")
-#         elif results["error"]:
-#             st.error(results["error"])
-#         else:
-#             st.success("Analysis complete!")
-#             summary = results["summary"]
-#             df_original = results["df"] # The original, high-resolution data
-    
-#             # --- Display Summary Metrics & Download Button ---
-#             st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
-            
-#             summary_cols = st.columns(3)
-    
-#             # --- CORRECTED LOGIC ---
-#             # 1. Find the name of the final result column in the DataFrame
-#             total_result_col = find_total_result_column(df_original)
-            
-#             # 2. Calculate the net result by summing that column
-#             net_result = 0 # Default to 0
-#             if total_result_col:
-#                 net_result = df_original[total_result_col].sum()
-#             # --- END OF CORRECTION ---
-    
-#             summary_cols[0].metric("Net Result / Revenue", f"€ {net_result:,.0f}")
-#             summary_cols[1].metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
-#             summary_cols[2].metric("Infeasible Days", f"{len(summary.get('infeasible_days', []))}")
-                
-#             for warning in results["warnings"]:
-#                 st.warning(warning)
-    
-#             st.download_button(
-#                 label="📥 Download Full Results (Excel)",
-#                 data=results["output_file_bytes"],
-#                 file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-#                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-#             )
-#             st.markdown("---")
-    
-    
-#             # --- Interactive Plotting Section ---
-#             st.subheader("📊 Interactive Charts")
-    
-#             # 1. UI: Create the resolution selector
-#             resolution = st.selectbox(
-#                 "Select Chart Time Resolution",
-#                 ('15 Min (Original)', 'Hourly', 'Daily', 'Monthly', 'Yearly')
-#             )
-    
-#             # 2. DATA: Resample data based on user's choice
-#             df_resampled = resample_data(df_original.copy(), resolution)
-    
-#             # 3. PLOTS: Create tabs and display the charts
-#             tab1, tab2, tab3 = st.tabs(["💰 Financial Results", "⚡ Energy Profiles", "🔋 Battery SoC"])
-    
-#             with tab1:
-#                 # Find the correct financial column to plot
-#                 total_result_col = find_total_result_column(df_resampled)
-#                 if total_result_col:
-#                     fig_finance = px.line(
-#                         df_resampled, 
-#                         x=df_resampled.index, 
-#                         y=total_result_col,
-#                         title=f"Financial Result ({resolution})",
-#                         labels={"x": "Date", "y": "Amount (€)"}
-#                     )
-#                     st.plotly_chart(fig_finance, use_container_width=True)
-#                 else:
-#                     st.warning("Could not find a 'total_result' column to plot.")
-    
-#             with tab2:
-#                 st.markdown("#### Production & Consumption")
-#                 # Use the resampled data for these plots
-#                 fig_pv = px.line(
-#                     df_resampled, 
-#                     x=df_resampled.index, 
-#                     y='production_PV',
-#                     title=f"PV Production ({resolution})",
-#                     labels={"x": "Date", "y": "Energy (kWh)"}
-#                 )
-#                 st.plotly_chart(fig_pv, use_container_width=True)
-    
-#                 fig_load = px.line(
-#                     df_resampled, 
-#                     x=df_resampled.index, 
-#                     y='load',
-#                     title=f"Load ({resolution})",
-#                     labels={"x": "Date", "y": "Energy (kWh)"}
-#                 )
-#                 st.plotly_chart(fig_load, use_container_width=True)
-    
-#             with tab3:
-#                 st.markdown("#### Battery State of Charge (SoC)")
-#                 st.info("This chart is always shown in the original 15-minute resolution.")
-#                 # IMPORTANT: Use the ORIGINAL DataFrame for this plot
-#                 fig_soc = px.line(
-#                     df_original, 
-#                     x=df_original.index, 
-#                     y='SoC_kWh',
-#                     title="Battery SoC (15 Min Resolution)",
-#                     labels={"x": "Date", "y": "State of Charge (kWh)"}
-#                 )
-#             st.plotly_chart(fig_soc, use_container_width=True)
-
-    
-    # if st.button("⬅️ Back to Home"):
-    #     st.session_state.page = "Home"
-    #     st.session_state.revenue_results = None # Clear results on exit
-    #     st.rerun()
-
 def show_revenue_analysis_page():
     display_header("Battery Revenue Analysis 🔋")
     st.write("Upload a data file and configure the battery parameters to run a revenue simulation.")
@@ -719,8 +436,24 @@ def show_revenue_analysis_page():
     with st.sidebar:
         st.header("⚙️ Configuration")
         
+        # uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
+
+        # --- NEW: Step 1 - Asset Selection ---
+        st.subheader("1. Select Simulation Assets")
+        # The user must select the assets they want to include in the simulation.
+        selected_assets = st.multiselect(
+            "Choose the assets for your configuration:",
+            options=["Solar PV", "Battery", "Load"],
+            default=["Solar PV", "Battery", "Load"], # Pre-select all by default
+            label_visibility="collapsed"
+        )
+        st.markdown("---") # Visual separator
+
+        # --- Step 2 - Upload Data ---
+        st.subheader("2. Upload Data File")
         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
-        
+        st.markdown("---")
+
         st.subheader("Optimization Strategy")
         goal_choice = st.radio(
             "What is your primary financial goal?",
@@ -755,6 +488,27 @@ def show_revenue_analysis_page():
         supply_costs = st.number_input("Kosten energieleverancier (€/MWh)", value=20.0)
         transport_costs = st.number_input("Transportkosten afname (€/MWh)", value=15.0)
 
+    # --- NEW: Display the chosen configuration visually ---
+    st.subheader("Selected Configuration")
+    if not selected_assets:
+        st.warning("Please select at least one asset in the sidebar to configure your simulation.")
+    else:
+        # Create columns for each selected asset plus the grid
+        num_columns = len(selected_assets) + 1
+        cols = st.columns(num_columns)
+
+        # Always display the grid
+        with cols[0]:
+            st.markdown(f"<div style='text-align: center; font-size: 50px;'>{ASSET_ICONS['Grid']}</div>", unsafe_allow_html=True)
+            st.markdown("<h5 style='text-align: center;'>Grid</h5>", unsafe_allow_html=True)
+
+        # Display each selected asset
+        for i, asset in enumerate(selected_assets):
+            with cols[i+1]:
+                st.markdown(f"<div style='text-align: center; font-size: 50px;'>{ASSET_ICONS.get(asset, '❓')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<h5 style='text-align: center;'>{asset}</h5>", unsafe_allow_html=True)
+    st.markdown("---")
+    
     # --- PART 1: SIMULATION CONTROLS (Top of the main page) ---
     st.subheader("Run Simulation")
     if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
@@ -771,13 +525,24 @@ def show_revenue_analysis_page():
                     st.error(f"Error reading file: {e}. Ensure the sheet is named 'Export naar Python'.")
                     st.stop()
                 
+                # params = {
+                #     "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
+                #     "MIN_SOC": min_soc, "MAX_SOC": max_soc, "EFF_CH": eff_ch,
+                #     "EFF_DIS": eff_dis, "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
+                #     "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
+                #     "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25
+                # }
+
                 params = {
                     "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
                     "MIN_SOC": min_soc, "MAX_SOC": max_soc, "EFF_CH": eff_ch,
                     "EFF_DIS": eff_dis, "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
                     "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
-                    "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25
+                    "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25,
+                    # --- ADD THIS NEW LINE ---
+                    "SELECTED_ASSETS": selected_assets
                 }
+
                 
                 status_placeholder = st.empty()
                 def progress_callback(msg):
