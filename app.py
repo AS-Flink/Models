@@ -104,7 +104,7 @@ def get_image_as_base64(path):
 #     return "".join(html_parts)
 # Final, Advanced Diagram Function - Handles all 7 Situations
 # Final Version: Creates a complete and robust diagram within a single SVG element.
-def create_advanced_diagram(situation_name, icons_b64):
+def create_detailed_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations.
     This version builds the entire visual inside a single SVG for precise control.
