@@ -75,11 +75,12 @@ def create_detailed_diagram(selected_assets):
 
 
 # Function 2 (Corrected Version): Creates the dynamic HTML and CSS for your diagram
+# Function 2 (Corrected and Final Version): Creates the diagram using CSS Grid
 def create_detailed_diagram(selected_assets):
     """
-    Generates a dynamic HTML/CSS diagram using Base64 encoded PNGs.
+    Generates a dynamic HTML/CSS diagram using a robust CSS Grid layout.
     """
-    # Define paths to your icons
+    # Define paths to your icons (ensure these are correct)
     icon_paths = {
         'grid': 'Assets/power-line.png',
         'alloc': 'Assets/energy-meter.png',
@@ -88,86 +89,81 @@ def create_detailed_diagram(selected_assets):
         'load': 'Assets/energy-consumption.png'
     }
     
-    # Load all icons and check for missing files
+    # Load all icons
     icons_b64 = {name: get_image_as_base64(path) for name, path in icon_paths.items()}
     if None in icons_b64.values():
-        return "<div>Error: One or more icon files are missing or have incorrect filenames in the 'icons' folder.</div>"
+        return "<div>Error: One or more icon files are missing. Please check the 'icons' folder.</div>"
 
     # Determine visibility for optional assets
     pv_visibility = "visible" if "Solar PV" in selected_assets else "hidden"
     batt_visibility = "visible" if "Battery" in selected_assets else "hidden"
     load_visibility = "visible" if "Load" in selected_assets else "hidden"
 
-    # Build the complete HTML and CSS string
+    # Build the HTML and CSS string using CSS Grid
     html = f"""
-    <div style="position: relative; width: 100%; height: 380px; font-family: sans-serif; color: #333;">
+    <div style="width: 100%; display: flex; justify-content: center;">
+        <div style="position: relative; width: 800px; height: 350px; font-family: sans-serif; color: #333;">
 
-        <style>
-            .node {{
-                position: absolute;
-                text-align: center;
-                width: 120px;
-            }}
-            .node img {{
-                width: 60px;
-                height: 60px;
-            }}
-            .node p {{
-                font-weight: bold;
-                font-size: 13px;
-                margin-top: 5px;
-            }}
-            .data-label {{
-                position: absolute;
-                font-size: 11px;
-                color: #555;
-                text-align: center;
-                line-height: 1.2;
-            }}
-            .line {{
-                position: absolute;
-                background-color: #B0B0B0;
-                z-index: -1;
-            }}
-            .arrow-red {{ border-top: 2px solid #D9534F; border-right: 2px solid #D9534F; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }}
-            .arrow-green {{ border-top: 2px solid #5CB85C; border-right: 2px solid #5CB85C; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }}
-        </style>
+            <style>
+                .grid-container {{
+                    display: grid;
+                    grid-template-columns: 120px 1fr 120px 1fr 120px;
+                    grid-template-rows: 1fr 1fr 1fr;
+                    height: 100%;
+                    align-items: center;
+                    justify-items: center;
+                }}
+                .node {{ text-align: center; }}
+                .node img {{ width: 60px; height: 60px; }}
+                .node p {{ font-weight: bold; font-size: 13px; margin: 5px 0 0 0; }}
+                .data-label {{ font-size: 11px; color: #555; text-align: center; line-height: 1.2; }}
+                .line {{ position: absolute; background-color: #B0B0B0; z-index: -1; }}
+                .arrow-red {{ border-top: 2px solid #D9534F; border-right: 2px solid #D9534F; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }}
+                .arrow-green {{ border-top: 2px solid #5CB85C; border-right: 2px solid #5CB85C; transform: rotate(45deg); width: 8px; height: 8px; position: absolute; }}
+            </style>
 
-        <div class="node" style="top: 150px; left: 5%;">
-            <img src="{icons_b64['grid']}">
-            <p>Grid Connection</p>
-        </div>
-        <div class="node" style="top: 150px; left: 50%; transform: translateX(-50%);">
-            <img src="{icons_b64['alloc']}">
-            <p>Allocation Point</p>
-        </div>
-        <div class="node" style="top: 20px; right: 5%; visibility: {pv_visibility};">
-            <img src="{icons_b64['pv']}">
-            <p>Solar PV</p>
-        </div>
-        <div class="node" style="top: 150px; right: 5%; visibility: {load_visibility};">
-            <img src="{icons_b64['load']}">
-            <p>Base Load</p>
-        </div>
-        <div class="node" style="top: 280px; right: 5%; visibility: {batt_visibility};">
-            <img src="{icons_b64['batt']}">
-            <p>Battery</p>
-        </div>
+            <div class="grid-container">
+                <div class="node" style="grid-column: 1; grid-row: 2;">
+                    <img src="{icons_b64['grid']}">
+                    <p>Grid Connection</p>
+                </div>
 
-        <div class="line" style="top: 190px; left: 18%; width: 23%; height: 3px; background-color: #D9534F;"></div>
-        <div class="arrow-red" style="top: 186px; left: 40%;"></div>
-        <div class="data-label" style="top: 200px; left: 18%;">Power Import (Buy)<br>price, tax, costs</div>
-        
-        <div class="line" style="top: 170px; left: 18%; width: 23%; height: 3px; background-color: #5CB85C;"></div>
-        <div class="arrow-green" style="top: 166px; left: 18%;"></div>
-        <div class="data-label" style="top: 135px; left: 18%;">Power Feed-in (Sell)<br>price, supply_costs</div>
+                <div class="node" style="grid-column: 3; grid-row: 2;">
+                    <img src="{icons_b64['alloc']}">
+                    <p>Allocation Point</p>
+                </div>
 
-        <div class="line" style="top: 180px; left: 59%; width: 23%; height: 2px; visibility: {load_visibility};"></div>
-        <div class="line" style="top: 100px; left: 59%; width: 21%; height: 2px; transform: rotate(-35deg); transform-origin: left top; visibility: {pv_visibility};"></div>
-        <div class="line" style="top: 265px; left: 59%; width: 21%; height: 2px; transform: rotate(35deg); transform-origin: left bottom; visibility: {batt_visibility};"></div>
+                <div class="node" style="grid-column: 5; grid-row: 1; visibility: {pv_visibility};">
+                    <img src="{icons_b64['pv']}">
+                    <p>Solar PV</p>
+                </div>
+                <div class="node" style="grid-column: 5; grid-row: 2; visibility: {load_visibility};">
+                    <img src="{icons_b64['load']}">
+                    <p>Base Load</p>
+                </div>
+                <div class="node" style="grid-column: 5; grid-row: 3; visibility: {batt_visibility};">
+                    <img src="{icons_b64['batt']}">
+                    <p>Battery</p>
+                </div>
+            </div>
+
+            <div class="line" style="top: 185px; left: 130px; width: 230px; height: 3px; background-color: #D9534F;"></div>
+            <div class="arrow-red" style="top: 181px; left: 355px;"></div>
+            <div class="data-label" style="position: absolute; top: 195px; left: 150px;">Power Import (Buy)</div>
+
+            <div class="line" style="top: 165px; left: 130px; width: 230px; height: 3px; background-color: #5CB85C;"></div>
+            <div class="arrow-green" style="top: 161px; left: 130px; transform: rotate(-135deg);"></div>
+            <div class="data-label" style="position: absolute; top: 130px; left: 150px;">Power Feed-in (Sell)</div>
+
+            <div class="line" style="top: 175px; left: 470px; width: 180px; height: 2px; visibility: {load_visibility};"></div>
+            <div class="line" style="top: 105px; left: 470px; width: 180px; height: 2px; transform: rotate(-30deg); transform-origin: left top; visibility: {pv_visibility};"></div>
+            <div class="line" style="top: 245px; left: 470px; width: 180px; height: 2px; transform: rotate(30deg); transform-origin: left bottom; visibility: {batt_visibility};"></div>
+            
+        </div>
     </div>
     """
     return html
+    
 # --- Add these new helper functions to your main app script ---
 
 def find_total_result_column(df):
