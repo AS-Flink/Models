@@ -33,76 +33,196 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a clean diagram with external, curved, dashed interconnections.
-def create_detailed_diagram(selected_assets):
-    """
-    Generates a dynamic HTML/SVG diagram with PNG icons and clean, curved,
-    dashed lines for internal asset interactions that are drawn externally.
-    """
-    # Define paths to your icons (ensure these are correct)
-    icon_paths = {
-        'grid': 'Assets/power-line.png',
-        'alloc': 'Assets/energy-meter.png',
-        'pv': 'Assets/renewable-energy.png',
-        'batt': 'Assets/energy-storage.png',
-        'load': 'Assets/energy-consumption.png'
-    }
+# # Final Version: Creates a clean diagram with external, curved, dashed interconnections.
+# def create_detailed_diagram(selected_assets):
+#     """
+#     Generates a dynamic HTML/SVG diagram with PNG icons and clean, curved,
+#     dashed lines for internal asset interactions that are drawn externally.
+#     """
+#     # Define paths to your icons (ensure these are correct)
+#     icon_paths = {
+#         'grid': 'Assets/power-line.png',
+#         'alloc': 'Assets/energy-meter.png',
+#         'pv': 'Assets/renewable-energy.png',
+#         'batt': 'Assets/energy-storage.png',
+#         'load': 'Assets/energy-consumption.png'
+#     }
     
-    # Load all icons into Base64 format
-    icons_b64 = {name: get_image_as_base64(path) for name, path in icon_paths.items()}
-    if None in icons_b64.values():
-        return "<div>Error: One or more icon files are missing from the 'Assets' folder.</div>"
+#     # Load all icons into Base64 format
+#     icons_b64 = {name: get_image_as_base64(path) for name, path in icon_paths.items()}
+#     if None in icons_b64.values():
+#         return "<div>Error: One or more icon files are missing from the 'Assets' folder.</div>"
 
-    # Determine visibility for assets and their interconnections
-    pv_visibility = "visible" if "Solar PV" in selected_assets else "hidden"
-    batt_visibility = "visible" if "Battery" in selected_assets else "hidden"
-    load_visibility = "visible" if "Load" in selected_assets else "hidden"
-    pv_load_visibility = "visible" if "Solar PV" in selected_assets and "Load" in selected_assets else "hidden"
-    pv_batt_visibility = "visible" if "Solar PV" in selected_assets and "Battery" in selected_assets else "hidden"
-    batt_load_visibility = "visible" if "Battery" in selected_assets and "Load" in selected_assets else "hidden"
+#     # Determine visibility for assets and their interconnections
+#     pv_visibility = "visible" if "Solar PV" in selected_assets else "hidden"
+#     batt_visibility = "visible" if "Battery" in selected_assets else "hidden"
+#     load_visibility = "visible" if "Load" in selected_assets else "hidden"
+#     pv_load_visibility = "visible" if "Solar PV" in selected_assets and "Load" in selected_assets else "hidden"
+#     pv_batt_visibility = "visible" if "Solar PV" in selected_assets and "Battery" in selected_assets else "hidden"
+#     batt_load_visibility = "visible" if "Battery" in selected_assets and "Load" in selected_assets else "hidden"
 
-    # --- Build the HTML using a list of smaller strings ---
+#     # --- Build the HTML using a list of smaller strings ---
+#     html_parts = []
+#     html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
+
+#     # SVG layer for drawing all connecting lines
+#     # Using a viewBox for a consistent coordinate system
+#     html_parts.append('<svg viewbox="0 0 800 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
+#     # Main solid lines
+#     html_parts.append('<line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="3"/>')
+#     html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="3"/></g>')
+#     html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="3"/></g>')
+#     html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="3"/></g>')
+
+#     # Dashed interconnection CURVES drawn OUTSIDE the assets
+#     # These <path> elements use Bezier curves: M(start) C(control1), (control2), (end)
+#     html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
+#     html_parts.append('<path d="M 710 80 C 740 110, 740 150, 710 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+#     html_parts.append('</g>')
+#     html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
+#     html_parts.append('<path d="M 710 210 C 740 240, 740 280, 710 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+#     html_parts.append('</g>')
+#     html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
+#     html_parts.append('<path d="M 730 80 C 810 135, 810 235, 730 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
+#     html_parts.append('</g>')
+    
+#     html_parts.append('</svg>')
+
+#     # HTML layer for icons and labels
+#     html_parts.append('<div style="position: relative; z-index: 1;">')
+#     html_parts.append(f'<div style="position: absolute; top: 150px; left: 5%; text-align: center; width: 120px;"><img src="{icons_b64["grid"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Grid Connection</p></div>')
+#     html_parts.append(f'<div style="position: absolute; top: 150px; left: 50%; transform: translateX(-50%); text-align: center; width: 120px;"><img src="{icons_b64["alloc"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Primary Allocation Point</p></div>')
+#     html_parts.append(f'<div style="position: absolute; top: 20px; right: 5%; text-align: center; width: 120px; visibility: {pv_visibility};"><img src="{icons_b64["pv"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Solar PV</p></div>')
+#     html_parts.append(f'<div style="position: absolute; top: 150px; right: 5%; text-align: center; width: 120px; visibility: {load_visibility};"><img src="{icons_b64["load"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Base Load</p></div>')
+#     html_parts.append(f'<div style="position: absolute; top: 280px; right: 5%; text-align: center; width: 120px; visibility: {batt_visibility};"><img src="{icons_b64["batt"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Battery</p></div>')
+#     html_parts.append('</div>')
+
+#     # Close the main container
+#     html_parts.append('</div>')
+    
+#     # Join all the pieces into a single HTML string and return it
+#     return "".join(html_parts)
+# Final, Advanced Diagram Function - Handles all 7 Situations
+def create_advanced_diagram(situation_name, icons_b64):
+    """
+    Generates the correct HTML/SVG diagram for any of the 7 situations.
+    """
+    # Default visibility for all optional assets and points
+    vis = {
+        'pv': 'hidden', 'load': 'hidden', 'batt': 'hidden',
+        'pap': 'hidden', 'sap1': 'hidden', 'sap2': 'hidden'
+    }
+    lines = "" # This will hold the SVG code for the lines
+
+    # --- Define the layout and connections for EACH situation ---
+
+    # Situation 1: PV + Consumption on PAP
+    if "Situation 1" in situation_name:
+        vis.update({'pv': 'visible', 'load': 'visible', 'pap': 'visible'})
+        lines = """
+            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
+            <path d="M 685 80 C 725 110, 725 150, 685 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>
+        """
+
+    # Situation 2: PV on SAP, Consumption on PAP
+    elif "Situation 2" in situation_name:
+        vis.update({'pv': 'visible', 'load': 'visible', 'pap': 'visible', 'sap1': 'visible'})
+        lines = """
+            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="45%" y1="180" x2="63%" y2="115" stroke="#777" stroke-width="3"/>
+            <line x1="73%" y1="115" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
+        """
+
+    # Situation 3: PV+Consumption on PAP, Battery on SAP
+    elif "Situation 3" in situation_name:
+        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible'})
+        lines = """
+            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="45%" y1="180" x2="63%" y2="245" stroke="#777" stroke-width="3"/>
+            <line x1="73%" y1="245" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
+            <path d="M 400 215 C 480 235, 580 235, 660 245" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+        """
+
+    # Situation 4: Everything on PAP
+    elif "Situation 4" in situation_name:
+        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible'})
+        lines = """
+            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="82%" y2="55" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="82%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="82%" y2="310" stroke="#777" stroke-width="3"/>
+            <g><polyline points="710,85 710,150" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/></g>
+            <g><polyline points="710,215 710,310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/></g>
+            <g><polyline points="740,80 760,80 760,310 740,310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/></g>
+        """
+
+    # Situation 5: Consumption on PAP, Battery+PV on SAP
+    elif "Situation 5" in situation_name:
+        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible'})
+        lines = """
+            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="45%" y1="180" x2="63%" y2="115" stroke="#777" stroke-width="3"/>
+            <line x1="73%" y1="115" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
+            <line x1="73%" y1="115" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
+            <path d="M 700 80 C 740 185, 740 255, 700 310" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+        """
+
+    # Situation 6: Consumption on PAP, Battery on SAP1, PV on SAP2
+    elif "Situation 6" in situation_name:
+        vis.update({'pv': 'visible', 'load': 'visible', 'batt': 'visible', 'pap': 'visible', 'sap1': 'visible', 'sap2': 'visible'})
+        lines = """
+            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="45%" y1="180" x2="63%" y2="115" stroke="#777" stroke-width="3"/>
+            <line x1="45%" y1="180" x2="63%" y2="245" stroke="#777" stroke-width="3"/>
+            <line x1="73%" y1="115" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
+            <line x1="73%" y1="245" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
+        """
+
+    # Situation 7: PV + Battery on PAP
+    elif "Situation 7" in situation_name:
+        vis.update({'pv': 'visible', 'batt': 'visible', 'pap': 'visible'})
+        lines = """
+            <line x1="18%" y1="180" x2="45%" y2="180" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="55" stroke="#777" stroke-width="3"/>
+            <line x1="55%" y1="180" x2="85%" y2="310" stroke="#777" stroke-width="3"/>
+            <path d="M 700 80 C 740 155, 740 245, 700 310" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none"/>
+        """
+        
+    # --- Build the final HTML using the selected lines and visibilities ---
     html_parts = []
     html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
-
-    # SVG layer for drawing all connecting lines
-    # Using a viewBox for a consistent coordinate system
-    html_parts.append('<svg viewbox="0 0 800 380" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
-    # Main solid lines
-    html_parts.append('<line x1="160" y1="180" x2="360" y2="180" stroke="#777" stroke-width="3"/>')
-    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="440" y1="180" x2="680" y2="50" stroke="#777" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="440" y1="180" x2="680" y2="180" stroke="#777" stroke-width="3"/></g>')
-    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="440" y1="180" x2="680" y2="310" stroke="#777" stroke-width="3"/></g>')
-
-    # Dashed interconnection CURVES drawn OUTSIDE the assets
-    # These <path> elements use Bezier curves: M(start) C(control1), (control2), (end)
-    html_parts.append(f'<g style="visibility: {pv_load_visibility};">')
-    html_parts.append('<path d="M 710 80 C 740 110, 740 150, 710 180" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
-    html_parts.append('</g>')
-    html_parts.append(f'<g style="visibility: {batt_load_visibility};">')
-    html_parts.append('<path d="M 710 210 C 740 240, 740 280, 710 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
-    html_parts.append('</g>')
-    html_parts.append(f'<g style="visibility: {pv_batt_visibility};">')
-    html_parts.append('<path d="M 730 80 C 810 135, 810 235, 730 310" stroke="#777" stroke-width="2" stroke-dasharray="4, 4" fill="none"/>')
-    html_parts.append('</g>')
-    
-    html_parts.append('</svg>')
-
-    # HTML layer for icons and labels
+    html_parts.append("""
+        <style>
+            .node {
+                position: absolute; text-align: center; width: 120px;
+                background-color: #f8f9fa; border: 1px solid #dee2e6;
+                border-radius: 12px; padding: 10px 5px; box-sizing: border-box;
+            }
+            .node img { width: 50px; height: 50px; }
+            .node p { font-weight: bold; font-size: 13px; margin: 5px 0 0 0; color: #333;}
+        </style>
+    """)
+    html_parts.append(f'<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;">{lines}</svg>')
     html_parts.append('<div style="position: relative; z-index: 1;">')
-    html_parts.append(f'<div style="position: absolute; top: 150px; left: 5%; text-align: center; width: 120px;"><img src="{icons_b64["grid"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Grid Connection</p></div>')
-    html_parts.append(f'<div style="position: absolute; top: 150px; left: 50%; transform: translateX(-50%); text-align: center; width: 120px;"><img src="{icons_b64["alloc"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Primary Allocation Point</p></div>')
-    html_parts.append(f'<div style="position: absolute; top: 20px; right: 5%; text-align: center; width: 120px; visibility: {pv_visibility};"><img src="{icons_b64["pv"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Solar PV</p></div>')
-    html_parts.append(f'<div style="position: absolute; top: 150px; right: 5%; text-align: center; width: 120px; visibility: {load_visibility};"><img src="{icons_b64["load"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Base Load</p></div>')
-    html_parts.append(f'<div style="position: absolute; top: 280px; right: 5%; text-align: center; width: 120px; visibility: {batt_visibility};"><img src="{icons_b64["batt"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Battery</p></div>')
+    html_parts.append(f'<div class="node" style="top: 140px; left: 5%;"><img src="{icons_b64["grid"]}"><p>Grid Connection</p></div>')
+    html_parts.append(f'<div class="node" style="top: 140px; left: 48%; transform: translateX(-50%); visibility: {vis["pap"]};"><img src="{icons_b64["alloc"]}"><p>PAP</p></div>')
+    html_parts.append(f'<div class="node" style="top: 20px; right: 5%; visibility: {vis["pv"]};"><img src="{icons_b64["pv"]}"><p>Solar PV</p></div>')
+    html_parts.append(f'<div class="node" style="top: 140px; right: 5%; visibility: {vis["load"]};"><img src="{icons_b64["load"]}"><p>Base Load</p></div>')
+    html_parts.append(f'<div class="node" style="top: 260px; right: 5%; visibility: {vis["batt"]};"><img src="{icons_b64["batt"]}"><p>Battery</p></div>')
+    html_parts.append(f'<div class="node" style="top: 80px; left: 68%; visibility: {vis["sap1"]};"><img src="{icons_b64["alloc"]}"><p>SAP 1</p></div>')
+    html_parts.append(f'<div class="node" style="top: 200px; left: 68%; visibility: {vis["sap2"]};"><img src="{icons_b64["alloc"]}"><p>SAP 2</p></div>')
+    html_parts.append('</div>')
     html_parts.append('</div>')
 
-    # Close the main container
-    html_parts.append('</div>')
-    
-    # Join all the pieces into a single HTML string and return it
     return "".join(html_parts)
-
+    
 # --- Add these new helper functions to your main app script ---
 
 def find_total_result_column(df):
@@ -600,22 +720,34 @@ def show_project_selection_page():
 import os
 
 def show_revenue_analysis_page():
-    display_header("Battery Revenue Analysis 🔋")
-    st.write("Configure your simulation in the sidebar, and the system diagram will appear below.")
+    display_header("Energy System Simulation ⚡")
+    st.write("Select a system configuration from the sidebar, upload your data, and run the simulation.")
 
     # --- Configuration Sidebar ---
     with st.sidebar:
         st.header("⚙️ Configuration")
         
-        st.subheader("1. Select Simulation Assets")
-        selected_assets = st.multiselect(
-            "Choose the assets for your configuration:",
-            options=["Solar PV", "Battery", "Load"],
-            default=["Solar PV", "Battery", "Load"],
-            label_visibility="collapsed"
+        # --- 1. Master Situation Selector ---
+        st.subheader("1. Select System Configuration")
+        
+        situation_options = [
+            "Situation 1: PV + Consumption on PAP",
+            "Situation 2: PV on SAP, Consumption on PAP",
+            "Situation 3: PV+Consumption on PAP, Battery on SAP",
+            "Situation 4: Everything on PAP (Imbalance)",
+            "Situation 5: Consumption on PAP, Battery+PV on SAP",
+            "Situation 6: Consumption on PAP, Battery on SAP1, PV on SAP2",
+            "Situation 7: PV + Battery on PAP"
+        ]
+        
+        # Store the user's choice in session_state
+        st.session_state['selected_situation'] = st.selectbox(
+            "Choose the system topology:",
+            options=situation_options
         )
         st.markdown("---")
 
+        # --- 2. Upload Data File ---
         st.subheader("2. Upload Data File")
         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
         st.markdown("---")
@@ -662,24 +794,32 @@ def show_revenue_analysis_page():
     # --- Main Page Content ---
     st.subheader("Selected Configuration")
 
+    # Get the situation name from the session state (set by the sidebar)
+    situation = st.session_state.get('selected_situation', "Situation 1: PV + Consumption on PAP")
+    
+    # Create and display the diagram for the selected situation
+    # The get_image_as_base64 function should be defined at the top of your script
+    icons_b64 = {
+        'grid': get_image_as_base64('Assets/power-line.png'),
+        'alloc': get_image_as_base64('Assets/energy-meter.png'),
+        'pv': get_image_as_base64('Assets/renewable-energy.png'),
+        'batt': get_image_as_base64('Assets/energy-storage.png'),
+        'load': get_image_as_base64('Assets/energy-consumption.png')
+    }
+    html_diagram = create_advanced_diagram(situation, icons_b64)
+    st.markdown(html_diagram, unsafe_allow_html=True)
+        
+    st.markdown("---")
+
+
     # if not selected_assets:
-    #     st.warning("Please select at least one asset in the sidebar to build your configuration.")
+    #     st.warning("Please select at least one asset in the sidebar.")
     # else:
-    #     # Create the HTML diagram based on the user's selection
-    #     html_diagram = create_html_diagram(selected_assets)
-    #     # Display the diagram using st.markdown
+    #     # This call will now use the new, corrected function
+    #     html_diagram = create_detailed_diagram(selected_assets)
     #     st.markdown(html_diagram, unsafe_allow_html=True)
         
     # st.markdown("---")
-
-    if not selected_assets:
-        st.warning("Please select at least one asset in the sidebar.")
-    else:
-        # This call will now use the new, corrected function
-        html_diagram = create_detailed_diagram(selected_assets)
-        st.markdown(html_diagram, unsafe_allow_html=True)
-        
-    st.markdown("---")
 
 
 
