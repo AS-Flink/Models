@@ -39,7 +39,7 @@ def create_detailed_diagram(selected_assets):
     Generates a dynamic HTML/SVG diagram with PNG icons and visible connecting lines.
     This version builds the HTML step-by-step to avoid syntax highlighting errors.
     """
-    # Define paths to your icons (ensure this 'Assets' folder is correct)
+    # Define paths to your icons
     icon_paths = {
         'grid': 'Assets/power-line.png',
         'alloc': 'Assets/energy-meter.png',
@@ -51,26 +51,34 @@ def create_detailed_diagram(selected_assets):
     # Load all icons into Base64 format
     icons_b64 = {name: get_image_as_base64(path) for name, path in icon_paths.items()}
     if None in icons_b64.values():
-        return "<div>Error: One or more icon files are missing. Please check the 'Assets' folder.</div>"
+        return "<div>Error: One or more icon files are missing from the 'Assets' folder.</div>"
 
-    # Determine visibility for optional assets
+    # Determine visibility for individual assets
     pv_visibility = "visible" if "Solar PV" in selected_assets else "hidden"
     batt_visibility = "visible" if "Battery" in selected_assets else "hidden"
     load_visibility = "visible" if "Load" in selected_assets else "hidden"
+    
+    # Determine visibility for the dashed interconnection lines
+    pv_load_visibility = "visible" if "Solar PV" in selected_assets and "Load" in selected_assets else "hidden"
+    pv_batt_visibility = "visible" if "Solar PV" in selected_assets and "Battery" in selected_assets else "hidden"
+    batt_load_visibility = "visible" if "Battery" in selected_assets and "Load" in selected_assets else "hidden"
 
-    # --- Build the HTML using a list of smaller strings ---
+    # --- Build the HTML using a list of strings to avoid editor errors ---
     html_parts = []
-    html_parts.append('<div style="width: 100%; max-width: 800px; height: 380px; font-family: sans-serif; position: relative; margin: auto;">')
+    html_parts.append('<div style="position: relative; width: 100%; max-width: 650px; height: 380px; font-family: sans-serif; margin: auto;">')
 
-    # Add the SVG layer for drawing connecting lines
+    # SVG layer for drawing all connecting lines
     html_parts.append('<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">')
-    html_parts.append('<line x1="15%" y1="185" x2="45%" y2="185" stroke="#B0B0B0" stroke-width="2"/>')
-    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="55%" y1="185" x2="85%" y2="55" stroke="#B0B0B0" stroke-width="2"/></g>')
-    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="55%" y1="185" x2="85%" y2="185" stroke="#B0B0B0" stroke-width="2"/></g>')
-    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="55%" y1="185" x2="85%" y2="315" stroke="#B0B0B0" stroke-width="2"/></g>')
+    html_parts.append('<line x1="20%" y1="185" x2="44%" y2="185" stroke="#999" stroke-width="3"/>')
+    html_parts.append(f'<g style="visibility: {pv_visibility};"><line x1="56%" y1="185" x2="80%" y2="55" stroke="#999" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {load_visibility};"><line x1="56%" y1="185" x2="80%" y2="185" stroke="#999" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {batt_visibility};"><line x1="56%" y1="185" x2="80%" y2="315" stroke="#999" stroke-width="3"/></g>')
+    html_parts.append(f'<g style="visibility: {pv_load_visibility};"><line x1="90%" y1="65" x2="90%" y2="175" stroke="#999" stroke-width="2" stroke-dasharray="5, 5"/></g>')
+    html_parts.append(f'<g style="visibility: {batt_load_visibility};"><line x1="90%" y1="195" x2="90%" y2="305" stroke="#999" stroke-width="2" stroke-dasharray="5, 5"/></g>')
+    html_parts.append(f'<g style="visibility: {pv_batt_visibility};"><path d="M 585,55 C 520,185 520,185 585,315" stroke="#999" stroke-width="2" stroke-dasharray="5, 5" fill="none"/></g>')
     html_parts.append('</svg>')
 
-    # Add the HTML layer for icons and labels (sits on top)
+    # HTML layer for icons and labels
     html_parts.append('<div style="position: relative; z-index: 1;">')
     html_parts.append(f'<div style="position: absolute; top: 150px; left: 5%; text-align: center; width: 120px;"><img src="{icons_b64["grid"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Grid Connection</p></div>')
     html_parts.append(f'<div style="position: absolute; top: 150px; left: 50%; transform: translateX(-50%); text-align: center; width: 120px;"><img src="{icons_b64["alloc"]}" style="width: 60px; height: 60px;"><p style="font-weight: bold; font-size: 13px; margin: 5px 0 0 0;">Allocation Point</p></div>')
@@ -83,7 +91,7 @@ def create_detailed_diagram(selected_assets):
     html_parts.append('</div>')
     
     # Join all the pieces into a single HTML string and return it
-    return "".join(html_parts) 
+    return "".join(html_parts)
 
 # --- Add these new helper functions to your main app script ---
 
