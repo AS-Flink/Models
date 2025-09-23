@@ -987,36 +987,25 @@ def show_revenue_analysis_page():
         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0, key="supply_costs")
         transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0, key="transport_costs")
 
-    # # --- Main Page Content ---
-    # st.subheader("Selected Configuration")
-
-    # # Get the situation name from the session state
-    # situation = st.session_state.get('selected_situation')
-    
-    # # Create and display the diagram for the selected situation
-    # icons_b64 = {
-    #     'grid': get_image_as_base64('Assets/power-line.png'),
-    #     'alloc': get_image_as_base64('Assets/energy-meter.png'),
-    #     'pv': get_image_as_base64('Assets/renewable-energy.png'),
-    #     'batt': get_image_as_base64('Assets/energy-storage.png'),
-    #     'load': get_image_as_base64('Assets/energy-consumption.png')
-    # }
-    # html_diagram = create_detailed_diagram(situation, icons_b64)
-    # st.markdown(html_diagram, unsafe_allow_html=True)
-        
-    # st.markdown("---")
-
     # --- Main Page Content ---
     st.subheader("Selected Configuration")
 
-    if not selected_assets:
-        st.warning("Please select at least one asset in the sidebar to build your configuration.")
-    else:
-        # Call the diagram function with the list of selected assets
-        html_diagram = create_detailed_diagram(selected_assets)
-        st.markdown(html_diagram, unsafe_allow_html=True)
+    # Get the situation name from the session state
+    situation = st.session_state.get('selected_situation')
     
+    # Create and display the diagram for the selected situation
+    icons_b64 = {
+        'grid': get_image_as_base64('Assets/power-line.png'),
+        'alloc': get_image_as_base64('Assets/energy-meter.png'),
+        'pv': get_image_as_base64('Assets/renewable-energy.png'),
+        'batt': get_image_as_base64('Assets/energy-storage.png'),
+        'load': get_image_as_base64('Assets/energy-consumption.png')
+    }
+    html_diagram = create_detailed_diagram(situation, icons_b64)
+    st.markdown(html_diagram, unsafe_allow_html=True)
+        
     st.markdown("---")
+
 
     # if not selected_assets:
     #     st.warning("Please select at least one asset in the sidebar.")
