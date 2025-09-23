@@ -1,0 +1,70 @@
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        .icon { width: 60px; height: 60px; }
+        .label { font-family: sans-serif; font-size: 12px; fill: #555; text-anchor: middle; }
+        .data-label { font-family: monospace; font-size: 11px; fill: #333; }
+        .line { stroke-width: 3; }
+        .buy-arrow { stroke: #d9534f; } /* Red */
+        .sell-arrow { stroke: #5cb85c; } /* Green */
+        .neutral-arrow { stroke: #aaa; }
+    </style>
+
+    <defs>
+        <image id="img-grid" href="{{ icons.grid }}" width="60" height="60"/>
+        <image id="img-alloc" href="{{ icons.alloc }}" width="60" height="60"/>
+        <image id="img-pv" href="{{ icons.pv }}" width="60" height="60"/>
+        <image id="img-batt" href="{{ icons.batt }}" width="60" height="60"/>
+        <image id="img-load" href="{{ icons.load }}" width="60" height="60"/>
+    </defs>
+
+    <g transform="translate(50, 170)">
+        <use href="#img-grid" class="icon"/>
+        <text x="30" y="80" class="label">Grid Connection</text>
+    </g>
+    <g transform="translate(370, 170)">
+        <use href="#img-alloc" class="icon"/>
+        <text x="30" y="80" class="label">Allocation Point</text>
+    </g>
+    <g style="display:{{ visibility.pv }}" transform="translate(650, 50)">
+        <use href="#img-pv" class="icon"/>
+        <text x="30" y="80" class="label">Solar PV</text>
+        <text x="30" y="100" class="data-label">production_PV</text>
+    </g>
+    <g style="display:{{ visibility.load }}" transform="translate(650, 170)">
+        <use href="#img-load" class="icon"/>
+        <text x="30" y="80" class="label">Base Load</text>
+         <text x="30" y="100" class="data-label">load</text>
+    </g>
+    <g style="display:{{ visibility.batt }}" transform="translate(650, 290)">
+        <use href="#img-batt" class="icon"/>
+        <text x="30" y="80" class="label">Battery</text>
+        <text x="30" y="100" class="data-label">POWER_MW</text>
+        <text x="30" y="115" class="data-label">CAPACITY_MWH</text>
+    </g>
+
+    <path d="M 115 185 Q 240 145, 365 185" stroke-dasharray="5,5" class="neutral-arrow" fill="none"/>
+    <text x="240" y="160" class="data-label">Day-ahet price, Grid Limits</text>
+
+    <path d="M 365 215 Q 240 255, 115 215" class="sell-arrow" fill="none" marker-end="url(#arrowhead-green)"/>
+    <text x="200" y="245" class="data-label">price_day_ahead (Sell)</text>
+    <text x="200" y="260" class="data-label">supply_costs</text>
+
+    <path d="M 115 200 Q 240 200, 365 200" class="buy-arrow" fill="none" marker-start="url(#arrowhead-red)"/>
+    <text x="140" y="220" class="data-label">Power Import (Buy)</text>
+    <text x="140" y="235" class="data-label">price_day_ahead, energy_tax</text>
+    <text x="140" y="250" class="data-label">supply_costs, transport_costs</text>
+
+
+    <path style="display:{{ visibility.pv }}" d="M 435 200 L 645 80" class="neutral-arrow" fill="none"/>
+    <path style="display:{{ visibility.load }}" d="M 435 200 L 645 200" class="neutral-arrow" fill="none"/>
+    <path style="display:{{ visibility.batt }}" d="M 435 200 L 645 320" class="neutral-arrow" fill="none"/>
+
+    <defs>
+        <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#d9534f"/>
+        </marker>
+        <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="10 0, 0 3.5, 10 7" fill="#5cb85c"/>
+        </marker>
+    </defs>
+</svg>
