@@ -248,16 +248,13 @@ def get_image_as_base64(path):
 
 
 # Final, Comprehensive Diagram Function - Handles all 7 Situations with Meters and Arrows
+# Final, Comprehensive Diagram Function - Corrected for NameError
 def create_detailed_diagram(situation_name, icons_b64):
     """
     Generates the correct and clean HTML/SVG diagram for any of the 7 situations,
-    including all meters, assets, and directional arrows based on the provided schematics.
+    including all meters, assets, and directional arrows.
     """
-    # This list will hold all the SVG elements for the selected situation.
-    svg_elements = []
-    
-    # --- SVG Definitions ---
-    # Define the arrowhead marker that will be used for all lines
+    # --- SVG Definitions (Arrowheads) ---
     arrow_defs = """
         <defs>
             <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -268,8 +265,8 @@ def create_detailed_diagram(situation_name, icons_b64):
             </marker>
         </defs>
     """
-    
-    # --- Reusable Component Functions ---
+
+    # --- Reusable Component Functions (Defined inside the main function) ---
     def create_blue_box(label, x, y):
         return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="70" rx="8" fill="#1C3F5E" stroke="#1C3F5E"/><text x="60" y="40" text-anchor="middle" font-weight="bold" font-size="14px" fill="white">{label}</text></g>'
 
@@ -281,40 +278,40 @@ def create_detailed_diagram(situation_name, icons_b64):
 
     def create_purple_box(label, x, y):
          return f'<g transform="translate({x}, {y})"><rect x="0" y="0" width="120" height="70" rx="8" fill="#6f42c1" stroke="#5a32a3"/><text x="60" y="35" text-anchor="middle" font-weight="bold" font-size="14px" fill="white">{label}</text></g>'
-    
-    # --- Helper variables for arrow markers ---
+
+    # Helper variables for arrow markers
     end_arrow = 'marker-end="url(#arrow-end)"'
     start_arrow = 'marker-start="url(#arrow-start)"'
-
+    
     # Initialize lists to hold the components for the selected situation
     nodes_to_draw = []
     lines_to_draw = []
     
+    # Always add the main grid box
+    nodes_to_draw.append(create_purple_box('stroomnet', 300, 450))
+
     # --- Configure the diagram based on the selected situation ---
     
-    # Situation 1: PV + Consumption on PAP
     if "Situation 1" in situation_name:
         nodes_to_draw.extend([
             create_blue_box('PV', 100, 20), create_blue_box('Verbruik gebouw', 300, 20),
-            create_gray_meter('meter PV', 100, 150), create_gray_meter('Hoofdmeter', 300, 250),
-            create_ap_box('PAP', 325, 325), create_purple_box('stroomnet', 300, 400)
+            create_gray_meter('meter PV', 100, 150), create_gray_meter('Hoofdmeter', 300, 350),
+            create_ap_box('PAP', 220, 260)
         ])
         lines_to_draw.extend([
             f'<path d="M 160 90 V 150" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
             f'<path d="M 360 90 V 250" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
-            f'<path d="M 160 220 C 160 270, 250 270, 250 280" stroke="#FDB813" stroke-width="4" {end_arrow} fill="none"/>',
-            f'<path d="M 300 280 C 250 280, 220 220, 220 220" stroke="#FDB813" stroke-width="4" {start_arrow} fill="none"/>',
+            f'<path d="M 160 220 C 160 270, 220 270, 220 270" stroke="#FDB813" stroke-width="4" {end_arrow} fill="none"/>',
+            f'<path d="M 300 280 C 250 280, 250 220, 220 220" stroke="#FDB813" stroke-width="4" {start_arrow} fill="none"/>',
             f'<line x1="360" y1="320" x2="350" y2="325" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
-            f'<line x1="360" y1="390" x2="360" y2="400" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
+            f'<line x1="360" y1="420" x2="360" y2="450" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
         ])
 
-    # Situation 2: PV on SAP, Consumption on PAP
     elif "Situation 2" in situation_name:
         nodes_to_draw.extend([
             create_blue_box('PV', 100, 20), create_blue_box('Verbruik gebouw', 300, 20),
             create_gray_meter('meter PV', 100, 150), create_gray_meter('Hoofdmeter', 300, 250),
-            create_ap_box('PAP', 400, 260), create_ap_box('SAP', 200, 260),
-            create_purple_box('stroomnet', 300, 350)
+            create_ap_box('PAP', 400, 260), create_ap_box('SAP', 200, 260)
         ])
         lines_to_draw.extend([
             f'<line x1="160" y1="90" x2="160" y2="150" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
@@ -324,13 +321,12 @@ def create_detailed_diagram(situation_name, icons_b64):
             f'<line x1="360" y1="320" x2="360" y2="350" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
         ])
 
-    # Situation 3: PV+Consumption on PAP, Battery on SAP
     elif "Situation 3" in situation_name:
         nodes_to_draw.extend([
             create_blue_box('PV', 50, 20), create_blue_box('Verbruik gebouw', 250, 20),
             create_blue_box('Batterij', 450, 20), create_meter_box('meter PV', 50, 150),
             create_meter_box('meter batterij', 450, 150), create_gray_meter('Hoofdmeter', 250, 300),
-            create_ap_box('PAP', 180, 250), create_ap_box('SAP', 380, 250), create_purple_box('stroomnet', 250, 400)
+            create_ap_box('PAP', 180, 250), create_ap_box('SAP', 380, 250)
         ])
         lines_to_draw.extend([
             f'<line x1="110" y1="90" x2="110" y2="150" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
@@ -340,7 +336,7 @@ def create_detailed_diagram(situation_name, icons_b64):
             f'<line x1="510" y1="220" x2="430" y2="265" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>',
             f'<line x1="230" y1="280" x2="310" y2="300" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
             f'<path d="M 380 280 C 350 290, 330 300, 310 300" stroke="#FDB813" stroke-width="4" fill="none" {start_arrow} {end_arrow}/>',
-            f'<line x1="310" y1="370" x2="310" y2="400" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
+            f'<line x1="310" y1="370" x2="310" y2="450" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
         ])
         
     elif "Situation 4" in situation_name:
@@ -354,8 +350,8 @@ def create_detailed_diagram(situation_name, icons_b64):
             f'<line x1="110" y1="90" x2="110" y2="150" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
             f'<line x1="310" y1="90" x2="310" y2="250" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
             f'<line x1="510" y1="90" x2="510" y2="150" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>',
-            f'<path d="M 110 190 C 110 240, 250 240, 250 250" stroke="#FDB813" stroke-width="4" {end_arrow}" fill="none"/>',
-            f'<path d="M 510 190 C 510 240, 310 240, 310 250" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
+            f'<path d="M 110 220 C 110 270, 250 270, 250 250" stroke="#FDB813" stroke-width="4" {end_arrow}" fill="none"/>',
+            f'<path d="M 510 220 C 510 270, 310 270, 310 250" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
             f'<line x1="310" y1="320" x2="360" y2="355" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>',
             f'<line x1="360" y1="385" x2="360" y2="420" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
         ])
@@ -365,15 +361,14 @@ def create_detailed_diagram(situation_name, icons_b64):
             create_blue_box('Verbruik gebouw', 50, 20), create_blue_box('PV', 250, 20),
             create_blue_box('Batterij', 450, 20), create_meter_box('meter PV', 250, 150),
             create_meter_box('meter batterij', 450, 150), create_gray_meter('Hoofdmeter', 340, 250),
-            create_ap_box('PAP', 150, 260), create_ap_box('SAP', 580, 260),
-            create_purple_box('stroomnet', 340, 350)
+            create_ap_box('PAP', 150, 260), create_ap_box('SAP', 580, 260), create_purple_box('stroomnet', 340, 350)
         ])
         lines_to_draw.extend([
             f'<line x1="110" y1="90" x2="170" y2="260" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
             f'<line x1="310" y1="90" x2="310" y2="150" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
             f'<line x1="510" y1="90" x2="510" y2="150" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>',
-            f'<path d="M 310 190 C 310 240, 580 240, 580 260" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
-            f'<path d="M 510 190 C 510 240, 310 240, 310 190" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
+            f'<path d="M 310 220 C 310 270, 580 270, 580 260" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
+            f'<path d="M 510 220 C 510 270, 310 270, 310 220" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
             f'<line x1="400" y1="320" x2="400" y2="350" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
         ])
 
@@ -404,14 +399,14 @@ def create_detailed_diagram(situation_name, icons_b64):
         lines_to_draw.extend([
             f'<line x1="310" y1="90" x2="310" y2="150" stroke="#FDB813" stroke-width="4" {end_arrow}/>',
             f'<line x1="510" y1="90" x2="510" y2="150" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>',
-            f'<path d="M 310 190 C 310 240, 340 240, 340 250" stroke="#FDB813" stroke-width="4" {end_arrow}" fill="none"/>',
-            f'<path d="M 510 190 C 510 240, 340 240, 340 250" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
+            f'<path d="M 310 220 C 310 270, 340 270, 340 250" stroke="#FDB813" stroke-width="4" {end_arrow}" fill="none"/>',
+            f'<path d="M 510 220 C 510 270, 340 270, 340 250" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}" fill="none"/>',
             f'<line x1="400" y1="320" x2="360" y2="355" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>',
             f'<line x1="360" y1="385" x2="360" y2="420" stroke="#FDB813" stroke-width="4" {start_arrow} {end_arrow}/>'
         ])
-
-    # --- Build the final HTML string ---
-    svg_content = "\n".join(lines_to_draw + nodes_to_draw)
+    
+    # --- Assemble the final SVG and HTML ---
+    svg_content = "\n".join(nodes_to_draw + lines_to_draw)
     
     html_parts = []
     html_parts.append('<div style="width: 100%; max-width: 850px; height: 550px; font-family: sans-serif; position: relative; margin: auto;">')
