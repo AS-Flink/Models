@@ -7,3 +7,4 @@ openpyxl
 Pyomo
 Pillow  
 graphviz
+Jinja2
