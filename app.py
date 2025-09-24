@@ -296,7 +296,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         # --- Node Placement (Aligned as requested) ---
         nodes_to_draw.extend([
             create_node(350, 185, 'PAP', icons_b64['alloc']),          # Aligned with Load
-            create_node(350, 310, 'SAP', icons_b64['alloc']),          # Aligned with Battery group
+            create_node(350, 350, 'SAP', icons_b64['alloc']),          # Aligned with Battery group
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
@@ -305,27 +305,27 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         ])
         # --- Connections rebuilt to your new specification ---
         lines_to_draw.extend([
-            # 1. Main Meter -> PAP (Outgoing arrow)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="{POS["pap_main"][1]+40}" {arrow} />',
+            # 1. PV -> PV Meter
+            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             
-            # 2. PV Meter -> Main Meter (Incoming arrow)
-            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+40}" {arrow} />',
+            # 2. PV Meter -> PAP (now a straight line)
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />',
             
-            # 3. SAP <-> Main Meter (Two-way arrow)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+45}" x2="350" y2="355" {arrow} />',
-            f'<line x1="350" y1="345" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+35}" {arrow} />',
+            # 3. PAP -> Main Meter (Connects to top-right of Main Meter)
+            f'<line x1="350" y1="225" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+20}" {arrow} />',
             
             # 4. PAP -> Load (Straight line)
-            f'<line x1="450" y1="{POS["load"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-            
-            # 5. PV -> PV Meter
-            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
+            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
-            # 6. Battery Meter <-> SAP (Two-way arrow)
-            f'<line x1="450" y1="355" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+45}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]}" y1="{POS["meter_battery"][1]+35}" x2="450" y2="345" {arrow} />',
+            # 5. SAP <-> Main Meter (Connects to bottom-right of Main Meter)
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="395" {arrow} />',
+            f'<line x1="350" y1="385" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+50}" {arrow} />',
             
-            # 7. Battery <-> Battery Meter (Two-way arrow)
+            # 6. SAP <-> Battery Meter (Straight line)
+            f'<line x1="450" y1="395" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+45}" {arrow} />',
+            f'<line x1="{POS["meter_battery"][0]}" y1="{POS["meter_battery"][1]+35}" x2="450" y2="385" {arrow} />',
+            
+            # 7. Battery <-> Battery Meter (Straight line)
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+45}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+45}" {arrow} />',
             f'<line x1="{POS["battery"][0]}" y1="{POS["battery"][1]+35}" x2="{POS["meter_battery"][0]+100}" y2="{POS["meter_battery"][1]+35}" {arrow} />',
             
