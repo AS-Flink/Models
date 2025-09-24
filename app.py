@@ -1045,14 +1045,18 @@ def show_revenue_analysis_page():
     # Get the situation name from the session state
     situation = st.session_state.get('selected_situation')
     
-    # Create and display the diagram using the new function call
+    # Create and display the diagram using the correct function call
     if situation:
-        html_diagram = create_diagram(situation) # CORRECT: Use new name and only one argument
-        st.markdown(html_diagram, unsafe_allow_html=True)
+        # 1. Call the function to get the HTML/SVG string
+        html_diagram = create_diagram(situation) 
+        
+        # 2. Render the string as HTML
+        st.markdown(html_diagram, unsafe_allow_html=True) # This is the crucial line
     else:
         st.warning("Please select a situation from the sidebar first.")
     
     st.markdown("---")
+
 
 
     # if not selected_assets:
