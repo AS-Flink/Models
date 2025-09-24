@@ -850,7 +850,7 @@ def show_home_page():
             st.rerun()
     # --- 3. Add the image to the right column ---
     with right_col:
-        st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", width=550)
+        st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", width=650)
 
 def show_project_selection_page():
     display_header("Project Management 🗂️")
