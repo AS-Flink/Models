@@ -1045,8 +1045,8 @@ def show_revenue_analysis_page():
         icons_b64 = {
             'grid': get_image_as_base64('Assets/power-line.png'),
             'meter': get_image_as_base64('Assets/energy-meter.png'), 
-            'alloc': get_image_as_base64('Assets/alloc_point.png'), # You might need to create/rename this icon for PAP/SAP
-            'pv': get_image_as_base64('Assets/renewable-energy.png'),
+            'alloc': get_image_as_base64('Assets/energy-meter.png'), # You might need to create/rename this icon for PAP/SAP
+            'pv': get_image_as_base64('Assets/energy-meter.png'),
             'batt': get_image_as_base64('Assets/energy-storage.png'),
             'load': get_image_as_base64('Assets/energy-consumption.png')
         }
