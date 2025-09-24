@@ -850,77 +850,269 @@ def show_home_page():
     with right_col:
         st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", width=650)
 
-def show_project_selection_page():
-    display_header("Project Management 🗂️")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Create a New Project")
-        with st.form("new_project_form"):
-            new_project_name = st.text_input("New project name:")
-            submitted = st.form_submit_button("Create Project")
-            if submitted:
-                if not new_project_name: st.warning("Project name cannot be empty.")
-                elif new_project_name in st.session_state.projects: st.error("A project with this name already exists.")
-                else:
-                    st.session_state.projects[new_project_name] = {'inputs': HARDCODED_DEFAULTS.copy(),'type': "BESS & PV",'last_saved': datetime.now().isoformat()}
-                    save_projects(); st.success(f"Project '{new_project_name}' created!"); st.rerun()
-    with col2:
-        st.subheader("Manage Existing Projects")
-        if not st.session_state.projects: st.info("No projects found. Create one or load from file.")
-        else:
-            for project_name, project_data in st.session_state.projects.items():
-                with st.container(border=True):
-                    p_col1, p_col2 = st.columns([3, 1])
-                    with p_col1:
-                        st.markdown(f"**{project_name}**")
-                        if 'last_saved' in project_data:
-                            saved_time = datetime.fromisoformat(project_data['last_saved']).strftime("%Y-%m-%d %H:%M")
-                            st.caption(f"Last saved: {saved_time}")
-                    with p_col2:
-                        if st.button("Load", key=f"load_{project_name}", use_container_width=True):
-                            st.session_state.current_project_name = project_name; st.session_state.page = "Model"; st.rerun()
-                    if st.session_state.renaming_project == project_name:
-                        with st.form(f"rename_form_{project_name}"):
-                            new_name = st.text_input("New name", value=project_name)
-                            rename_col1, rename_col2 = st.columns(2)
-                            if rename_col1.form_submit_button("Save", use_container_width=True):
-                                if new_name and new_name not in st.session_state.projects:
-                                    st.session_state.projects[new_name] = st.session_state.projects.pop(project_name)
-                                    st.session_state.renaming_project = None; save_projects(); st.rerun()
-                                else: st.error("New name is invalid or already exists.")
-                            if rename_col2.form_submit_button("Cancel", use_container_width=True):
-                                st.session_state.renaming_project = None; st.rerun()
-                    elif st.session_state.deleting_project == project_name:
-                        st.warning(f"Are you sure you want to delete **{project_name}**?")
-                        del_col1, del_col2 = st.columns(2)
-                        if del_col1.button("Yes, permanently delete", type="primary", key=f"del_confirm_{project_name}", use_container_width=True):
-                            del st.session_state.projects[project_name]
-                            st.session_state.deleting_project = None; save_projects(); st.rerun()
-                        if del_col2.button("Cancel", key=f"del_cancel_{project_name}", use_container_width=True):
-                            st.session_state.deleting_project = None; st.rerun()
-                    else:
-                        action_cols = st.columns(3)
-                        if action_cols[0].button("✏️ Rename", key=f"rename_{project_name}", use_container_width=True): st.session_state.renaming_project = project_name; st.rerun()
-                        if action_cols[1].button("Duplicate", key=f"clone_{project_name}", use_container_width=True):
-                            new_name = f"{project_name} (copy)"; i = 1
-                            while new_name in st.session_state.projects: i += 1; new_name = f"{project_name} (copy {i})"
-                            st.session_state.projects[new_name] = copy.deepcopy(project_data)
-                            st.session_state.projects[new_name]['last_saved'] = datetime.now().isoformat()
-                            save_projects(); st.rerun()
-                        if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
+# def show_project_selection_page():
+#     display_header("Project Management 🗂️")
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.subheader("Create a New Project")
+#         with st.form("new_project_form"):
+#             new_project_name = st.text_input("New project name:")
+#             submitted = st.form_submit_button("Create Project")
+#             if submitted:
+#                 if not new_project_name: st.warning("Project name cannot be empty.")
+#                 elif new_project_name in st.session_state.projects: st.error("A project with this name already exists.")
+#                 else:
+#                     st.session_state.projects[new_project_name] = {'inputs': HARDCODED_DEFAULTS.copy(),'type': "BESS & PV",'last_saved': datetime.now().isoformat()}
+#                     save_projects(); st.success(f"Project '{new_project_name}' created!"); st.rerun()
+#     with col2:
+#         st.subheader("Manage Existing Projects")
+#         if not st.session_state.projects: st.info("No projects found. Create one or load from file.")
+#         else:
+#             for project_name, project_data in st.session_state.projects.items():
+#                 with st.container(border=True):
+#                     p_col1, p_col2 = st.columns([3, 1])
+#                     with p_col1:
+#                         st.markdown(f"**{project_name}**")
+#                         if 'last_saved' in project_data:
+#                             saved_time = datetime.fromisoformat(project_data['last_saved']).strftime("%Y-%m-%d %H:%M")
+#                             st.caption(f"Last saved: {saved_time}")
+#                     with p_col2:
+#                         if st.button("Load", key=f"load_{project_name}", use_container_width=True):
+#                             st.session_state.current_project_name = project_name; st.session_state.page = "Model"; st.rerun()
+#                     if st.session_state.renaming_project == project_name:
+#                         with st.form(f"rename_form_{project_name}"):
+#                             new_name = st.text_input("New name", value=project_name)
+#                             rename_col1, rename_col2 = st.columns(2)
+#                             if rename_col1.form_submit_button("Save", use_container_width=True):
+#                                 if new_name and new_name not in st.session_state.projects:
+#                                     st.session_state.projects[new_name] = st.session_state.projects.pop(project_name)
+#                                     st.session_state.renaming_project = None; save_projects(); st.rerun()
+#                                 else: st.error("New name is invalid or already exists.")
+#                             if rename_col2.form_submit_button("Cancel", use_container_width=True):
+#                                 st.session_state.renaming_project = None; st.rerun()
+#                     elif st.session_state.deleting_project == project_name:
+#                         st.warning(f"Are you sure you want to delete **{project_name}**?")
+#                         del_col1, del_col2 = st.columns(2)
+#                         if del_col1.button("Yes, permanently delete", type="primary", key=f"del_confirm_{project_name}", use_container_width=True):
+#                             del st.session_state.projects[project_name]
+#                             st.session_state.deleting_project = None; save_projects(); st.rerun()
+#                         if del_col2.button("Cancel", key=f"del_cancel_{project_name}", use_container_width=True):
+#                             st.session_state.deleting_project = None; st.rerun()
+#                     else:
+#                         action_cols = st.columns(3)
+#                         if action_cols[0].button("✏️ Rename", key=f"rename_{project_name}", use_container_width=True): st.session_state.renaming_project = project_name; st.rerun()
+#                         if action_cols[1].button("Duplicate", key=f"clone_{project_name}", use_container_width=True):
+#                             new_name = f"{project_name} (copy)"; i = 1
+#                             while new_name in st.session_state.projects: i += 1; new_name = f"{project_name} (copy {i})"
+#                             st.session_state.projects[new_name] = copy.deepcopy(project_data)
+#                             st.session_state.projects[new_name]['last_saved'] = datetime.now().isoformat()
+#                             save_projects(); st.rerun()
+#                         if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
 
+
+# def show_revenue_analysis_page():
+#     display_header("Energy System Simulation ⚡")
+#     st.write("Select a system configuration from the sidebar, upload your data, and run the simulation.")
+
+#     # --- Configuration Sidebar ---
+#     with st.sidebar:
+#         st.header("⚙️ Configuration")
+        
+#         # --- 1. Master Situation Selector ---
+#         st.subheader("1. Select System Configuration")
+        
+#         situation_options = [
+#             "Situation 1: PV + Consumption on PAP",
+#             "Situation 2: PV on SAP, Consumption on PAP",
+#             "Situation 3: PV+Consumption on PAP, Battery on SAP",
+#             "Situation 4: Everything on PAP (Imbalance)",
+#             "Situation 5: Consumption on PAP, Battery+PV on SAP",
+#             "Situation 6: Consumption on PAP, Battery on SAP1, PV on SAP2",
+#             "Situation 7: PV + Battery on PAP"
+#         ]
+        
+#         # Store the user's choice in session_state
+#         st.session_state['selected_situation'] = st.selectbox(
+#             "Choose the system topology:",
+#             options=situation_options
+#         )
+#         st.markdown("---")
+
+#         # --- 2. Upload Data File ---
+#         st.subheader("2. Upload Data File")
+#         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
+#         st.markdown("---")
+
+#         # --- 3. Optimization Strategy & Parameters ---
+#         st.subheader("3. Optimization Strategy")
+#         strategy_choice = st.selectbox(
+#             "Select a strategy:", 
+#             ("Prioritize Self-Consumption", "Optimize on Day-Ahead Market", "Simple Battery Trading (Imbalance)")
+#         )
+
+#         # Conditionally show battery parameters only if "Battery" is in the selected situation name
+#         if "Battery" in st.session_state.get('selected_situation', ''):
+#             st.subheader("Battery Parameters")
+#             power_mw = st.number_input("Power (MW)", value=1.0, min_value=0.1, step=0.1, key="power_mw")
+#             capacity_mwh = st.number_input("Capacity (MWh)", value=2.0, min_value=0.1, step=0.1, key="capacity_mwh")
+#             min_soc = st.slider("Minimum SoC", 0.0, 1.0, 0.05, key="min_soc")
+#             max_soc = st.slider("Maximum SoC", 0.0, 1.0, 0.95, key="max_soc")
+#             eff_ch = st.slider("Charging Efficiency", 0.80, 1.00, 0.95, step=0.01, key="eff_ch")
+#             eff_dis = st.slider("Discharging Efficiency", 0.80, 1.00, 0.95, step=0.01, key="eff_dis")
+#             max_cycles = st.number_input("Max Cycles per Year", value=600, min_value=1, key="max_cycles")
+#         else:
+#             # If no battery in the situation, set placeholder values so the app doesn't crash
+#             power_mw, capacity_mwh, min_soc, max_soc, eff_ch, eff_dis, max_cycles = 0, 0, 0, 1, 1, 1, 0
+
+#         st.subheader("Cost Parameters")
+#         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0, key="supply_costs")
+#         transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0, key="transport_costs")
+
+#     # --- Main Page Content ---
+#     st.subheader("Selected Configuration")
+    
+#     # Get the situation name from the session state
+#     situation = st.session_state.get('selected_situation')
+    
+#     if situation:
+#         # This dictionary is required again for the new function
+#         icons_b64 = {
+#             'grid': get_image_as_base64('Assets/power-line.png'),
+#             'meter': get_image_as_base64('Assets/energy-meter.png'), 
+#             'alloc': get_image_as_base64('Assets/energy-meter.png'), # You might need to create/rename this icon for PAP/SAP
+#             'pv': get_image_as_base64('Assets/energy-meter.png'),
+#             'batt': get_image_as_base64('Assets/energy-storage.png'),
+#             'load': get_image_as_base64('Assets/energy-consumption.png')
+#         }
+    
+#         # 1. Call the new function with both required arguments
+#         html_diagram = create_horizontal_diagram_with_icons(situation, icons_b64)
+        
+#         # 2. Render the diagram using the components.html function
+#         # Note: Adjusted height to match the new diagram's size
+#         st.components.v1.html(html_diagram, height=470)
+#     else:
+#         st.warning("Please select a situation from the sidebar first.")
+    
+#     st.markdown("---")
+    
+#     # --- PART 1: SIMULATION CONTROLS (Top of the main page) ---
+#     st.subheader("Run Simulation")
+#     if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
+#         if uploaded_file is None:
+#             st.error("Please upload an input file.")
+#         else:
+#             with st.spinner("Reading data and running model... Please wait."):
+#                 try:
+#                     if uploaded_file.name.endswith('.csv'):
+#                         input_df = pd.read_csv(uploaded_file, header=0)
+#                     else:
+#                         input_df = pd.read_excel(uploaded_file, sheet_name='Export naar Python', header=0)
+#                 except Exception as e:
+#                     st.error(f"Error reading file: {e}. Ensure the sheet is named 'Export naar Python'.")
+#                     st.stop()
+
+#                 params = {
+#                     "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
+#                     "MIN_SOC": min_soc, "MAX_SOC": max_soc, "EFF_CH": eff_ch,
+#                     "EFF_DIS": eff_dis, "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
+#                     "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
+#                     "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25,
+#                     # --- ADD THIS NEW LINE ---
+#                     "SELECTED_ASSETS": selected_assets
+#                 }
+
+                
+#                 status_placeholder = st.empty()
+#                 def progress_callback(msg):
+#                     status_placeholder.info(f"⏳ {msg}")
+                
+#                 results = run_revenue_model(params, input_df, progress_callback)
+#                 st.session_state.revenue_results = results
+#                 status_placeholder.empty()
+#             st.rerun()
+
+#     # --- PART 2: RESULTS DISPLAY (Below the run button, full width) ---
+#     st.markdown("---")
+#     results = st.session_state.revenue_results
+    
+#     if not results:
+#         st.info("Configure your simulation in the sidebar and click 'Run Analysis' to see the results.")
+#     elif results["error"]:
+#         st.error(results["error"])
+#     else:
+#         summary = results["summary"]
+#         df_original = results.get("df")
+
+#         # --- A. Summary Section ---
+#         st.subheader("📈 Results Summary")
+#         st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
+        
+#         summary_cols = st.columns(3)
+#         total_result_col = find_total_result_column(df_original)
+#         net_result = df_original[total_result_col].sum() if total_result_col else 0
+        
+#         summary_cols[0].metric("Net Result / Revenue", f"€ {net_result:,.0f}")
+#         summary_cols[1].metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
+#         summary_cols[2].metric("Infeasible Days", f"{len(summary.get('infeasible_days', []))}")
+        
+#         for warning in results["warnings"]:
+#             st.warning(warning)
+
+#         st.download_button(
+#             label="📥 Download Full Results (Excel)",
+#             data=results["output_file_bytes"],
+#             file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+#             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+#         )
+#         st.markdown("<br>", unsafe_allow_html=True) # Add some space
+
+#         # --- B. Interactive Plotting Section ---
+#         if df_original is not None and not df_original.empty:
+#             st.subheader("📊 Interactive Charts")
+#             resolution = st.selectbox(
+#                 "Select Chart Time Resolution",
+#                 ('15 Min (Original)', 'Hourly', 'Daily', 'Monthly', 'Yearly')
+#             )
+#             df_resampled = resample_data(df_original.copy(), resolution)
+            
+#             tab1, tab2, tab3 = st.tabs(["💰 Financial Results", "⚡ Energy Profiles", "🔋 Battery SoC"])
+#             with tab1:
+#                 if total_result_col:
+#                     fig_finance = px.line(df_resampled, x=df_resampled.index, y=total_result_col, title=f"Financial Result ({resolution})", labels={"x": "Date", "y": "Amount (€)"})
+#                     st.plotly_chart(fig_finance, use_container_width=True)
+#                 else:
+#                     st.warning("Could not find a 'total_result' column to plot.")
+#             with tab2:
+#                 st.markdown("#### Production & Consumption")
+#                 fig_pv = px.line(df_resampled, x=df_resampled.index, y='production_PV', title=f"PV Production ({resolution})", labels={"x": "Date", "y": "Energy (kWh)"})
+#                 st.plotly_chart(fig_pv, use_container_width=True)
+#                 fig_load = px.line(df_resampled, x=df_resampled.index, y='load', title=f"Load ({resolution})", labels={"x": "Date", "y": "Energy (kWh)"})
+#                 st.plotly_chart(fig_load, use_container_width=True)
+#             with tab3:
+#                 st.markdown("#### Battery State of Charge (SoC)")
+#                 st.info("This chart is always shown in the original 15-minute resolution.")
+#                 fig_soc = px.line(df_original, x=df_original.index, y='SoC_kWh', title="Battery SoC (15 Min Resolution)", labels={"x": "Date", "y": "State of Charge (kWh)"})
+#                 st.plotly_chart(fig_soc, use_container_width=True)
+#         else:
+#              st.warning("The model ran, but no data was returned for plotting.")
+
+#     # --- Navigation ---
+#     if st.button("⬅️ Back to Home"):
+#         st.session_state.page = "Home"
+#         st.session_state.revenue_results = None
+#         st.rerun()
 
 def show_revenue_analysis_page():
     display_header("Energy System Simulation ⚡")
-    st.write("Select a system configuration from the sidebar, upload your data, and run the simulation.")
+    st.write("Select a system configuration, upload your data, configure the parameters, and run the simulation.")
 
     # --- Configuration Sidebar ---
     with st.sidebar:
         st.header("⚙️ Configuration")
         
-        # --- 1. Master Situation Selector ---
-        st.subheader("1. Select System Configuration")
-        
+        # 1. System Configuration Selector
+        st.subheader("1. System Configuration")
         situation_options = [
             "Situation 1: PV + Consumption on PAP",
             "Situation 2: PV on SAP, Consumption on PAP",
@@ -930,73 +1122,63 @@ def show_revenue_analysis_page():
             "Situation 6: Consumption on PAP, Battery on SAP1, PV on SAP2",
             "Situation 7: PV + Battery on PAP"
         ]
-        
-        # Store the user's choice in session_state
         st.session_state['selected_situation'] = st.selectbox(
             "Choose the system topology:",
             options=situation_options
         )
         st.markdown("---")
 
-        # --- 2. Upload Data File ---
-        st.subheader("2. Upload Data File")
+        # 2. Upload Data
+        st.subheader("2. Upload Data")
         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
         st.markdown("---")
-
-        # --- 3. Optimization Strategy & Parameters ---
-        st.subheader("3. Optimization Strategy")
+        
+        # 3. Strategy & Parameters
+        st.subheader("3. Strategy & Parameters")
         strategy_choice = st.selectbox(
-            "Select a strategy:", 
+            "Select an optimization strategy:",
             ("Prioritize Self-Consumption", "Optimize on Day-Ahead Market", "Simple Battery Trading (Imbalance)")
         )
 
-        # Conditionally show battery parameters only if "Battery" is in the selected situation name
+        # Conditionally show battery parameters only if needed
         if "Battery" in st.session_state.get('selected_situation', ''):
             st.subheader("Battery Parameters")
-            power_mw = st.number_input("Power (MW)", value=1.0, min_value=0.1, step=0.1, key="power_mw")
-            capacity_mwh = st.number_input("Capacity (MWh)", value=2.0, min_value=0.1, step=0.1, key="capacity_mwh")
-            min_soc = st.slider("Minimum SoC", 0.0, 1.0, 0.05, key="min_soc")
-            max_soc = st.slider("Maximum SoC", 0.0, 1.0, 0.95, key="max_soc")
-            eff_ch = st.slider("Charging Efficiency", 0.80, 1.00, 0.95, step=0.01, key="eff_ch")
-            eff_dis = st.slider("Discharging Efficiency", 0.80, 1.00, 0.95, step=0.01, key="eff_dis")
-            max_cycles = st.number_input("Max Cycles per Year", value=600, min_value=1, key="max_cycles")
+            power_mw = st.number_input("Power (MW)", value=1.0, min_value=0.1, step=0.1)
+            capacity_mwh = st.number_input("Capacity (MWh)", value=2.0, min_value=0.1, step=0.1)
+            min_soc = st.slider("Minimum SoC", 0.0, 1.0, 0.05)
+            max_soc = st.slider("Maximum SoC", 0.0, 1.0, 0.95)
+            eff_ch = st.slider("Charging Efficiency", 0.80, 1.00, 0.95, step=0.01)
+            eff_dis = st.slider("Discharging Efficiency", 0.80, 1.00, 0.95, step=0.01)
+            max_cycles = st.number_input("Max Cycles per Year", value=600, min_value=1)
         else:
-            # If no battery in the situation, set placeholder values so the app doesn't crash
             power_mw, capacity_mwh, min_soc, max_soc, eff_ch, eff_dis, max_cycles = 0, 0, 0, 1, 1, 1, 0
 
         st.subheader("Cost Parameters")
-        supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0, key="supply_costs")
-        transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0, key="transport_costs")
+        supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0)
+        transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0)
 
     # --- Main Page Content ---
+    
+    # A. Display Selected Configuration Diagram
     st.subheader("Selected Configuration")
-    
-    # Get the situation name from the session state
     situation = st.session_state.get('selected_situation')
-    
     if situation:
-        # This dictionary is required again for the new function
         icons_b64 = {
             'grid': get_image_as_base64('Assets/power-line.png'),
             'meter': get_image_as_base64('Assets/energy-meter.png'), 
-            'alloc': get_image_as_base64('Assets/energy-meter.png'), # You might need to create/rename this icon for PAP/SAP
-            'pv': get_image_as_base64('Assets/energy-meter.png'),
+            'alloc': get_image_as_base64('Assets/alloc_point.png'),
+            'pv': get_image_as_base64('Assets/renewable-energy.png'),
             'batt': get_image_as_base64('Assets/energy-storage.png'),
             'load': get_image_as_base64('Assets/energy-consumption.png')
         }
-    
-        # 1. Call the new function with both required arguments
         html_diagram = create_horizontal_diagram_with_icons(situation, icons_b64)
-        
-        # 2. Render the diagram using the components.html function
-        # Note: Adjusted height to match the new diagram's size
         st.components.v1.html(html_diagram, height=470)
     else:
-        st.warning("Please select a situation from the sidebar first.")
+        st.info("Select a configuration from the sidebar to begin.")
     
     st.markdown("---")
-    
-    # --- PART 1: SIMULATION CONTROLS (Top of the main page) ---
+
+    # B. Run Simulation Button
     st.subheader("Run Simulation")
     if st.button("🚀 Run Analysis", type="primary", use_container_width=True):
         if uploaded_file is None:
@@ -1011,17 +1193,14 @@ def show_revenue_analysis_page():
                 except Exception as e:
                     st.error(f"Error reading file: {e}. Ensure the sheet is named 'Export naar Python'.")
                     st.stop()
-
+                
                 params = {
                     "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
                     "MIN_SOC": min_soc, "MAX_SOC": max_soc, "EFF_CH": eff_ch,
                     "EFF_DIS": eff_dis, "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
                     "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
-                    "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25,
-                    # --- ADD THIS NEW LINE ---
-                    "SELECTED_ASSETS": selected_assets
+                    "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25
                 }
-
                 
                 status_placeholder = st.empty()
                 def progress_callback(msg):
@@ -1032,31 +1211,31 @@ def show_revenue_analysis_page():
                 status_placeholder.empty()
             st.rerun()
 
-    # --- PART 2: RESULTS DISPLAY (Below the run button, full width) ---
+    # C. Results Display
     st.markdown("---")
-    results = st.session_state.revenue_results
+    results = st.session_state.get('revenue_results')
     
     if not results:
         st.info("Configure your simulation in the sidebar and click 'Run Analysis' to see the results.")
-    elif results["error"]:
+    elif results.get("error"):
         st.error(results["error"])
     else:
         summary = results["summary"]
         df_original = results.get("df")
 
-        # --- A. Summary Section ---
+        # Summary Section
         st.subheader("📈 Results Summary")
         st.info(f"**Analysis Method Used:** {summary.get('optimization_method', 'Not specified')}")
         
         summary_cols = st.columns(3)
         total_result_col = find_total_result_column(df_original)
-        net_result = df_original[total_result_col].sum() if total_result_col else 0
+        net_result = df_original[total_result_col].sum() if total_result_col and not df_original.empty else 0
         
         summary_cols[0].metric("Net Result / Revenue", f"€ {net_result:,.0f}")
         summary_cols[1].metric("Total Cycles", f"{summary.get('total_cycles', 0):.1f}")
         summary_cols[2].metric("Infeasible Days", f"{len(summary.get('infeasible_days', []))}")
         
-        for warning in results["warnings"]:
+        for warning in results.get("warnings", []):
             st.warning(warning)
 
         st.download_button(
@@ -1065,9 +1244,9 @@ def show_revenue_analysis_page():
             file_name=f"Revenue_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        st.markdown("<br>", unsafe_allow_html=True) # Add some space
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- B. Interactive Plotting Section ---
+        # Interactive Plotting Section
         if df_original is not None and not df_original.empty:
             st.subheader("📊 Interactive Charts")
             resolution = st.selectbox(
@@ -1085,17 +1264,20 @@ def show_revenue_analysis_page():
                     st.warning("Could not find a 'total_result' column to plot.")
             with tab2:
                 st.markdown("#### Production & Consumption")
-                fig_pv = px.line(df_resampled, x=df_resampled.index, y='production_PV', title=f"PV Production ({resolution})", labels={"x": "Date", "y": "Energy (kWh)"})
-                st.plotly_chart(fig_pv, use_container_width=True)
-                fig_load = px.line(df_resampled, x=df_resampled.index, y='load', title=f"Load ({resolution})", labels={"x": "Date", "y": "Energy (kWh)"})
-                st.plotly_chart(fig_load, use_container_width=True)
+                if 'production_PV' in df_resampled.columns:
+                    fig_pv = px.line(df_resampled, x=df_resampled.index, y='production_PV', title=f"PV Production ({resolution})", labels={"x": "Date", "y": "Energy (kWh)"})
+                    st.plotly_chart(fig_pv, use_container_width=True)
+                if 'load' in df_resampled.columns:
+                    fig_load = px.line(df_resampled, x=df_resampled.index, y='load', title=f"Load ({resolution})", labels={"x": "Date", "y": "Energy (kWh)"})
+                    st.plotly_chart(fig_load, use_container_width=True)
             with tab3:
-                st.markdown("#### Battery State of Charge (SoC)")
-                st.info("This chart is always shown in the original 15-minute resolution.")
-                fig_soc = px.line(df_original, x=df_original.index, y='SoC_kWh', title="Battery SoC (15 Min Resolution)", labels={"x": "Date", "y": "State of Charge (kWh)"})
-                st.plotly_chart(fig_soc, use_container_width=True)
+                if 'SoC_kWh' in df_original.columns:
+                    st.markdown("#### Battery State of Charge (SoC)")
+                    st.info("This chart is always shown in the original 15-minute resolution.")
+                    fig_soc = px.line(df_original, x=df_original.index, y='SoC_kWh', title="Battery SoC (15 Min Resolution)", labels={"x": "Date", "y": "State of Charge (kWh)"})
+                    st.plotly_chart(fig_soc, use_container_width=True)
         else:
-             st.warning("The model ran, but no data was returned for plotting.")
+            st.warning("The model ran, but no data was returned for plotting.")
 
     # --- Navigation ---
     if st.button("⬅️ Back to Home"):
