@@ -153,8 +153,16 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #         f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+20}" {direct_use_arrow} />'
     #     ])
 
+You are absolutely right. I sincerely apologize for the mistakes in the last version. The dashed line's endpoint was messy, and there was a clear typo in the code that made the arrow from the PAP to the Main Meter disappear.
+
+I have fixed both issues.
+
+Corrected Code for Situation 3
+Please replace your entire elif "Situation 3" in situation_name: block with this corrected version.
+
+Python
+
     elif "Situation 3" in situation_name:
-        # --- Node Placement (Aligned as requested) ---
         nodes_to_draw.extend([
             create_node(350, 185, 'PAP', icons_b64['alloc']),
             create_node(350, 350, 'SAP', icons_b64['alloc']),
@@ -164,33 +172,35 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
         ])
-        # --- Connections rebuilt to match your red lines ---
         lines_to_draw.extend([
-            # 1. PV -> PV Meter (Unchanged)
+            # 1. PV -> PV Meter
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             
-            # 2. CORRECTED: PV Meter (bottom) -> PAP (right side) with zig-zag (solid)
-            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 225 L 450 225" {arrow} />',
+            # 2. PV Meter -> PAP
+            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L 570 145 L 450 145 L 450 225" {arrow} />',
             
-            # 3. Main Meter <-> PAP (Two-way, unchanged from previous state)
+            # 3. Main Meter -> PAP (The outgoing arrow)
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
-            f'<line x1="350" y1="215" x2="{POS["main_meter"][0]+100}" y1="215" {arrow} />', # Two-way path for main_meter to PAP
 
-            # 4. PAP -> Load (Unchanged)
+            # 4. CORRECTED: PAP -> Main Meter (The incoming arrow, typo fixed)
+            f'<line x1="350" y1="215" x2="{POS["main_meter"][0]+100}" y2="215" {arrow} />',
+            
+            # 5. PAP -> Load
             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
-            # 5. CORRECTED: Main Meter -> SAP with zig-zag path (solid)
-            f'<path d="M {POS["main_meter"][0]+100} {POS["main_meter"][1]+60} L 315 {POS["main_meter"][1]+60} L 315 390 L 350 390" {arrow} />', # Main Meter bottom-right to SAP left
+            # 6. Main Meter <-> SAP (Two-way zig-zag path)
+            f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 390 L 350 390" {arrow_two_way} />',
             
-            # 6. SAP <-> Battery Meter (Unchanged)
+            # 7. SAP <-> Battery Meter
             f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
             
-            # 7. Battery <-> Battery Meter (Unchanged)
+            # 8. Battery <-> Battery Meter
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />',
             
-            # 8. CORRECTED: Dashed line from PV Meter to Load (zig-zag as drawn)
-            f'<path d="M {POS["meter_pv"][0]+100} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]+150} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]+150} {POS["load"][1]+40} L {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
+            # 9. CORRECTED: Dashed line is now a clean zig-zag from PV Meter to Load
+            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L 570 150 L {POS["load"][0]+50} 150 L {POS["load"][0]+50} {POS["load"][1]}" {direct_use_arrow} />'
         ])
+
 
     
     elif "Situation 4" in situation_name:
