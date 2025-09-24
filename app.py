@@ -87,20 +87,34 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
 
     # All situations except #6 are the same as before
     if "Situation 1" in situation_name:
-        nodes_to_draw.extend([
-            create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
-            create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter'])
-        ])
+    #     nodes_to_draw.extend([
+    #         create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
+    #         create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+    #         create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+    #         create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter'])
+    #     ])
+    #     lines_to_draw.extend([
+    #         f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+    #         f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+    #         f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 145 L 400 145 L {POS["pap_main"][0]+50} {POS["pap_main"][1]}" {arrow} />',
+    #         f'<line x2="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x1="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+    #         f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+20}" {direct_use_arrow} />'
+    #     ])
+
         lines_to_draw.extend([
+            # Main Meter to PAP and PAP to Load connections remain the same
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
             f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 145 L 400 145 L {POS["pap_main"][0]+50} {POS["pap_main"][1]}" {arrow} />',
-            f'<line x2="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x1="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+20}" {direct_use_arrow} />'
+            
+            # CORRECTED: Connection from PV Meter now ends on the right side of the PAP box
+            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 145 L {POS["pap_main"][0]+100} 145" {arrow} />',
+            
+            # PV to PV Meter connection remains the same
+            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
+            
+            # CORRECTED: Dashed line is now a straight, angled path from PV Meter to Load
+            f'<path d="M {POS["meter_pv"][0]} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]-50} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]-50} {POS["load"][1]+40} L {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
         ])
-
 
     elif "Situation 2" in situation_name:
         # --- Node Placement (PAP is now aligned with Load) ---
