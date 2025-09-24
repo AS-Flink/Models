@@ -1155,7 +1155,7 @@ def show_revenue_analysis_page():
             )
 
         # Conditionally show battery parameters only if needed
-        if "Battery" in st.session_state.get('selected_situation', ''):
+        if "Battery" or "PAP" in st.session_state.get('selected_situation', ''):
             st.subheader("Battery Parameters")
             power_mw = st.number_input("Power (MW)", value=1.0, min_value=0.1, step=0.1)
             capacity_mwh = st.number_input("Capacity (MWh)", value=2.0, min_value=0.1, step=0.1)
