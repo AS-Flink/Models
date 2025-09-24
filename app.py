@@ -244,25 +244,32 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
 
 
     elif "Situation 2" in situation_name:
+        # --- Node Placement (PAP is now aligned with Load) ---
         nodes_to_draw.extend([
             create_node(350, 100, 'SAP', icons_b64['alloc']),
-            create_node(350, 225, 'PAP', icons_b64['alloc']),
+            create_node(350, 185, 'PAP', icons_b64['alloc']), # Aligned with Load
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter'])
         ])
+        # --- Connections (Separate, clean lines with correct directions) ---
         lines_to_draw.extend([
-            # These first three lines are correct and remain unchanged
-            f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 140 L 350 140" {arrow} />',
-            f'<line x1="315" y1="225" x2="350" y2="265" {arrow} />',
-            f'<line x1="450" y1="265" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-    
-            # REVERSED: Arrow now points from PV Meter to SAP
+            # 1. Main Meter -> PAP (Separate line, correct direction)
+            f'<path d="M {POS["main_meter"][0]+100} {POS["main_meter"][1]+40} L 350 {POS["main_meter"][1]+40}" {arrow} />',
+            
+            # 2. SAP -> Main Meter (Separate line, REVERSED direction)
+            f'<path d="M 450 140 L 280 140 L 280 {POS["main_meter"][1]+40}" {arrow} />',
+            
+            # 3. PAP -> Load (Straight horizontal line)
+            f'<line x1="{450}" y1="{POS["load"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+            
+            # 4. PV Meter -> SAP
             f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="140" {arrow} />',
-    
-            # REVERSED: Arrow now points from PV to PV Meter
+            
+            # 5. PV -> PV Meter
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />'
         ])
+
 
 
     elif "Situation 3" in situation_name:
