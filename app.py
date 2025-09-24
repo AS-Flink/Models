@@ -183,19 +183,19 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
         ])
-        # --- Connections rebuilt with three separate lines from PAP ---
+        # --- Connections rebuilt with three separate, spaced-out lines from PAP ---
         lines_to_draw.extend([
             # Connection from Main Meter to PAP
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
 
-            # 1. NEW: Direct line from PAP to PV Meter
-            f'<path d="M {POS["pap_main"][0]+100} 225 L 480 225 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
+            # 1. SEPARATE LINE: From PAP (top-right) to PV Meter
+            f'<path d="M {POS["pap_main"][0]+100} {POS["pap_main"][1]+20} L 480 {POS["pap_main"][1]+20} L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
             
-            # 2. NEW: Direct line from PAP to Load
+            # 2. SEPARATE LINE: From PAP (center-right) to Load
             f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
-            # 3. NEW: Direct line from PAP to Battery Meter
-            f'<path d="M {POS["pap_main"][0]+100} 225 L 480 225 L 480 390 L {POS["meter_battery"][0]} 390" {arrow} />',
+            # 3. SEPARATE LINE: From PAP (bottom-right) to Battery Meter
+            f'<path d="M {POS["pap_main"][0]+100} {POS["pap_main"][1]+60} L 480 {POS["pap_main"][1]+60} L 480 390 L {POS["meter_battery"][0]} 390" {arrow} />',
 
             # Local connections from meters to assets
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
