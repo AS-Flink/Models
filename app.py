@@ -172,7 +172,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<path d="M {POS["meter_pv"][0]+45} {POS["meter_pv"][1]+80} L 565 145 L {POS["pap_main"][0]+50} 145 L {POS["pap_main"][0]+50} {POS["load"][1]}" {arrow} />',
             
             # 3. Main Meter -> PAP (The outgoing arrow)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="225" {arrow} />',
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+65}" x2="350" y2="250" {arrow} />',
 
             # 4. CORRECTED: PAP -> Main Meter (The incoming arrow, typo fixed)
             f'<line x1="350" y1="215" x2="{POS["main_meter"][0]+100}" y2="215" {arrow} />',
@@ -181,7 +181,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
             # 6. Main Meter <-> SAP (Two-way zig-zag path)
-            f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 390 L 350 390" {arrow_two_way} />',
+            f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L 315 390 L 350 390" {arrow_two_way} />',
             
             # 7. SAP <-> Battery Meter
             f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
