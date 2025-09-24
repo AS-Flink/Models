@@ -164,7 +164,7 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-def create_detailed_diagram(situation_name):
+def create_diagram(situation_name):
     """
     Generates a clean and accurate SVG diagram for any of the 7 situations,
     replicating the provided schematics with all meters and correct connections.
@@ -1020,23 +1020,38 @@ def show_revenue_analysis_page():
         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0, key="supply_costs")
         transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0, key="transport_costs")
 
+    # # --- Main Page Content ---
+    # st.subheader("Selected Configuration")
+
+    # # Get the situation name from the session state
+    # situation = st.session_state.get('selected_situation')
+    
+    # # Create and display the diagram for the selected situation
+    # icons_b64 = {
+    #     'grid': get_image_as_base64('Assets/power-line.png'),
+    #     'alloc': get_image_as_base64('Assets/energy-meter.png'),
+    #     'pv': get_image_as_base64('Assets/renewable-energy.png'),
+    #     'batt': get_image_as_base64('Assets/energy-storage.png'),
+    #     'load': get_image_as_base64('Assets/energy-consumption.png')
+    # }
+    # html_diagram = create_detailed_diagram(situation, icons_b64)
+    # st.markdown(html_diagram, unsafe_allow_html=True)
+        
+    # st.markdown("---")
+
     # --- Main Page Content ---
     st.subheader("Selected Configuration")
-
+    
     # Get the situation name from the session state
     situation = st.session_state.get('selected_situation')
     
-    # Create and display the diagram for the selected situation
-    icons_b64 = {
-        'grid': get_image_as_base64('Assets/power-line.png'),
-        'alloc': get_image_as_base64('Assets/energy-meter.png'),
-        'pv': get_image_as_base64('Assets/renewable-energy.png'),
-        'batt': get_image_as_base64('Assets/energy-storage.png'),
-        'load': get_image_as_base64('Assets/energy-consumption.png')
-    }
-    html_diagram = create_detailed_diagram(situation, icons_b64)
-    st.markdown(html_diagram, unsafe_allow_html=True)
-        
+    # Create and display the diagram using the new function call
+    if situation:
+        html_diagram = create_diagram(situation) # CORRECT: Use new name and only one argument
+        st.markdown(html_diagram, unsafe_allow_html=True)
+    else:
+        st.warning("Please select a situation from the sidebar first.")
+    
     st.markdown("---")
 
 
