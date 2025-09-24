@@ -221,7 +221,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="200" {arrow} />',
             
             # 3. Main Meter <-> SAP (Two-way connection)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="200" x2="350" y2="200" {arrow} />',
+            f'<line x2="{POS["main_meter"][0]+100}" y1="200" x1="350" y2="200" {arrow} />',
             f'<line x1="350" y1="220" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+35}" {arrow} />',
             
             # 4. SAP -> Battery Meter
