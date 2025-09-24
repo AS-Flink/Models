@@ -195,7 +195,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
             # 3. NEW: Direct line from PAP to Battery Meter
-            f'<path d="M {POS["pap_main"][0]+100} 225 L 480 225 L 480 390 L {POS["meter_battery"][0]} 390" {arrow_one_way} />',
+            f'<path d="M {POS["pap_main"][0]+100} 225 L 480 225 L 480 390 L {POS["meter_battery"][0]} 390" {arrow} />',
 
             # Local connections from meters to assets
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
