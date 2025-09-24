@@ -118,13 +118,13 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         # --- Connections redrawn for the new layout ---
         lines_to_draw.extend([
             # 1. Main Meter -> SAP (Angled path to the top row)
-            f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L 315 120 L 350 120" {arrow} />',
+            f'<path d="M 350 120 L 315 120 L 315 225 L {POS["main_meter"][0]+100} 225" {arrow} />',          
             
             # 2. CORRECTED: Main Meter -> PAP (New zig-zag path to the bottom row)
             f'<path d="M {POS["main_meter"][0]+100} 250 L 315 250 L 315 330 L 350 330" {arrow} />',
             
             # 3. SAP -> PV Meter (Straight line on the top row)
-            f'<line x1="450" y1="120" x2="{POS["meter_pv"][0]}" y2="120" {arrow} />',
+            f'<line x2="450" y1="120" x1="{POS["meter_pv"][0]}" y2="120" {arrow} />',
             
             # 4. PAP -> Load (Straight line on the bottom row)
             f'<line x1="450" y1="330" x2="{POS["load"][0]}" y2="330" {arrow} />',
