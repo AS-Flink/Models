@@ -480,12 +480,15 @@ def load_projects():
         st.sidebar.warning("No saved projects file found.")
 
 # --- UI HELPER ---
+# def display_header(title):
+    # col1, col2 = st.columns([1, 4])
+    # with col1:
+    #     st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=10000)
+    # with col2:
+    #     st.title(title)
+    # st.markdown("---")
 def display_header(title):
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=10000)
-    with col2:
-        st.title(title)
+    st.title(title)
     st.markdown("---")
 
 # --- CORE CALCULATION & CHARTING FUNCTIONS (Financial Model) ---
