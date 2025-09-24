@@ -1045,13 +1045,16 @@ def show_revenue_analysis_page():
     # Get the situation name from the session state
     situation = st.session_state.get('selected_situation')
     
-    # Create and display the diagram using the correct function call
     if situation:
         # 1. Call the function to get the HTML/SVG string
         html_diagram = create_diagram(situation) 
         
-        # 2. Render the string as HTML
-        st.markdown(html_diagram, unsafe_allow_html=True) # This is the crucial line
+        # 2. (DEBUG STEP) Display the raw HTML string to inspect it.
+        # Check the output of this line in your app. Does it look like clean HTML?
+        st.code(html_diagram)
+    
+        # 3. (NEW METHOD) Render the diagram using the components.html function.
+        st.components.v1.html(html_diagram, height=520)
     else:
         st.warning("Please select a situation from the sidebar first.")
     
