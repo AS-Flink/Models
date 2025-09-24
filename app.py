@@ -1133,12 +1133,26 @@ def show_revenue_analysis_page():
         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
         st.markdown("---")
         
-        # 3. Strategy & Parameters
-        st.subheader("3. Strategy & Parameters")
-        strategy_choice = st.selectbox(
-            "Select an optimization strategy:",
-            ("Prioritize Self-Consumption", "Optimize on Day-Ahead Market", "Simple Battery Trading (Imbalance)")
+        # 3. CORRECTED: Restored the two-step strategy selection
+        st.subheader("3. Optimization Strategy")
+        goal_choice = st.radio(
+            "What is your primary financial goal?",
+            ("Minimize My Energy Bill", "Generate Revenue Through Market Trading"),
+            horizontal=True
         )
+        
+        if goal_choice == "Minimize My Energy Bill":
+            st.info("_Use assets to reduce overall energy costs._")
+            strategy_choice = st.selectbox(
+                "Select a cost-minimization strategy:",
+                ("Prioritize Self-Consumption", "Optimize on Day-Ahead Market")
+            )
+        else: # Generate Revenue
+            st.info("_Actively use assets to trade on energy markets._")
+            strategy_choice = st.selectbox(
+                "Select a revenue-generation strategy:",
+                ("Simple Battery Trading (Imbalance)", "Advanced Whole-System Trading (Imbalance)")
+            )
 
         # Conditionally show battery parameters only if needed
         if "Battery" in st.session_state.get('selected_situation', ''):
@@ -1166,7 +1180,7 @@ def show_revenue_analysis_page():
         icons_b64 = {
             'grid': get_image_as_base64('Assets/power-line.png'),
             'meter': get_image_as_base64('Assets/energy-meter.png'), 
-            'alloc': get_image_as_base64('Assets/alloc_point.png'),
+            'alloc': get_image_as_base64('Assets/energy-meter.png'),
             'pv': get_image_as_base64('Assets/renewable-energy.png'),
             'batt': get_image_as_base64('Assets/energy-storage.png'),
             'load': get_image_as_base64('Assets/energy-consumption.png')
