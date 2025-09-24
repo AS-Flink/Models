@@ -145,14 +145,14 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="200" {arrow} />',
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
             f'<line x1="350" y1="200" x2="{POS["main_meter"][0]+100}" y2="200" {arrow} />',
-            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+            f'<line x1="450" y1="250" x2="{POS["load"][0]}" y2="250" {arrow} />',
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+50}" x2="350" y2="390" {arrow_two_way} />',
             f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />',
             f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+20}" {direct_use_arrow} />'
         ])
 
-        
+        # {POS["load"][1]+40}
     elif "Situation 4" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
