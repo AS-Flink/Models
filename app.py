@@ -214,10 +214,10 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
 
             # --- CORRECTED DASHED LINES ---
             # 1. Dashed line from PV Meter to Load (angled, not curved)
-            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 220 L {POS["load"][0]} 220" {direct_use_arrow} />',
+            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 200 L {POS["load"][0]} 200" {direct_use_arrow} />',
             
             # 2. Dashed line from Battery Meter to Load (angled, not curved)
-            f'<path d="M {POS["meter_battery"][0]+50} {POS["meter_battery"][1]} L {POS["meter_battery"][0]+50} 280 L {POS["load"][0]} 280" {direct_use_arrow} />',
+            f'<path d="M {POS["meter_battery"][0]+50} {POS["meter_battery"][1]} L {POS["meter_battery"][0]+50} 250 L {POS["load"][0]} 250" {direct_use_arrow} />',
             
             # 3. Dashed line from PV Meter to Battery Meter (angled, not curved)
             f'<path d="M {POS["meter_pv"][0]} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]-50} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]-50} {POS["meter_battery"][1]+40} L {POS["meter_battery"][0]} {POS["meter_battery"][1]+40}" {direct_use_arrow} />'
