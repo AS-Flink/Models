@@ -736,187 +736,6 @@ def show_project_selection_page():
                         if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
 
 
-# def show_revenue_analysis_page():
-#     display_header("Battery Revenue Analysis 🔋")
-#     st.write("Upload a data file and configure the battery parameters to run a revenue simulation.")
-
-#     # --- Configuration Sidebar ---
-#     # The entire configuration now lives neatly in the sidebar.
-#     with st.sidebar:
-#         st.header("⚙️ Configuration")
-        
-#         # uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
-
-#         # --- NEW: Step 1 - Asset Selection ---
-#         st.subheader("1. Select Simulation Assets")
-#         # The user must select the assets they want to include in the simulation.
-#         selected_assets = st.multiselect(
-#             "Choose the assets for your configuration:",
-#             options=["Solar PV", "Battery", "Load"],
-#             default=["Solar PV", "Battery", "Load"], # Pre-select all by default
-#             label_visibility="collapsed"
-#         )
-#         st.markdown("---") # Visual separator
-
-#         # --- Step 2 - Upload Data ---
-#         st.subheader("2. Upload Data File")
-#         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
-#         st.markdown("---")
-
-#         st.subheader("Optimization Strategy")
-#         goal_choice = st.radio(
-#             "What is your primary financial goal?",
-#             ("Minimize My Energy Bill", "Generate Revenue Through Market Trading"),
-#             horizontal=True,
-#             label_visibility="collapsed"
-#         )
-        
-#         if goal_choice == "Minimize My Energy Bill":
-#             st.write("_Use assets to reduce overall energy costs by smartly using solar power and avoiding high grid prices._")
-#             strategy_choice = st.selectbox(
-#                 "Select a cost-minimization strategy:",
-#                 ("Prioritize Self-Consumption", "Optimize on Day-Ahead Market")
-#             )
-#         else: # Generate Revenue
-#             st.write("_Actively use assets to trade on energy markets and generate direct profit._")
-#             strategy_choice = st.selectbox(
-#                 "Select a revenue-generation strategy:",
-#                 ("Simple Battery Trading (Imbalance)", "Advanced Whole-System Trading (Imbalance)")
-#             )
-
-#         st.subheader("Battery Parameters")
-#         power_mw = st.number_input("Vermogen batterij (MW)", value=1.0, min_value=0.1, step=0.1)
-#         capacity_mwh = st.number_input("Capaciteit batterij (MWh)", value=2.0, min_value=0.1, step=0.1)
-#         min_soc = st.slider("Minimum SoC", 0.0, 1.0, 0.05)
-#         max_soc = st.slider("Maximum SoC", 0.0, 1.0, 0.95)
-#         eff_ch = st.slider("Efficiëntie opladen", 0.8, 1.0, 0.95)
-#         eff_dis = st.slider("Efficiëntie ontladen", 0.8, 1.0, 0.95)
-
-#         st.subheader("Cost & Other Parameters")
-#         max_cycles = st.number_input("Max cycli per jaar", value=600, min_value=1)
-#         supply_costs = st.number_input("Kosten energieleverancier (€/MWh)", value=20.0)
-#         transport_costs = st.number_input("Transportkosten afname (€/MWh)", value=15.0)
-
-#     # --- NEW: Display the chosen configuration visually ---
-#     st.subheader("Selected Configuration")
-#     if not selected_assets:
-#         st.warning("Please select at least one asset in the sidebar to configure your simulation.")
-#     else:
-#         # Create columns for each selected asset plus the grid
-#         num_columns = len(selected_assets) + 1
-#         cols = st.columns(num_columns)
-
-#         # Always display the grid
-#         with cols[0]:
-#             st.markdown(f"<div style='text-align: center; font-size: 50px;'>{ASSET_ICONS['Grid']}</div>", unsafe_allow_html=True)
-#             st.markdown("<h5 style='text-align: center;'>Grid</h5>", unsafe_allow_html=True)
-
-#         # Display each selected asset
-#         for i, asset in enumerate(selected_assets):
-#             with cols[i+1]:
-#                 st.markdown(f"<div style='text-align: center; font-size: 50px;'>{ASSET_ICONS.get(asset, '❓')}</div>", unsafe_allow_html=True)
-#                 st.markdown(f"<h5 style='text-align: center;'>{asset}</h5>", unsafe_allow_html=True)
-#     st.markdown("---")
-
-
-# Make sure you have this import at the top of your app.py
-import os
-
-# def show_revenue_analysis_page():
-#     display_header("Energy System Simulation ⚡")
-#     st.write("Select a system configuration from the sidebar, upload your data, and run the simulation.")
-
-#     # --- Configuration Sidebar ---
-#     with st.sidebar:
-#         st.header("⚙️ Configuration")
-        
-#         # --- 1. Master Situation Selector ---
-#         st.subheader("1. Select System Configuration")
-        
-#         situation_options = [
-#             "Situation 1: PV + Consumption on PAP",
-#             "Situation 2: PV on SAP, Consumption on PAP",
-#             "Situation 3: PV+Consumption on PAP, Battery on SAP",
-#             "Situation 4: Everything on PAP (Imbalance)",
-#             "Situation 5: Consumption on PAP, Battery+PV on SAP",
-#             "Situation 6: Consumption on PAP, Battery on SAP1, PV on SAP2",
-#             "Situation 7: PV + Battery on PAP"
-#         ]
-        
-#         # Store the user's choice in session_state
-#         st.session_state['selected_situation'] = st.selectbox(
-#             "Choose the system topology:",
-#             options=situation_options
-#         )
-#         st.markdown("---")
-
-#         # --- 2. Upload Data File ---
-#         st.subheader("2. Upload Data File")
-#         uploaded_file = st.file_uploader("Upload Input Data (CSV or Excel)", type=['csv', 'xlsx'])
-#         st.markdown("---")
-
-#         st.subheader("3. Optimization Strategy")
-#         goal_choice = st.radio(
-#             "What is your primary financial goal?",
-#             ("Minimize My Energy Bill", "Generate Revenue Through Market Trading"),
-#             horizontal=True,
-#             label_visibility="collapsed"
-#         )
-        
-#         if goal_choice == "Minimize My Energy Bill":
-#             st.write("_Use assets to reduce overall energy costs by smartly using solar power and avoiding high grid prices._")
-#             strategy_choice = st.selectbox(
-#                 "Select a cost-minimization strategy:",
-#                 ("Prioritize Self-Consumption", "Optimize on Day-Ahead Market")
-#             )
-#         else: # Generate Revenue
-#             st.write("_Actively use assets to trade on energy markets and generate direct profit._")
-#             strategy_choice = st.selectbox(
-#                 "Select a revenue-generation strategy:",
-#                 ("Simple Battery Trading (Imbalance)", "Advanced Whole-System Trading (Imbalance)")
-#             )
-
-#         # --- THIS SECTION IS CORRECTED ---
-#         # It now checks if "Battery" is in the selected situation's NAME string.
-#         # .get() is used to prevent an error on the first run.
-#         if "Battery" in st.session_state.get('selected_situation', ''):
-#             st.subheader("Battery Parameters")
-#             power_mw = st.number_input("Power (MW)", value=1.0, min_value=0.1, step=0.1)
-#             capacity_mwh = st.number_input("Capacity (MWh)", value=2.0, min_value=0.1, step=0.1)
-#             min_soc = st.slider("Minimum SoC", 0.0, 1.0, 0.05)
-#             max_soc = st.slider("Maximum SoC", 0.0, 1.0, 0.95)
-#             eff_ch = st.slider("Charging Efficiency", 0.8, 1.0, 0.95)
-#             eff_dis = st.slider("Discharging Efficiency", 0.8, 1.0, 0.95)
-#             max_cycles = st.number_input("Max Cycles per Year", value=600, min_value=1)
-#         else:
-#             # If the selected situation does not contain a battery, set default zero/placeholder values
-#             power_mw, capacity_mwh, min_soc, max_soc, eff_ch, eff_dis, max_cycles = 0, 0, 0, 1, 1, 1, 0
-#         # --- END OF CORRECTION ---
-
-#         st.subheader("Cost Parameters")
-#         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0)
-#         transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0)
-    
-#     # --- Main Page Content ---
-#     st.subheader("Selected Configuration")
-
-#     # Get the situation name from the session state (set by the sidebar)
-#     situation = st.session_state.get('selected_situation', "Situation 1: PV + Consumption on PAP")
-    
-#     # Create and display the diagram for the selected situation
-#     # The get_image_as_base64 and create_advanced_diagram functions should be defined elsewhere in your script
-#     icons_b64 = {
-#         'grid': get_image_as_base64('Assets/power-line.png'),
-#         'alloc': get_image_as_base64('Assets/energy-meter.png'),
-#         'pv': get_image_as_base64('Assets/renewable-energy.png'),
-#         'batt': get_image_as_base64('Assets/energy-storage.png'),
-#         'load': get_image_as_base64('Assets/energy-consumption.png')
-#     }
-#     html_diagram = create_detailed_diagram(situation, icons_b64)
-#     st.markdown(html_diagram, unsafe_allow_html=True)
-        
-#     st.markdown("---")
-
 # This is the complete and correct version of your page function.
 def show_revenue_analysis_page():
     display_header("Energy System Simulation ⚡")
@@ -976,25 +795,6 @@ def show_revenue_analysis_page():
         supply_costs = st.number_input("Supplier Costs (€/MWh)", value=20.0, key="supply_costs")
         transport_costs = st.number_input("Transport Costs (€/MWh)", value=15.0, key="transport_costs")
 
-    # # --- Main Page Content ---
-    # st.subheader("Selected Configuration")
-
-    # # Get the situation name from the session state
-    # situation = st.session_state.get('selected_situation')
-    
-    # # Create and display the diagram for the selected situation
-    # icons_b64 = {
-    #     'grid': get_image_as_base64('Assets/power-line.png'),
-    #     'alloc': get_image_as_base64('Assets/energy-meter.png'),
-    #     'pv': get_image_as_base64('Assets/renewable-energy.png'),
-    #     'batt': get_image_as_base64('Assets/energy-storage.png'),
-    #     'load': get_image_as_base64('Assets/energy-consumption.png')
-    # }
-    # html_diagram = create_detailed_diagram(situation, icons_b64)
-    # st.markdown(html_diagram, unsafe_allow_html=True)
-        
-    # st.markdown("---")
-
     # --- Main Page Content ---
     st.subheader("Selected Configuration")
     
@@ -1022,21 +822,6 @@ def show_revenue_analysis_page():
         st.warning("Please select a situation from the sidebar first.")
     
     st.markdown("---")
-
-
-
-
-    # if not selected_assets:
-    #     st.warning("Please select at least one asset in the sidebar.")
-    # else:
-    #     # This call will now use the new, corrected function
-    #     html_diagram = create_detailed_diagram(selected_assets)
-    #     st.markdown(html_diagram, unsafe_allow_html=True)
-        
-    # st.markdown("---")
-
-
-
     
     # --- PART 1: SIMULATION CONTROLS (Top of the main page) ---
     st.subheader("Run Simulation")
@@ -1053,14 +838,6 @@ def show_revenue_analysis_page():
                 except Exception as e:
                     st.error(f"Error reading file: {e}. Ensure the sheet is named 'Export naar Python'.")
                     st.stop()
-                
-                # params = {
-                #     "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
-                #     "MIN_SOC": min_soc, "MAX_SOC": max_soc, "EFF_CH": eff_ch,
-                #     "EFF_DIS": eff_dis, "MAX_CYCLES": max_cycles, "INIT_SOC": 0.5,
-                #     "SUPPLY_COSTS": supply_costs, "TRANSPORT_COSTS": transport_costs,
-                #     "STRATEGY_CHOICE": strategy_choice, "TIME_STEP_H": 0.25
-                # }
 
                 params = {
                     "POWER_MW": power_mw, "CAPACITY_MWH": capacity_mwh,
@@ -1152,8 +929,6 @@ def show_revenue_analysis_page():
         st.session_state.page = "Home"
         st.session_state.revenue_results = None
         st.rerun()
-
-
 
 def show_model_page():
     # --- ADD THIS CODE AT THE TOP OF THE FUNCTION ---
