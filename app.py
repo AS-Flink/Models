@@ -179,10 +179,22 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #     </defs>
     # """
     # # Define SVG arrow markers
+    # arrow_defs = """
+    #     <defs>
+    #         <marker id="arrow-end-yellow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    #             <path d="M 0 0 L 8 4 L 0 8 z" fill="#FDB813" />
+    #         </marker>
+    #     </defs>
+    # """
+    # Define SVG arrow markers
     arrow_defs = """
         <defs>
             <marker id="arrow-end-yellow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
                 <path d="M 0 0 L 8 4 L 0 8 z" fill="#FDB813" />
+            </marker>
+            
+            <marker id="arrow-start-yellow" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 8 0 L 0 4 L 8 8 z" fill="#FDB813" />
             </marker>
         </defs>
     """
@@ -208,7 +220,11 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         'sap1': (350, 80), 'pap_center_sit6': (350, 185), 'sap2': (350, 290)
     }
 
+    # arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+    # direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
+    # Define styles for the arrows
     arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+    arrow_two_way = 'stroke="#FDB813" stroke-width="3" fill="none" marker-start="url(#arrow-start-yellow)" marker-end="url(#arrow-end-yellow)"'
     direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
 
     nodes_to_draw = []
@@ -321,16 +337,16 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
             # 6. SAP <-> Main Meter
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="395" {arrow} />',
-            f'<line x1="350" y1="385" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+50}" {arrow} />',
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="395" {arrow_two_way} />',
+            # f'<line x1="350" y1="385" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+50}" {arrow} />',
             
             # 7. SAP <-> Battery Meter
-            f'<line x1="450" y1="395" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+45}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]}" y1="{POS["meter_battery"][1]+35}" x2="450" y2="385" {arrow} />',
+            f'<line x1="450" y1="395" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+45}" {arrow_two_way} />',
+            # f'<line x1="{POS["meter_battery"][0]}" y1="{POS["meter_battery"][1]+35}" x2="450" y2="385" {arrow} />',
             
             # 8. Battery <-> Battery Meter
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+45}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+45}" {arrow} />',
-            f'<line x1="{POS["battery"][0]}" y1="{POS["battery"][1]+35}" x2="{POS["meter_battery"][0]+100}" y2="{POS["meter_battery"][1]+35}" {arrow} />',
+            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+45}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+45}" {arrow_two_way} />',
+            # f'<line x1="{POS["battery"][0]}" y1="{POS["battery"][1]+35}" x2="{POS["meter_battery"][0]+100}" y2="{POS["meter_battery"][1]+35}" {arrow} />',
             
             # 9. Dashed line for direct use from PV Meter to Load
             f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
