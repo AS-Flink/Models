@@ -217,29 +217,29 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         # --- Connections for Situation 5 (Re-routed and corrected) ---
         lines_to_draw.extend([
             # 1. Main Meter to SAP (now a direct, distinct line)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="300" {arrow_one_way} />',
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="300" {arrow} />',
 
             # 2. Main Meter to PAP (now a direct, distinct line)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="430" {arrow_one_way} />',
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="430" {arrow} />',
 
             # 3. PV to PV Meter (Unchanged, PV -> PV Meter)
-            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow_one_way} />',
+            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             
             # 4. PV Meter to SAP (New, direct line with correct direction)
-            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="300" {arrow_one_way} />', # PV Meter (right side) to SAP (right side, middle height)
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="300" {arrow} />', # PV Meter (right side) to SAP (right side, middle height)
 
             # 5. Battery to Battery Meter (Unchanged, two-way)
             f'<line x1="{POS["battery"][0]}" y1="300" x2="{POS["meter_battery"][0]+100}" y2="300" {arrow_two_way} />',
             
             # 6. Battery Meter to SAP (New, direct line)
-            f'<line x1="{POS["meter_battery"][0]}" y1="300" x2="450" y2="300" {arrow_one_way} />', # Battery Meter (left side) to SAP (right side, middle height)
+            f'<line x1="{POS["meter_battery"][0]}" y1="300" x2="450" y2="300" {arrow} />', # Battery Meter (left side) to SAP (right side, middle height)
             
             # 7. SAP to PAP (Connection between the two allocation points)
-            f'<line x1="400" y1="340" x2="400" y2="390" {arrow_one_way} />', # From SAP (bottom center) down to PAP (top center)
-            f'<line x1="350" y1="340" x2="350" y2="390" {arrow_one_way} />', # Added a second path for flexibility or specific flow
+            f'<line x1="400" y1="340" x2="400" y2="390" {arrow} />', # From SAP (bottom center) down to PAP (top center)
+            f'<line x1="350" y1="340" x2="350" y2="390" {arrow} />', # Added a second path for flexibility or specific flow
 
             # 8. PAP to Load (Direct horizontal line)
-            f'<line x1="450" y1="430" x2="{POS["load"][0]}" y2="430" {arrow_one_way} />',
+            f'<line x1="450" y1="430" x2="{POS["load"][0]}" y2="430" {arrow} />',
 
             # 9. Dashed line: PV direct to Battery (Unchanged, assuming it still applies)
             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {260+20}" {direct_use_arrow} />' # Adjusted Y for battery
