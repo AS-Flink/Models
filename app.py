@@ -781,7 +781,7 @@ def show_home_page():
             st.session_state.page = "Project_Selection"; st.rerun()
             
     st.markdown("---") 
-    st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", use_container_width=True)
+    st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", use_container_width=False)
 
 
 
