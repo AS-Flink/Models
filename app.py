@@ -815,7 +815,7 @@ def show_battery_sizing_page():
 #         if st.button("Business Case Simulation", type="primary"):
 #             st.session_state.page = "Project_Selection"; st.rerun()
 def show_home_page():
-    display_header("Flink Energy Management System (EMS) Simulation ")
+    display_header("Flink EMS Simulation ")
 
     # --- 1. Create the main two-column layout ---
     # The ratio [2, 3] gives more space to the image on the right.
@@ -910,7 +910,6 @@ def show_project_selection_page():
                         if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
 
 
-# This is the complete and correct version of your page function.
 def show_revenue_analysis_page():
     display_header("Energy System Simulation ⚡")
     st.write("Select a system configuration from the sidebar, upload your data, and run the simulation.")
