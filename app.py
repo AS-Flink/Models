@@ -191,8 +191,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         <defs>
             <marker id="arrow-end-yellow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
                 <path d="M 0 0 L 8 4 L 0 8 z" fill="#FDB813" />
-            </marker>
-            
+            </marker>   
             <marker id="arrow-start-yellow" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
                 <path d="M 8 0 L 0 4 L 8 8 z" fill="#FDB813" />
             </marker>
@@ -236,7 +235,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         create_node(POS['grid'][0], POS['grid'][1], 'Grid', icons_b64['grid']),
         create_node(POS['main_meter'][0], POS['main_meter'][1], 'Main Meter', icons_b64['meter'])
     ])
-    lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["main_meter"][0]}" y2="{POS["main_meter"][1]+40}" {arrow} />')
+    lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["main_meter"][0]}" y2="{POS["main_meter"][1]+40}" {arrow_two_way} />')
 
     # --- Configure Diagram Based on Selected Situation ---
     # NOTE: Most situations use a height of 450px, but Sit 6 needs more vertical space.
@@ -288,26 +287,6 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />'
         ])
 
-    # elif "Situation 3" in situation_name:
-    #     nodes_to_draw.extend([
-    #         create_node(350, 100, 'PAP', icons_b64['alloc']),
-    #         create_node(350, 270, 'SAP', icons_b64['alloc']),
-    #         create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-    #         create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-    #         create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-    #         create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-    #         create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
-    #     ])
-    #     lines_to_draw.extend([
-    #         f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 140 L 350 140" {arrow} />',
-    #         f'<path d="M 315 225 L 315 310 L 350 310" {arrow} />',
-    #         f'<path d="M 450 140 L 480 140 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
-    #         f'<path d="M 480 140 L 480 225 L {POS["load"][0]} 225" {arrow} />',
-    #         f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-    #         f'<line x1="450" y1="310" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',
-    #         f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
-    #         f'<path d="M {POS["pv"][0]} {POS["pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
-    #     ])
     elif "Situation 3" in situation_name:
             # --- Node Placement (Aligned as requested) ---
             nodes_to_draw.extend([
