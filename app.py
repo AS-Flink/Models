@@ -154,6 +154,17 @@ import os
 
 #     return "".join(html_parts)
 
+
+@st.cache_data
+def get_image_as_base64(path):
+    """Encodes an image to base64 for embedding in HTML."""
+    if not os.path.exists(path):
+        st.error(f"Icon file not found at: {path}")
+        return None
+    with open(path, "rb") as f:
+        data = f.read()
+    return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+
 def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     """
     Generates the correct horizontal diagram using PNG icons and corrected connections
