@@ -817,8 +817,6 @@ def show_battery_sizing_page():
 def show_home_page():
     display_header("Flink Energy Management System (EMS) Simulation ")
 
-    st.markdown("---") # Adds a separator line below the main title
-
     # --- 1. Create the main two-column layout ---
     # The ratio [2, 3] gives more space to the image on the right.
     left_col, right_col = st.columns([2, 3])
