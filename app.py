@@ -178,11 +178,21 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #         </marker>
     #     </defs>
     # """
-    # Define SVG arrow markers
+    # # Define SVG arrow markers
+    # arrow_defs = """
+    #     <defs>
+    #         <marker id="arrow-end-yellow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    #             <path d="M 0 0 L 8 4 L 0 8 z" fill="#FDB813" />
+    #         </marker>
+    #     </defs>
+    # """
     arrow_defs = """
         <defs>
             <marker id="arrow-end-yellow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
                 <path d="M 0 0 L 8 4 L 0 8 z" fill="#FDB813" />
+            </marker>
+            <marker id="arrow-start-yellow" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 8 0 L 0 4 L 8 8 z" fill="#FDB813" />
             </marker>
         </defs>
     """
@@ -199,6 +209,19 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     
     # Define consistent positions with English keys
     # Spaced out sap1/pap/sap2 for Situation 6
+    # POS = {
+    #     'grid': (20, 185), 'main_meter': (180, 185),
+    #     'pv': (680, 20), 'load': (680, 185), 'battery': (680, 350),
+    #     'meter_pv': (520, 20), 'meter_battery': (520, 350),
+    #     'pap_main': (350, 185),
+    #     'sap1': (350, 80), 'pap_center_sit6': (350, 185), 'sap2': (350, 290)
+    # }
+
+    # arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+    # direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
+
+    # nodes_to_draw = []
+    # lines_to_draw = []
     POS = {
         'grid': (20, 185), 'main_meter': (180, 185),
         'pv': (680, 20), 'load': (680, 185), 'battery': (680, 350),
@@ -207,11 +230,20 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         'sap1': (350, 80), 'pap_center_sit6': (350, 185), 'sap2': (350, 290)
     }
 
-    arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+    # --- UPDATED: Defined styles for one-way and two-way arrows ---
+    arrow_one_way = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+    arrow_two_way = 'stroke="#FDB813" stroke-width="3" fill="none" marker-start="url(#arrow-start-yellow)" marker-end="url(#arrow-end-yellow)"'
     direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
 
     nodes_to_draw = []
     lines_to_draw = []
+
+    # --- UPDATED: Using the new two-way arrow for the Grid connection ---
+    nodes_to_draw.extend([
+        create_node(POS['grid'][0], POS['grid'][1], 'Grid', icons_b64['grid']),
+        create_node(POS['main_meter'][0], POS['main_meter'][1], 'Main Meter', icons_b64['meter'])
+    ])
+    lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["main_meter"][0]}" y2="{POS["main_meter"][1]+40}" {arrow_two_way} />')
 
     # --- Base components (Grid and Main Meter) ---
     nodes_to_draw.extend([
