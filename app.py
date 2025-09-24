@@ -207,10 +207,10 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
 
     # --- Base components (Grid and Main Meter) ---
     nodes_to_draw.extend([
-        create_node(POS['grid'][0], POS['grid'][1], 'Stroomnet', icons_b64['grid']),
-        create_node(POS['hoofdmeter'][0], POS['hoofdmeter'][1], 'Hoofdmeter', icons_b64['meter'])
+        create_node(POS['grid'][0], POS['grid'][1], 'Grid', icons_b64['grid']),
+        create_node(POS['Main meter'][0], POS['Main meter'][1], 'Main meter', icons_b64['meter'])
     ])
-    lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["hoofdmeter"][0]}" y2="{POS["hoofdmeter"][1]+40}" {arrow} />')
+    lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["Main meter"][0]}" y2="{POS["Main meter"][1]+40}" {arrow} />')
 
     # --- Configure Diagram Based on Selected Situation ---
 
@@ -218,11 +218,11 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         nodes_to_draw.extend([
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<line x1="{POS["hoofdmeter"][0]+100}" y1="{POS["hoofdmeter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+            f'<line x1="{POS["Main meter"][0]+100}" y1="{POS["Main meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
             f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
             f'<path d="M {POS["pap_main"][0]+50} {POS["pap_main"][1]} L 400 120 L {POS["meter_pv"][0]+50} 120 L {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80}" {arrow} />',
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
@@ -234,7 +234,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'SAP', icons_b64['alloc']),
             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter'])
         ])
         lines_to_draw.extend([
@@ -250,10 +250,10 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['sap_batt'][0], POS['sap_batt'][1], 'SAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
-            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV meter', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'Battery meter', icons_b64['meter'])
         ])
         lines_to_draw.extend([
             f'<path d="M {POS["hoofdmeter"][0]+100} 200 L 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
@@ -270,10 +270,10 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         nodes_to_draw.extend([
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
-            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV meter', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'Battery meter', icons_b64['meter'])
         ])
         lines_to_draw.extend([
             f'<line x1="{POS["hoofdmeter"][0]+100}" y1="{POS["hoofdmeter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
@@ -293,10 +293,10 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['sap_batt'][0], POS['sap_batt'][1], 'SAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
-            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV meter', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'Battery meter', icons_b64['meter'])
         ])
         lines_to_draw.extend([
             f'<path d="M {POS["hoofdmeter"][0]+100} 200 L 315 200 L {POS["pap_center"][0]} 200" {arrow} />',
@@ -315,10 +315,10 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['sap_batt'][0], POS['sap_batt'][1], 'SAP2', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
             create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
-            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV meter', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'Battery meter', icons_b64['meter'])
         ])
         lines_to_draw.extend([
             f'<path d="M {POS["hoofdmeter"][0]+100} 200 L 315 200" {arrow} />',
@@ -337,8 +337,8 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
             create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
-            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV meter', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'Battery meter', icons_b64['meter'])
         ])
         lines_to_draw.extend([
             f'<line x1="{POS["hoofdmeter"][0]+100}" y1="{POS["hoofdmeter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
