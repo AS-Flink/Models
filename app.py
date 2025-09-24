@@ -116,7 +116,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     }
 
     # Defines the styles that use the markers from arrow_defs
-    arrow_one_way = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+    arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
     arrow_two_way = 'stroke="#FDB813" stroke-width="3" fill="none" marker-start="url(#arrow-start-yellow)" marker-end="url(#arrow-end-yellow)"'
     direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
 
