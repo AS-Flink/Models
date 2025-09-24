@@ -186,7 +186,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<path d="M {POS["meter_battery"][0]+50} {POS["meter_battery"][1]} L {POS["meter_battery"][0]+50} 250 L {POS["load"][0]} 250" {direct_use_arrow} />',
             
             # 3. Dashed line from PV Meter to Battery Meter (angled, not curved)
-            f'<path d="M {POS["meter_pv"][0]} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]-50} {POS["meter_pv"][1]+40} L {POS["meter_pv"][0]-50} {POS["meter_battery"][1]+60} L {POS["meter_battery"][0]} {POS["meter_battery"][1]+60}" {direct_use_arrow} />'
+            f'<path d="M {POS["meter_pv"][0]} {POS["meter_pv"][1]+20} L {POS["meter_pv"][0]-50} {POS["meter_pv"][1]+20} L {POS["meter_pv"][0]-50} {POS["meter_battery"][1]+60} L {POS["meter_battery"][0]} {POS["meter_battery"][1]+60}" {direct_use_arrow} />'
         ])
 
     elif "Situation 5" in situation_name:
