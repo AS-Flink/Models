@@ -197,7 +197,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #     ])
 
 
-elif "Situation 5" in situation_name:
+    elif "Situation 5" in situation_name:
         # --- Node Placement (As per the three-row layout) ---
         nodes_to_draw.extend([
             # Top Row
