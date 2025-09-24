@@ -308,28 +308,31 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             # 1. PV -> PV Meter
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             
-            # 2. PV Meter -> PAP (now a straight line)
+            # 2. PV Meter -> PAP
             f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />',
             
-            # 3. PAP -> Main Meter (Connects to top-right of Main Meter)
+            # 3. PAP -> Main Meter
             f'<line x1="350" y1="225" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+20}" {arrow} />',
             
-            # 4. PAP -> Load (Straight line)
+            # 4. ADDED: Arrow from Main Meter to PAP
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
+
+            # 5. PAP -> Load
             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
-            # 5. SAP <-> Main Meter (Connects to bottom-right of Main Meter)
+            # 6. SAP <-> Main Meter
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="395" {arrow} />',
             f'<line x1="350" y1="385" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+50}" {arrow} />',
             
-            # 6. SAP <-> Battery Meter (Straight line)
+            # 7. SAP <-> Battery Meter
             f'<line x1="450" y1="395" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+45}" {arrow} />',
             f'<line x1="{POS["meter_battery"][0]}" y1="{POS["meter_battery"][1]+35}" x2="450" y2="385" {arrow} />',
             
-            # 7. Battery <-> Battery Meter (Straight line)
+            # 8. Battery <-> Battery Meter
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+45}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+45}" {arrow} />',
             f'<line x1="{POS["battery"][0]}" y1="{POS["battery"][1]+35}" x2="{POS["meter_battery"][0]+100}" y2="{POS["meter_battery"][1]+35}" {arrow} />',
             
-            # 8. Dashed line for direct use from PV Meter to Load
+            # 9. Dashed line for direct use from PV Meter to Load
             f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
         ])
 
