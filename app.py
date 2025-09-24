@@ -239,7 +239,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
             f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 145 L 400 145 L {POS["pap_main"][0]+50} {POS["pap_main"][1]}" {arrow} />',
             f'<line x2="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x1="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<path d="M {POS["meter_pv"][0]} {POS["meter_pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
+            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
         ])
 
 
