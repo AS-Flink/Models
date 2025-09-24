@@ -229,8 +229,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="450" y1="225" x2="{POS["meter_battery"][0]}" y2="225" {arrow} />',
 
             # 5. Battery Meter <-> Battery (Two-way in middle row)
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="230" x2="{POS["battery"][0]}" y2="230" {arrow_two_way} />',
-            f'<line x1="{POS["battery"][0]}" y1="220" x2="{POS["meter_battery"][0]+100}" y2="220" {arrow_two_way} />',
+            f'<line x1="{POS["meter_battery"][0]+100}" y1="225" x2="{POS["battery"][0]}" y2="225" {arrow_two_way} />',
 
             # 6. SAP -> PAP (Branch from middle to bottom row)
             f'<line x1="400" y1="265" x2="400" y2="350" {arrow} />',
