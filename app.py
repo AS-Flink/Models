@@ -780,40 +780,77 @@ def show_battery_sizing_page():
 #         if st.button("Business Case Simulation", type="primary"):
 #             st.session_state.page = "Project_Selection"; st.rerun()
 
+# def show_home_page():
+#     display_header("Flink Energy Management System (EMS) Simulation ")
+
+#     # --- 1. CENTER THE IMAGE FIRST ---
+#     # Create three columns; the middle one holds the image.
+#     # Adjust the ratio like [1, 2, 1] to control the size.
+#     # A larger middle number (e.g., 6) makes the image wider.
+#     # A smaller middle number (e.g., 2) makes it narrower.
+#     img_col1, img_col2, img_col3 = st.columns([1, 2, 1])
+
+#     with img_col2:
+#         st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif") # Make sure to use your actual GIF link
+
+#     st.markdown("---") # Visual separator
+
+#     # --- 2. DISPLAY THE TOOLS SECTION AFTER THE IMAGE ---
+#     st.subheader('Tools')
+#     st.write("Please select a tool to begin.")
+
+#     tool_col1, tool_col2, tool_col3 = st.columns(3)
+#     with tool_col1:
+#         st.markdown("#### 🛠️ Sizing Tools")
+#         if st.button("Battery Size Finder", type="primary"):
+#             st.session_state.page = "Battery_Sizing"
+#             st.rerun()
+#     with tool_col2:
+#         st.markdown("#### 💰 Revenue Analysis")
+#         if st.button("Battery Revenue Analysis",type="primary"):
+#             st.session_state.page = "Revenue_Analysis"
+#             st.rerun()
+#     with tool_col3:
+#         st.markdown("#### 📈 Financial Modeling")
+#         if st.button("Business Case Simulation", type="primary"):
+#             st.session_state.page = "Project_Selection"; st.rerun()
 def show_home_page():
     display_header("Flink Energy Management System (EMS) Simulation ")
 
-    # --- 1. CENTER THE IMAGE FIRST ---
-    # Create three columns; the middle one holds the image.
-    # Adjust the ratio like [1, 2, 1] to control the size.
-    # A larger middle number (e.g., 6) makes the image wider.
-    # A smaller middle number (e.g., 2) makes it narrower.
-    img_col1, img_col2, img_col3 = st.columns([1, 2, 1])
+    st.markdown("---") # Adds a separator line below the main title
 
-    with img_col2:
-        st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif") # Make sure to use your actual GIF link
+    # --- 1. Create the main two-column layout ---
+    # The ratio [2, 3] gives more space to the image on the right.
+    left_col, right_col = st.columns([2, 3])
 
-    st.markdown("---") # Visual separator
+    # --- 2. Add the vertically stacked tools to the left column ---
+    with left_col:
+        st.subheader('Tools')
+        st.write("Please select a tool to begin.")
 
-    # --- 2. DISPLAY THE TOOLS SECTION AFTER THE IMAGE ---
-    st.subheader('Tools')
-    st.write("Please select a tool to begin.")
+        st.markdown("<br>", unsafe_allow_html=True) # Adds some vertical space
 
-    tool_col1, tool_col2, tool_col3 = st.columns(3)
-    with tool_col1:
         st.markdown("#### 🛠️ Sizing Tools")
-        if st.button("Battery Size Finder", type="primary"):
+        if st.button("Battery Size Finder", type="primary", use_container_width=True):
             st.session_state.page = "Battery_Sizing"
             st.rerun()
-    with tool_col2:
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         st.markdown("#### 💰 Revenue Analysis")
-        if st.button("Battery Revenue Analysis",type="primary"):
+        if st.button("Battery Revenue Analysis", type="primary", use_container_width=True):
             st.session_state.page = "Revenue_Analysis"
             st.rerun()
-    with tool_col3:
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         st.markdown("#### 📈 Financial Modeling")
-        if st.button("Business Case Simulation", type="primary"):
-            st.session_state.page = "Project_Selection"; st.rerun()
+        if st.button("Business Case Simulation", type="primary", use_container_width=True):
+            st.session_state.page = "Project_Selection"
+            st.rerun()
+    # --- 3. Add the image to the right column ---
+    with right_col:
+        st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", use_container_width=True)
 
 def show_project_selection_page():
     display_header("Project Management 🗂️")
