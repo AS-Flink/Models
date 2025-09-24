@@ -1259,6 +1259,8 @@ def show_model_page():
 
 # --- MAIN ROUTER ---
 with st.sidebar:
+    st.image("https://i.postimg.cc/RFgvn3Cp/LOGO-S-PRESENTATIE.webp", width=150) 
+    
     st.markdown("---"); st.header("Navigation")
     if st.button("🏠 Back to Home"): 
         st.session_state.page = "Home"
