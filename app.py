@@ -155,6 +155,217 @@ import os
 #     return "".join(html_parts)
 
 
+# @st.cache_data
+# def get_image_as_base64(path):
+#     """Encodes an image to base64 for embedding in HTML."""
+#     if not os.path.exists(path):
+#         st.error(f"Icon file not found at: {path}")
+#         return None
+#     with open(path, "rb") as f:
+#         data = f.read()
+#     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+
+# def create_horizontal_diagram_with_icons(situation_name, icons_b64):
+#     """
+#     Generates the correct horizontal diagram using PNG icons and corrected connections
+#     for any of the 7 situations, with all labels in English.
+#     """
+#     # Define SVG arrow markers
+#     arrow_defs = """
+#         <defs>
+#             <marker id="arrow-end-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#FDB813" />
+#             </marker>
+#         </defs>
+#     """
+
+#     # Helper function to create a component with an icon and a label
+#     def create_node(x, y, label, icon_b64, w=100, h=80):
+#         return f'''
+#             <g transform="translate({x}, {y})">
+#                 <rect x="0" y="0" width="{w}" height="{h}" rx="8" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+#                 <image href="{icon_b64}" x="{w*0.25}" y="5" width="{w*0.5}" height="{h*0.5}"/>
+#                 <text x="{w/2}" y="{h*0.8}" text-anchor="middle" font-weight="bold" font-size="12px" fill="#333">{label}</text>
+#             </g>
+#         '''
+    
+#     # Define consistent positions with English keys
+#     POS = {
+#         'grid': (20, 160), 'main_meter': (180, 160),
+#         'pv': (680, 20), 'load': (680, 160), 'battery': (680, 300),
+#         'meter_pv': (520, 20), 'meter_battery': (520, 300),
+#         'pap_main': (350, 160), 'pap_center': (350, 160),
+#         'sap_pv':(350, 100), 'sap_battery': (350, 220)
+#     }
+
+#     arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+#     direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
+
+#     nodes_to_draw = []
+#     lines_to_draw = []
+
+#     # --- Base components (Grid and Main Meter) ---
+#     nodes_to_draw.extend([
+#         create_node(POS['grid'][0], POS['grid'][1], 'Grid', icons_b64['grid']),
+#         create_node(POS['main_meter'][0], POS['main_meter'][1], 'Main Meter', icons_b64['meter'])
+#     ])
+#     lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["main_meter"][0]}" y2="{POS["main_meter"][1]+40}" {arrow} />')
+
+#     # --- Configure Diagram Based on Selected Situation ---
+
+#     if "Situation 1" in situation_name:
+#         nodes_to_draw.extend([
+#             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
+#             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+#             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+#             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter'])
+#         ])
+#         lines_to_draw.extend([
+#             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pap_main"][0]+50} {POS["pap_main"][1]} L 400 120 L {POS["meter_pv"][0]+50} 120 L {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80}" {arrow} />',
+#             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
+#         ])
+
+#     elif "Situation 2" in situation_name:
+#         nodes_to_draw.extend([
+#             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'SAP', icons_b64['alloc']),
+#             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
+#             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+#             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+#             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter'])
+#         ])
+#         lines_to_draw.extend([
+#             f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
+#             f'<line x1="315" y1="200" x2="{POS["pap_center"][0]}" y2="{POS["pap_center"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["pap_center"][0]+100}" y1="{POS["pap_center"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["sap_pv"][0]+100}" y1="{POS["sap_pv"][1]+40}" x2="{POS["meter_pv"][0]}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />'
+#         ])
+
+#     elif "Situation 3" in situation_name:
+#         nodes_to_draw.extend([
+#             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'PAP', icons_b64['alloc']),
+#             create_node(POS['sap_battery'][0], POS['sap_battery'][1], 'SAP', icons_b64['alloc']),
+#             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+#             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+#             create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
+#             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
+#             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+#         ])
+#         lines_to_draw.extend([
+#             f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
+#             f'<path d="M 315 200 L 315 260 L {POS["sap_battery"][0]} 260" {arrow} />',
+#             f'<path d="M {POS["sap_pv"][0]+100} 140 L 480 140 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
+#             f'<path d="M 480 140 L 480 200 L {POS["load"][0]} 200" {arrow} />',
+#             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["sap_battery"][0]+100}" y1="{POS["sap_battery"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
+#         ])
+
+#     elif "Situation 4" in situation_name:
+#         nodes_to_draw.extend([
+#             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
+#             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+#             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+#             create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
+#             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
+#             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+#         ])
+#         lines_to_draw.extend([
+#             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pap_main"][0]+100} 200 L 480 200" {arrow} />',
+#             f'<path d="M 480 200 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
+#             f'<line x1="480" y1="200" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+#             f'<path d="M 480 200 L 480 340 L {POS["meter_battery"][0]} 340" {arrow} />',
+#             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />',
+#             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />',
+#             f'<path d="M {POS["battery"][0]} {POS["battery"][1]+40} C 650 260, 650 220, {POS["load"][0]} {POS["load"][1]+80}" {direct_use_arrow} />'
+#         ])
+
+#     elif "Situation 5" in situation_name:
+#         nodes_to_draw.extend([
+#             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
+#             create_node(POS['sap_battery'][0], POS['sap_battery'][1], 'SAP', icons_b64['alloc']),
+#             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+#             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+#             create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
+#             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
+#             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+#         ])
+#         lines_to_draw.extend([
+#             f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L {POS["pap_center"][0]} 200" {arrow} />',
+#             f'<path d="M 315 200 L 315 260 L {POS["sap_battery"][0]} 260" {arrow} />',
+#             f'<line x1="{POS["pap_center"][0]+100}" y1="{POS["pap_center"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["sap_battery"][0]+100} 260 L 480 260 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
+#             f'<path d="M 480 260 L 480 340 L {POS["meter_battery"][0]} 340" {arrow} />',
+#             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />'
+#         ])
+
+#     elif "Situation 6" in situation_name:
+#         nodes_to_draw.extend([
+#             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'SAP1', icons_b64['alloc']),
+#             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
+#             create_node(POS['sap_battery'][0], POS['sap_battery'][1], 'SAP2', icons_b64['alloc']),
+#             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+#             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+#             create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
+#             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
+#             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+#         ])
+#         lines_to_draw.extend([
+#             f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200" {arrow} />',
+#             f'<path d="M 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
+#             f'<line x1="315" y1="200" x2="{POS["pap_center"][0]}" y2="{POS["pap_center"][1]+40}" {arrow} />',
+#             f'<path d="M 315 200 L 315 260 L {POS["sap_battery"][0]} 260" {arrow} />',
+#             f'<line x1="{POS["sap_pv"][0]+100}" y1="{POS["sap_pv"][1]+40}" x2="{POS["meter_pv"][0]}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["pap_center"][0]+100}" y1="{POS["pap_center"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["sap_battery"][0]+100}" y1="{POS["sap_battery"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />'
+#         ])
+
+#     elif "Situation 7" in situation_name:
+#         nodes_to_draw.extend([
+#             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
+#             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+#             create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
+#             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
+#             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+#         ])
+#         lines_to_draw.extend([
+#             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pap_main"][0]+100} 200 L 480 200" {arrow} />',
+#             f'<path d="M 480 200 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
+#             f'<path d="M 480 200 L 480 340 L {POS["meter_battery"][0]} 340" {arrow} />',
+#             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+#             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
+#             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />'
+#         ])
+
+#     # --- Assemble the Final HTML/SVG ---
+#     svg_content = "".join(nodes_to_draw) + "".join(lines_to_draw)
+#     html_code = f'''
+#         <div style="width: 100%; max-width: 850px; height: 450px; font-family: sans-serif; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+#             <svg viewBox="0 0 850 450" style="width: 100%; height: 100%;">
+#                 {arrow_defs}
+#                 {svg_content}
+#             </svg>
+#         </div>
+#     '''
+#     return html_code
+
+import streamlit as st
+import os
+import base64
+
+# This function should already be in your project
 @st.cache_data
 def get_image_as_base64(path):
     """Encodes an image to base64 for embedding in HTML."""
@@ -168,9 +379,9 @@ def get_image_as_base64(path):
 def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     """
     Generates the correct horizontal diagram using PNG icons and corrected connections
-    for any of the 7 situations, with all labels in English.
+    for any of the 7 situations.
     """
-    # Define SVG arrow markers
+    # Define SVG arrow markers for the yellow connection lines
     arrow_defs = """
         <defs>
             <marker id="arrow-end-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -189,13 +400,13 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             </g>
         '''
     
-    # Define consistent positions with English keys
+    # Define consistent positions for a horizontal layout
     POS = {
-        'grid': (20, 160), 'main_meter': (180, 160),
-        'pv': (680, 20), 'load': (680, 160), 'battery': (680, 300),
-        'meter_pv': (520, 20), 'meter_battery': (520, 300),
+        'grid': (20, 160), 'hoofdmeter': (180, 160),
+        'pv': (680, 20), 'load': (680, 160), 'batt': (680, 300),
+        'meter_pv': (520, 20), 'meter_batt': (520, 300),
         'pap_main': (350, 160), 'pap_center': (350, 160),
-        'sap_pv':(350, 100), 'sap_battery': (350, 220)
+        'sap_pv':(350, 100), 'sap_batt': (350, 220)
     }
 
     arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
@@ -206,10 +417,10 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
 
     # --- Base components (Grid and Main Meter) ---
     nodes_to_draw.extend([
-        create_node(POS['grid'][0], POS['grid'][1], 'Grid', icons_b64['grid']),
-        create_node(POS['main_meter'][0], POS['main_meter'][1], 'Main Meter', icons_b64['meter'])
+        create_node(POS['grid'][0], POS['grid'][1], 'Stroomnet', icons_b64['grid']),
+        create_node(POS['hoofdmeter'][0], POS['hoofdmeter'][1], 'Hoofdmeter', icons_b64['meter'])
     ])
-    lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["main_meter"][0]}" y2="{POS["main_meter"][1]+40}" {arrow} />')
+    lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["hoofdmeter"][0]}" y2="{POS["hoofdmeter"][1]+40}" {arrow} />')
 
     # --- Configure Diagram Based on Selected Situation ---
 
@@ -217,11 +428,11 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         nodes_to_draw.extend([
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter'])
+            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+            f'<line x1="{POS["hoofdmeter"][0]+100}" y1="{POS["hoofdmeter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
             f'<line x1="{POS["pap_main"][0]+100}" y1="{POS["pap_main"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
             f'<path d="M {POS["pap_main"][0]+50} {POS["pap_main"][1]} L 400 120 L {POS["meter_pv"][0]+50} 120 L {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80}" {arrow} />',
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
@@ -233,11 +444,11 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'SAP', icons_b64['alloc']),
             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter'])
+            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]+100} 200 L 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
             f'<line x1="315" y1="200" x2="{POS["pap_center"][0]}" y2="{POS["pap_center"][1]+40}" {arrow} />',
             f'<line x1="{POS["pap_center"][0]+100}" y1="{POS["pap_center"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
             f'<line x1="{POS["sap_pv"][0]+100}" y1="{POS["sap_pv"][1]+40}" x2="{POS["meter_pv"][0]}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
@@ -247,21 +458,21 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     elif "Situation 3" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'PAP', icons_b64['alloc']),
-            create_node(POS['sap_battery'][0], POS['sap_battery'][1], 'SAP', icons_b64['alloc']),
+            create_node(POS['sap_batt'][0], POS['sap_batt'][1], 'SAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-            create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
-            f'<path d="M 315 200 L 315 260 L {POS["sap_battery"][0]} 260" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]+100} 200 L 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
+            f'<path d="M 315 200 L 315 260 L {POS["sap_batt"][0]} 260" {arrow} />',
             f'<path d="M {POS["sap_pv"][0]+100} 140 L 480 140 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
             f'<path d="M 480 140 L 480 200 L {POS["load"][0]} 200" {arrow} />',
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<line x1="{POS["sap_battery"][0]+100}" y1="{POS["sap_battery"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
+            f'<line x1="{POS["sap_batt"][0]+100}" y1="{POS["sap_batt"][1]+40}" x2="{POS["meter_batt"][0]}" y2="{POS["meter_batt"][1]+40}" {arrow} />',
+            f'<line x1="{POS["meter_batt"][0]+100}" y1="{POS["meter_batt"][1]+40}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+40}" {arrow} />',
             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
         ])
 
@@ -269,84 +480,84 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         nodes_to_draw.extend([
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-            create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+            f'<line x1="{POS["hoofdmeter"][0]+100}" y1="{POS["hoofdmeter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
             f'<path d="M {POS["pap_main"][0]+100} 200 L 480 200" {arrow} />',
             f'<path d="M 480 200 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
             f'<line x1="480" y1="200" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-            f'<path d="M 480 200 L 480 340 L {POS["meter_battery"][0]} 340" {arrow} />',
+            f'<path d="M 480 200 L 480 340 L {POS["meter_batt"][0]} 340" {arrow} />',
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
+            f'<line x1="{POS["meter_batt"][0]+100}" y1="{POS["meter_batt"][1]+40}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+40}" {arrow} />',
             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />',
-            f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />',
-            f'<path d="M {POS["battery"][0]} {POS["battery"][1]+40} C 650 260, 650 220, {POS["load"][0]} {POS["load"][1]+80}" {direct_use_arrow} />'
+            f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["batt"][0]} {POS["batt"][1]+20}" {direct_use_arrow} />',
+            f'<path d="M {POS["batt"][0]} {POS["batt"][1]+40} C 650 260, 650 220, {POS["load"][0]} {POS["load"][1]+80}" {direct_use_arrow} />'
         ])
 
     elif "Situation 5" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
-            create_node(POS['sap_battery'][0], POS['sap_battery'][1], 'SAP', icons_b64['alloc']),
+            create_node(POS['sap_batt'][0], POS['sap_batt'][1], 'SAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-            create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200 L {POS["pap_center"][0]} 200" {arrow} />',
-            f'<path d="M 315 200 L 315 260 L {POS["sap_battery"][0]} 260" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]+100} 200 L 315 200 L {POS["pap_center"][0]} 200" {arrow} />',
+            f'<path d="M 315 200 L 315 260 L {POS["sap_batt"][0]} 260" {arrow} />',
             f'<line x1="{POS["pap_center"][0]+100}" y1="{POS["pap_center"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-            f'<path d="M {POS["sap_battery"][0]+100} 260 L 480 260 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
-            f'<path d="M 480 260 L 480 340 L {POS["meter_battery"][0]} 340" {arrow} />',
+            f'<path d="M {POS["sap_batt"][0]+100} 260 L 480 260 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
+            f'<path d="M 480 260 L 480 340 L {POS["meter_batt"][0]} 340" {arrow} />',
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
-            f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />'
+            f'<line x1="{POS["meter_batt"][0]+100}" y1="{POS["meter_batt"][1]+40}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+40}" {arrow} />',
+            f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["batt"][0]} {POS["batt"][1]+20}" {direct_use_arrow} />'
         ])
 
     elif "Situation 6" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['sap_pv'][0], POS['sap_pv'][1], 'SAP1', icons_b64['alloc']),
             create_node(POS['pap_center'][0], POS['pap_center'][1], 'PAP', icons_b64['alloc']),
-            create_node(POS['sap_battery'][0], POS['sap_battery'][1], 'SAP2', icons_b64['alloc']),
+            create_node(POS['sap_batt'][0], POS['sap_batt'][1], 'SAP2', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-            create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+            create_node(POS['load'][0], POS['load'][1], 'Verbruik', icons_b64['load']),
+            create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<path d="M {POS["main_meter"][0]+100} 200 L 315 200" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]+100} 200 L 315 200" {arrow} />',
             f'<path d="M 315 200 L 315 140 L {POS["sap_pv"][0]} 140" {arrow} />',
             f'<line x1="315" y1="200" x2="{POS["pap_center"][0]}" y2="{POS["pap_center"][1]+40}" {arrow} />',
-            f'<path d="M 315 200 L 315 260 L {POS["sap_battery"][0]} 260" {arrow} />',
+            f'<path d="M 315 200 L 315 260 L {POS["sap_batt"][0]} 260" {arrow} />',
             f'<line x1="{POS["sap_pv"][0]+100}" y1="{POS["sap_pv"][1]+40}" x2="{POS["meter_pv"][0]}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             f'<line x1="{POS["pap_center"][0]+100}" y1="{POS["pap_center"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-            f'<line x1="{POS["sap_battery"][0]+100}" y1="{POS["sap_battery"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',
+            f'<line x1="{POS["sap_batt"][0]+100}" y1="{POS["sap_batt"][1]+40}" x2="{POS["meter_batt"][0]}" y2="{POS["meter_batt"][1]+40}" {arrow} />',
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />'
+            f'<line x1="{POS["meter_batt"][0]+100}" y1="{POS["meter_batt"][1]+40}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+40}" {arrow} />'
         ])
 
     elif "Situation 7" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-            create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+            create_node(POS['batt'][0], POS['batt'][1], 'Batterij', icons_b64['batt']),
+            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'meter PV', icons_b64['meter']),
+            create_node(POS['meter_batt'][0], POS['meter_batt'][1], 'meter Batterij', icons_b64['meter'])
         ])
         lines_to_draw.extend([
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
+            f'<line x1="{POS["hoofdmeter"][0]+100}" y1="{POS["hoofdmeter"][1]+40}" x2="{POS["pap_main"][0]}" y2="{POS["pap_main"][1]+40}" {arrow} />',
             f'<path d="M {POS["pap_main"][0]+100} 200 L 480 200" {arrow} />',
             f'<path d="M 480 200 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
-            f'<path d="M 480 200 L 480 340 L {POS["meter_battery"][0]} 340" {arrow} />',
+            f'<path d="M 480 200 L 480 340 L {POS["meter_batt"][0]} 340" {arrow} />',
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
-            f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />'
+            f'<line x1="{POS["meter_batt"][0]+100}" y1="{POS["meter_batt"][1]+40}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+40}" {arrow} />',
+            f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["batt"][0]} {POS["batt"][1]+20}" {direct_use_arrow} />'
         ])
 
     # --- Assemble the Final HTML/SVG ---
@@ -360,8 +571,6 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
         </div>
     '''
     return html_code
-
-
 
 
 # --- Add these new helper functions to your main app script ---
