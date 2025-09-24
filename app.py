@@ -174,7 +174,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             
             # 3. Main Meter <-> PAP (Two-way, unchanged from previous state)
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
-            f'<line x1="350" y1="215" x2="{POS["main_meter"][0]+100}" y1="215" {arrow_one_way} />', # Two-way path for main_meter to PAP
+            f'<line x1="350" y1="215" x2="{POS["main_meter"][0]+100}" y1="215" {arrow} />', # Two-way path for main_meter to PAP
 
             # 4. PAP -> Load (Unchanged)
             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
