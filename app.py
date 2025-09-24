@@ -191,7 +191,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
             f'<path d="M 450 350 L 480 350 L 480 60 L {POS["meter_pv"][0]} 60" {arrow} />',
             f'<path d="M 480 350 L 480 390 L {POS["meter_battery"][0]} 390" {arrow} />',
-            f'<line x1="{POS["pv_meter"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />',
             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />'
         ])
