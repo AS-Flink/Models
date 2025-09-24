@@ -130,32 +130,61 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #         f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />'
     #     ])
 
+    # elif "Situation 2" in situation_name:
+    #     # --- Node Placement (Rearranged for symmetry) ---
+    #     nodes_to_draw.extend([
+    #         # Top row (PV System)
+    #         create_node(350, 80, 'SAP', icons_b64['alloc']),
+    #         create_node(POS['meter_pv'][0], 80, 'PV Meter', icons_b64['meter']),
+    #         create_node(POS['pv'][0], 80, 'PV', icons_b64['pv']),
+            
+    #         # Bottom row (Load System)
+    #         create_node(350, 185, 'PAP', icons_b64['alloc']), 
+    #         create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load'])
+    #     ])
+    #     # --- Connections redrawn for the new layout ---
+    #     lines_to_draw.extend([
+    #         # 1. Main Meter -> PAP (Straight line on the central axis)
+    #         f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
+            
+    #         # 2. Main Meter -> SAP (Angled line to the top row)
+    #         f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 120 L 350 120" {arrow} />',
+            
+    #         # 3. PAP -> Load (Straight line on the central axis)
+    #         f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+
+    #         # 4. SAP -> PV Meter (Straight line on the top row)
+    #         f'<line x1="450" y1="120" x2="{POS["meter_pv"][0]}" y2="120" {arrow} />',
+            
+    #         # 5. PV -> PV Meter (Straight line on the top row)
+    #         f'<line x1="{POS["pv"][0]}" y1="120" x2="{POS["meter_pv"][0]+100}" y2="120" {arrow} />'
+    #     ])
     elif "Situation 2" in situation_name:
-        # --- Node Placement (Rearranged for symmetry) ---
+        # --- Node Placement (Rearranged for perfect symmetry) ---
         nodes_to_draw.extend([
             # Top row (PV System)
             create_node(350, 80, 'SAP', icons_b64['alloc']),
             create_node(POS['meter_pv'][0], 80, 'PV Meter', icons_b64['meter']),
             create_node(POS['pv'][0], 80, 'PV', icons_b64['pv']),
             
-            # Bottom row (Load System)
-            create_node(350, 185, 'PAP', icons_b64['alloc']), 
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load'])
+            # Bottom row (Load System) - Symmetrically placed
+            create_node(350, 290, 'PAP', icons_b64['alloc']), 
+            create_node(POS['load'][0], 290, 'Load', icons_b64['load'])
         ])
         # --- Connections redrawn for the new layout ---
         lines_to_draw.extend([
-            # 1. Main Meter -> PAP (Straight line on the central axis)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
-            
-            # 2. Main Meter -> SAP (Angled line to the top row)
+            # 1. Main Meter -> SAP (Angled path to the top row)
             f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 120 L 350 120" {arrow} />',
             
-            # 3. PAP -> Load (Straight line on the central axis)
-            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-
-            # 4. SAP -> PV Meter (Straight line on the top row)
+            # 2. CORRECTED: Main Meter -> PAP (New zig-zag path to the bottom row)
+            f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 330 L 350 330" {arrow} />',
+            
+            # 3. SAP -> PV Meter (Straight line on the top row)
             f'<line x1="450" y1="120" x2="{POS["meter_pv"][0]}" y2="120" {arrow} />',
             
+            # 4. PAP -> Load (Straight line on the bottom row)
+            f'<line x1="450" y1="330" x2="{POS["load"][0]}" y2="330" {arrow} />',
+
             # 5. PV -> PV Meter (Straight line on the top row)
             f'<line x1="{POS["pv"][0]}" y1="120" x2="{POS["meter_pv"][0]+100}" y2="120" {arrow} />'
         ])
