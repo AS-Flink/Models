@@ -154,7 +154,6 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #     ])
 
     elif "Situation 3" in situation_name:
-        # --- Node Placement (Aligned as requested) ---
         nodes_to_draw.extend([
             create_node(350, 185, 'PAP', icons_b64['alloc']),
             create_node(350, 350, 'SAP', icons_b64['alloc']),
@@ -164,33 +163,33 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
         ])
-        # --- Connections rebuilt with zig-zag paths ---
         lines_to_draw.extend([
-            # 1. PV -> PV Meter (Unchanged)
+            # PV to PV Meter (unchanged)
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             
-            # 2. CORRECTED: PV Meter (bottom) -> PAP (right side) with a zig-zag path
-            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L 570 145 L 450 145 L 450 225" {arrow} />',
-            
-            # 3. Main Meter <-> PAP (Unchanged)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
-            f'<line x1="350" y1="215" x2="{POS["main_meter"][0]+100}" y2="215" {arrow} />',
-            
-            # 4. PAP -> Load (Unchanged)
-            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+            # PV Meter to PAP (replacing old branch, now direct to PAP right side)
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />', # Goes into PAP right side
 
-            # 5. CORRECTED: Main Meter <-> SAP with a zig-zag path
-            f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225 L 315 390 L 350 390" {arrow_two_way} />',
+            # CORRECTED: Main Meter to PAP (two-way as per red arrow)
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+45}" x2="350" y2="230" {arrow} />',
+            f'<line x1="350" y1="220" x2="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+35}" {arrow} />',
+
+            # PAP to Load (unchanged, but now from PAP)
+            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
             
-            # 6. SAP <-> Battery Meter (Unchanged)
+            # CORRECTED: Main Meter to SAP (two-way from previous code, now with distinct line)
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+60}" x2="350" y2="390" {arrow_two_way} />',
+            
+            # SAP to Battery Meter (unchanged two-way)
             f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
             
-            # 7. Battery <-> Battery Meter (Unchanged)
+            # Battery Meter to Battery (unchanged two-way)
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />',
             
-            # 8. Dashed line for direct use (Unchanged)
-            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
+            # NEW DASHED LINE: PV Meter to PAP (angled path)
+            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} L {POS["meter_pv"][0]+50} 250 L 400 250 L 400 {POS["pap_main"][1]+80}" {direct_use_arrow} />' # Adjusted to end bottom-right of PAP
         ])
+
     
     elif "Situation 4" in situation_name:
         nodes_to_draw.extend([
