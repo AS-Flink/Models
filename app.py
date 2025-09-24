@@ -779,6 +779,11 @@ def show_home_page():
         st.markdown("#### 📈 Financial Modeling")
         if st.button("Business Case Simulation", type="primary"):
             st.session_state.page = "Project_Selection"; st.rerun()
+            
+    st.markdown("---") 
+    st.image("https://i.postimg.cc/BZLC956z/1676232455623.gif")
+
+
 
 def show_project_selection_page():
     display_header("Project Management 🗂️")
