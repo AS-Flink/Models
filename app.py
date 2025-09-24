@@ -232,7 +232,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["meter_battery"][0]+100}" y1="230" x2="{POS["battery"][0]}" y2="230" {arrow_two_way} />',
 
             # 6. CORRECTED: Main Meter -> PAP (Direct connection)
-            f'<path d="M {POS["main_meter"][0]+100} 200 L 315 225 L 315 390 L 350 390" {arrow} />',
+            f'<path d="M {POS["main_meter"][0]+100} 250 L 315 250 L 315 390 L 350 390" {arrow} />',
 
             # 7. PAP -> Load
             f'<line x1="450" y1="390" x2="{POS["load"][0]}" y2="390" {arrow} />',
