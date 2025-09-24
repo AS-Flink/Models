@@ -757,7 +757,29 @@ def show_battery_sizing_page():
 
 ################# BATTERY SIZING CODE
 
-# --- PAGE DISPLAY FUNCTIONS ---
+# # --- PAGE DISPLAY FUNCTIONS ---
+# def show_home_page():
+#     display_header("Flink Energy Management System (EMS) Simulation ")
+#     st.subheader('Tools')
+#     st.write("Please select a tool to begin.")
+#     col1, col2, col3 = st.columns(3)
+#     with col1:
+#         st.markdown("#### 🛠️ Sizing Tools")
+#         # Change this line:
+#         if st.button("Battery Size Finder", type="primary"): 
+#             st.session_state.page = "Battery_Sizing"
+#             st.rerun()
+
+#     with col2:
+#         st.markdown("#### 💰 Revenue Analysis")
+#         if st.button("Battery Revenue Analysis",type="primary"):
+#             st.session_state.page = "Revenue_Analysis"
+#             st.rerun()
+#     with col3:
+#         st.markdown("#### 📈 Financial Modeling")
+#         if st.button("Business Case Simulation", type="primary"):
+#             st.session_state.page = "Project_Selection"; st.rerun()
+
 def show_home_page():
     display_header("Flink Energy Management System (EMS) Simulation ")
     st.subheader('Tools')
@@ -765,11 +787,9 @@ def show_home_page():
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("#### 🛠️ Sizing Tools")
-        # Change this line:
-        if st.button("Battery Size Finder", type="primary"): 
+        if st.button("Battery Size Finder", type="primary"):
             st.session_state.page = "Battery_Sizing"
             st.rerun()
-
     with col2:
         st.markdown("#### 💰 Revenue Analysis")
         if st.button("Battery Revenue Analysis",type="primary"):
@@ -779,7 +799,12 @@ def show_home_page():
         st.markdown("#### 📈 Financial Modeling")
         if st.button("Business Case Simulation", type="primary"):
             st.session_state.page = "Project_Selection"; st.rerun()
-            
+
+    st.markdown("---")
+    
+    # Create three columns to center the image
+    col1, col2, col3 = st.columns([1, 6, 1])
+
     st.markdown("---") 
     st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", use_container_width=False)
 
