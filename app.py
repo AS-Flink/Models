@@ -117,7 +117,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<path d="M {POS["main_meter"][0]+100} {POS["main_meter"][1]+40} L 350 {POS["main_meter"][1]+40}" {arrow} />',
             
             # 2. SAP -> Main Meter (Separate line, REVERSED direction)
-            f'<line x1="350" y1="140" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+40}" {arrow} />',
+            f'<line x1="350" y1="140" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+20}" {arrow} />',
             
             # 3. PAP -> Load (Straight horizontal line)
             f'<line x1="{450}" y1="{POS["load"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
