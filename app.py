@@ -212,7 +212,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(350, 350, 'PAP', icons_b64['alloc']),
             create_node(POS['load'][0], 350, 'Load', icons_b64['load'])
         ])
-        # --- Connections rebuilt to your final specification --- {POS["main_meter"][1]+45}
+        # --- Connections rebuilt to your final specification --- {POS["main_meter"][1]+45} {POS["main_meter"][1]+35}
         lines_to_draw.extend([
             # 1. PV -> PV Meter
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
@@ -222,7 +222,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             
             # 3. Main Meter <-> SAP (Two-way connection)
             f'<line x2="{POS["main_meter"][0]+100}" y1="200" x1="350" y2="200" {arrow} />',
-            f'<line x1="350" y1="220" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+35}" {arrow} />',
+            f'<line x2="350" y1="225" x1="{POS["main_meter"][0]+100}" y2="225" {arrow} />',
             
             # 4. SAP -> Battery Meter
             f'<line x1="450" y1="225" x2="{POS["meter_battery"][0]}" y2="225" {arrow_two_way} />',
