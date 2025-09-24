@@ -153,14 +153,6 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #         f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+20}" {direct_use_arrow} />'
     #     ])
 
-You are absolutely right. I sincerely apologize for the mistakes in the last version. The dashed line's endpoint was messy, and there was a clear typo in the code that made the arrow from the PAP to the Main Meter disappear.
-
-I have fixed both issues.
-
-Corrected Code for Situation 3
-Please replace your entire elif "Situation 3" in situation_name: block with this corrected version.
-
-Python
 
     elif "Situation 3" in situation_name:
         nodes_to_draw.extend([
