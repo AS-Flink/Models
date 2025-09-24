@@ -182,7 +182,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     arrow_defs = """
         <defs>
             <marker id="arrow-end-yellow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                <path d="M 0 0 L 8 4 L 0 8 z" fill="#FDB813" />
+                <path d="M 0 0 L 8 4 L 0 8 z" fill="#808080" />
             </marker>
         </defs>
     """
