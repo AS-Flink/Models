@@ -312,7 +312,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />',
             
             # 3. PAP -> Main Meter
-            f'<line x1="350" y1="225" x2="{POS["main_meter"][0]+100}" y2="{POS["main_meter"][1]+20}" {arrow} />',
+            f'<line x1="350" y1="215" x2="{POS["main_meter"][0]+100}" y2="215" {arrow} />',
             
             # 4. ADDED: Arrow from Main Meter to PAP
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
