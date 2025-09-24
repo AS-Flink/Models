@@ -308,43 +308,43 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     #         f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
     #         f'<path d="M {POS["pv"][0]} {POS["pv"][1]+40} C 650 100, 650 140, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
     #     ])
-elif "Situation 3" in situation_name:
-        # --- Node Placement (Aligned as requested) ---
-        nodes_to_draw.extend([
-            create_node(350, 185, 'PAP', icons_b64['alloc']),          # Aligned with Load
-            create_node(350, 350, 'SAP', icons_b64['alloc']),          # Aligned with Battery group
-            create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-            create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-            create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-            create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-            create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter']) # Aligned with Battery group
-        ])
-        # --- Connections using one-way and two-way arrows ---
-        lines_to_draw.extend([
-            # 1. PV -> PV Meter (One-way)
-            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
-            
-            # 2. PV Meter -> PAP (One-way)
-            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />',
-
-            # 3. PAP <-> Main Meter (Simplified to one two-way arrow)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow_two_way} />',
-
-            # 4. PAP -> Load (One-way)
-            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-
-            # 5. SAP <-> Main Meter (Two-way)
-            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+50}" x2="350" y2="390" {arrow_two_way} />',
-            
-            # 6. SAP <-> Battery Meter (Two-way)
-            f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
-            
-            # 7. Battery <-> Battery Meter (Two-way)
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />',
-            
-            # 8. Dashed line for direct use from PV Meter to Load
-            f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
-        ])
+    elif "Situation 3" in situation_name:
+            # --- Node Placement (Aligned as requested) ---
+            nodes_to_draw.extend([
+                create_node(350, 185, 'PAP', icons_b64['alloc']),          # Aligned with Load
+                create_node(350, 350, 'SAP', icons_b64['alloc']),          # Aligned with Battery group
+                create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+                create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+                create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
+                create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
+                create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter']) # Aligned with Battery group
+            ])
+            # --- Connections using one-way and two-way arrows ---
+            lines_to_draw.extend([
+                # 1. PV -> PV Meter (One-way)
+                f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
+                
+                # 2. PV Meter -> PAP (One-way)
+                f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />',
+    
+                # 3. PAP <-> Main Meter (Simplified to one two-way arrow)
+                f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow_two_way} />',
+    
+                # 4. PAP -> Load (One-way)
+                f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+    
+                # 5. SAP <-> Main Meter (Two-way)
+                f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+50}" x2="350" y2="390" {arrow_two_way} />',
+                
+                # 6. SAP <-> Battery Meter (Two-way)
+                f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
+                
+                # 7. Battery <-> Battery Meter (Two-way)
+                f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />',
+                
+                # 8. Dashed line for direct use from PV Meter to Load
+                f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
+            ])
 
         
     elif "Situation 4" in situation_name:
