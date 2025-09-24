@@ -233,6 +233,40 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 120, 640 200, {POS["battery"][0]} {POS["battery"][1]-145}" {direct_use_arrow} />'
         ])
     
+    # elif "Situation 6" in situation_name:
+    #     nodes_to_draw.extend([
+    #         create_node(POS['sap1'][0], POS['sap1'][1], 'SAP1', icons_b64['alloc']),
+    #         create_node(POS['pap_center_sit6'][0], POS['pap_center_sit6'][1], 'PAP', icons_b64['alloc']),
+    #         create_node(POS['sap2'][0], POS['sap2'][1], 'SAP2', icons_b64['alloc']),
+    #         create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
+    #         create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
+    #         create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
+    #         create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
+    #         create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
+    #     ])
+    #     lines_to_draw.extend([
+    #         # Main bus line from meter
+    #         f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225" {arrow} />',
+    #         # Branch to SAP1 (top)
+    #         f'<path d="M 315 225 L 315 {POS["sap1"][1]+40} L {POS["sap1"][0]} {POS["sap1"][1]+40}" {arrow} />',
+    #         # Branch to PAP (middle)
+    #         f'<line x1="315" y1="225" x2="{POS["pap_center_sit6"][0]}" y2="{POS["pap_center_sit6"][1]+40}" {arrow} />',
+    #         # Branch to SAP2 (bottom)
+    #         f'<path d="M 315 225 L 315 {POS["sap2"][1]+40} L {POS["sap2"][0]} {POS["sap2"][1]+40}" {arrow} />',
+            
+    #         # REVERSED AS REQUESTED: Arrow now points from PV Meter to SAP1
+    #         f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="{POS["sap1"][0]+100}" y2="{POS["sap1"][1]+40}" {arrow} />',
+    #         # This line is unchanged
+    #         f'<line x1="{POS["pap_center_sit6"][0]+100}" y1="{POS["pap_center_sit6"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',       
+    #         # This line is unchanged
+    #         f'<line x1="{POS["sap2"][0]+100}" y1="{POS["sap2"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',            
+    #         # REVERSED AS REQUESTED: Arrow now points from PV to PV Meter
+    #         f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',          
+    #         # This line is unchanged
+    #         f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />'
+    #     ])
+
+
     elif "Situation 6" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['sap1'][0], POS['sap1'][1], 'SAP1', icons_b64['alloc']),
@@ -244,28 +278,27 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter'])
         ])
+        # --- Connections rebuilt with three separate lines from Main Meter ---
         lines_to_draw.extend([
-            # Main bus line from meter
-            f'<path d="M {POS["main_meter"][0]+100} 225 L 315 225" {arrow} />',
-            # Branch to SAP1 (top)
-            f'<path d="M 315 225 L 315 {POS["sap1"][1]+40} L {POS["sap1"][0]} {POS["sap1"][1]+40}" {arrow} />',
-            # Branch to PAP (middle)
-            f'<line x1="315" y1="225" x2="{POS["pap_center_sit6"][0]}" y2="{POS["pap_center_sit6"][1]+40}" {arrow} />',
-            # Branch to SAP2 (bottom)
-            f'<path d="M 315 225 L 315 {POS["sap2"][1]+40} L {POS["sap2"][0]} {POS["sap2"][1]+40}" {arrow} />',
+            # 1. NEW: Direct line from Main Meter (top-right) to SAP1
+            f'<path d="M {POS["main_meter"][0]+100} {POS["main_meter"][1]+20} L 315 {POS["main_meter"][1]+20} L 315 {POS["sap1"][1]+40} L {POS["sap1"][0]} {POS["sap1"][1]+40}" {arrow} />',
+
+            # 2. NEW: Direct line from Main Meter (center-right) to PAP
+            f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="{POS["pap_center_sit6"][0]}" y2="{POS["pap_center_sit6"][1]+40}" {arrow} />',
+
+            # 3. NEW: Direct line from Main Meter (bottom-right) to SAP2
+            f'<path d="M {POS["main_meter"][0]+100} {POS["main_meter"][1]+60} L 315 {POS["main_meter"][1]+60} L 315 {POS["sap2"][1]+40} L {POS["sap2"][0]} {POS["sap2"][1]+40}" {arrow} />',
             
-            # REVERSED AS REQUESTED: Arrow now points from PV Meter to SAP1
+            # Connections from allocation points to assets (with your previous corrections)
             f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="{POS["sap1"][0]+100}" y2="{POS["sap1"][1]+40}" {arrow} />',
-            # This line is unchanged
-            f'<line x1="{POS["pap_center_sit6"][0]+100}" y1="{POS["pap_center_sit6"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',       
-            # This line is unchanged
-            f'<line x1="{POS["sap2"][0]+100}" y1="{POS["sap2"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',            
-            # REVERSED AS REQUESTED: Arrow now points from PV to PV Meter
-            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',          
-            # This line is unchanged
+            f'<line x1="{POS["pap_center_sit6"][0]+100}" y1="{POS["pap_center_sit6"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
+            f'<line x1="{POS["sap2"][0]+100}" y1="{POS["sap2"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',
+            
+            # Connections from meters to assets (with your previous corrections)
+            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />'
         ])
-        
+
     elif "Situation 7" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['pap_main'][0], POS['pap_main'][1], 'PAP', icons_b64['alloc']),
