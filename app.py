@@ -17,6 +17,143 @@ import streamlit as st
 import base64
 import os
 
+# @st.cache_data
+# def get_image_as_base64(path):
+#     """Encodes an image to base64 for embedding in HTML."""
+#     if not os.path.exists(path):
+#         st.error(f"Icon file not found at: {path}")
+#         return None
+#     with open(path, "rb") as f:
+#         data = f.read()
+#     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+
+# # Final Version: Creates a complete diagram using the safe, piece-by-piece HTML/SVG construction method,
+# # with all lines converted to arrows and meters removed.
+# def create_detailed_diagram(situation_name, icons_b64):
+#     """
+#     Generates the correct and clean HTML/SVG diagram for any of the 7 situations
+#     using a piece-by-piece method, with arrows and no meters.
+#     """
+#     # Define SVG arrow markers
+#     arrow_defs = """
+#         <defs>
+#             <marker id="arrow-end-solid" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
+#             </marker>
+#             <marker id="arrow-start-solid" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 10 0 L 0 5 L 10 10 z" fill="#777" />
+#             </marker>
+#             <marker id="arrow-end-dashed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#FDB813" />
+#             </marker>
+#             <marker id="arrow-start-dashed" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+#                 <path d="M 10 0 L 0 5 L 10 10 z" fill="#FDB813" />
+#             </marker>
+#         </defs>
+#     """
+
+#     # Define a common style for the rounded boxes
+#     node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
+
+#     # Define the SVG code for each possible node once
+#     nodes_library = {
+#         'grid': f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Grid Connection</text></g>',
+#         'pap_center': f'<g transform="translate(350, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">PAP</text></g>',
+#         'pap_left': f'<g transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">PAP</text></g>',
+#         'pv': f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Solar PV</text></g>',
+#         'load': f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Base Load</text></g>',
+#         'batt': f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Battery</text></g>',
+#         'sap1': f'<g transform="translate(460, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">SAP 1</text></g>',
+#         'sap2': f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">SAP 2</text></g>',
+#         'sap_pv': f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">SAP</text></g>',
+#     }
+    
+#     # Initialize lists to hold the components for the selected situation
+#     nodes_to_draw = [nodes_library['grid']]
+#     lines_to_draw = []
+
+#     # --- Configure the diagram based on the selected situation ---
+#     if "Situation 1" in situation_name:
+#         nodes_to_draw.extend([nodes_library['pap_center'], nodes_library['pv'], nodes_library['load']])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<path d="M 470 190 L 650 60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>', # Changed to path for arrow
+#             '<path d="M 470 190 L 650 190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>', # Changed to path for arrow
+#             '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 2" in situation_name:
+#         nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap_pv'], nodes_library['pv'], nodes_library['load']])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>'
+#         ])
+#     elif "Situation 3" in situation_name:
+#         nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap1'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="380" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>',
+#             '<path d="M 350 250 C 420 270, 420 270, 460 300" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 4" in situation_name:
+#         nodes_to_draw.extend([nodes_library['pap_center'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="470" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>',
+#             '<path d="M 690 215 C 740 250, 740 285, 690 320" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>',
+#             '<path d="M 720 80 C 780 145, 780 245, 720 310" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 5" in situation_name:
+#         nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap_pv'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="520" y1="120" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<path d="M 690 85 C 740 155, 740 245, 690 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+#     elif "Situation 6" in situation_name:
+#         nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap1'], nodes_library['sap2'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>'
+#         ])
+#     elif "Situation 7" in situation_name:
+#         nodes_to_draw.extend([nodes_library['pap_center'], nodes_library['pv'], nodes_library['batt']])
+#         lines_to_draw.extend([
+#             '<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
+#             '<path d="M 700 85 C 750 155, 750 245, 700 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+#         ])
+        
+#     # Join the final list of SVG elements into a single string
+#     svg_content = "\n".join(lines_to_draw + nodes_to_draw)
+
+#     # --- Build the final HTML using a list of single-line strings ---
+#     html_parts = []
+#     html_parts.append('<div style="width: 100%; max-width: 850px; height: 400px; font-family: sans-serif; position: relative; margin: auto;">')
+#     html_parts.append('<svg viewBox="0 0 850 400" style="width: 100%; height: 100%;">')
+#     html_parts.append(arrow_defs) # Add the arrow definitions here
+#     html_parts.append(svg_content)
+#     html_parts.append('</svg>')
+#     html_parts.append('</div>')
+
+#     return "".join(html_parts)
+
 @st.cache_data
 def get_image_as_base64(path):
     """Encodes an image to base64 for embedding in HTML."""
@@ -27,134 +164,210 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# Final Version: Creates a complete diagram using the safe, piece-by-piece HTML/SVG construction method,
-# with all lines converted to arrows and meters removed.
-def create_detailed_diagram(situation_name, icons_b64):
+def create_detailed_diagram(situation_name):
     """
-    Generates the correct and clean HTML/SVG diagram for any of the 7 situations
-    using a piece-by-piece method, with arrows and no meters.
+    Generates a clean and accurate SVG diagram for any of the 7 situations,
+    replicating the provided schematics with all meters and correct connections.
     """
-    # Define SVG arrow markers
+    # Define SVG arrow markers. The yellow arrow is for power flow.
     arrow_defs = """
         <defs>
-            <marker id="arrow-end-solid" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#777" />
-            </marker>
-            <marker id="arrow-start-solid" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 10 0 L 0 5 L 10 10 z" fill="#777" />
-            </marker>
-            <marker id="arrow-end-dashed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker id="arrow-end-yellow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#FDB813" />
-            </marker>
-            <marker id="arrow-start-dashed" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 10 0 L 0 5 L 10 10 z" fill="#FDB813" />
             </marker>
         </defs>
     """
 
-    # Define a common style for the rounded boxes
-    node_style = 'fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"'
+    def create_box(text, x, y, w=130, h=45, style_class='node'):
+        """Helper function to create a styled SVG box with text."""
+        styles = {
+            'node': 'fill="#002346"; stroke:"#002346";',  # Dark Blue for assets
+            'meter': 'fill="#6c757d"; stroke:"#6c757d";', # Grey for meters
+            'grid': 'fill="#5d3b80"; stroke:"#5d3b80";', # Purple for grid
+            'pap': 'fill="#495057"; stroke:"#495057";' # Dark Grey for PAP/SAP
+        }
+        text_color = "white"
+        return f'''
+            <g transform="translate({x}, {y})">
+                <rect x="0" y="0" width="{w}" height="{h}" rx="5" style="{styles.get(style_class, styles['node'])}" />
+                <text x="{w/2}" y="{h/2}" dy=".3em" text-anchor="middle" font-weight="bold" font-size="13px" fill="{text_color}">{text}</text>
+            </g>
+        '''
 
-    # Define the SVG code for each possible node once
-    nodes_library = {
-        'grid': f'<g transform="translate(50, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["grid"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Grid Connection</text></g>',
-        'pap_center': f'<g transform="translate(350, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">PAP</text></g>',
-        'pap_left': f'<g transform="translate(260, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">PAP</text></g>',
-        'pv': f'<g transform="translate(650, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["pv"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Solar PV</text></g>',
-        'load': f'<g transform="translate(650, 150)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["load"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Base Load</text></g>',
-        'batt': f'<g transform="translate(650, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["batt"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">Battery</text></g>',
-        'sap1': f'<g transform="translate(460, 280)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">SAP 1</text></g>',
-        'sap2': f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">SAP 2</text></g>',
-        'sap_pv': f'<g transform="translate(460, 20)"><rect x="0" y="0" width="120" height="100" rx="12" {node_style}/><image href="{icons_b64["alloc"]}" x="30" y="10" width="60"/><text x="60" y="90" text-anchor="middle" font-weight="bold" font-size="13px" fill="#333">SAP</text></g>',
+    # --- Define Component Positions (center x, y) ---
+    # This creates a consistent grid for placing all components.
+    POS = {
+        'grid': (425, 450), 'hoofdmeter': (425, 350),
+        'pv': (125, 50), 'load': (425, 50), 'batt': (725, 50),
+        'meter_pv': (125, 150), 'meter_batt': (725, 150),
+        'pap_center': (425, 250), 'pap_left': (275, 250),
+        'sap_pv': (275, 250), 'sap_right': (575, 250),
+        'sap1': (275, 250), 'sap2': (575, 250),
     }
-    
-    # Initialize lists to hold the components for the selected situation
-    nodes_to_draw = [nodes_library['grid']]
+
+    # Define styles for the arrows
+    arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
+    direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
+
+    nodes_to_draw = []
     lines_to_draw = []
 
-    # --- Configure the diagram based on the selected situation ---
+    # --- Add Common Base Components for ALL Diagrams ---
+    nodes_to_draw.append(create_box("Stroomnet", POS['grid'][0] - 65, POS['grid'][1] - 22, style_class='grid'))
+    nodes_to_draw.append(create_box("Hoofdmeter", POS['hoofdmeter'][0] - 65, POS['hoofdmeter'][1] - 22, style_class='meter'))
+    lines_to_draw.append(f'<line x1="{POS["grid"][0]}" y1="{POS["grid"][1] - 22}" x2="{POS["hoofdmeter"][0]}" y2="{POS["hoofdmeter"][1] + 22}" {arrow} />')
+
+    # --- Configure Diagram Based on Selected Situation ---
+    # Each block adds the specific nodes and lines for that case.
+
     if "Situation 1" in situation_name:
-        nodes_to_draw.extend([nodes_library['pap_center'], nodes_library['pv'], nodes_library['load']])
-        lines_to_draw.extend([
-            '<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<path d="M 470 190 L 650 60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>', # Changed to path for arrow
-            '<path d="M 470 190 L 650 190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>', # Changed to path for arrow
-            '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#FDB813" stroke-width="3" stroke-dasharray="5, 5" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+        nodes_to_draw.extend([
+            create_box("PV", POS['pv'][0]-65, POS['pv'][1]-22),
+            create_box("Verbruik gebouw", POS['load'][0]-65, POS['load'][1]-22),
+            create_box("meter PV", POS['meter_pv'][0]-65, POS['meter_pv'][1]-22, style_class='meter'),
+            create_box("PAP", POS['pap_center'][0]-65, POS['pap_center'][1]-22, style_class='pap')
         ])
+        lines_to_draw.extend([
+            f'<line x1="{POS["hoofdmeter"][0]}" y1="{POS["hoofdmeter"][1]-22}" x2="{POS["pap_center"][0]}" y2="{POS["pap_center"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_center"][0]} {POS["pap_center"][1]-22} L {POS["pap_center"][0]} 210 L {POS["load"][0]} 210 L {POS["load"][0]} {POS["load"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_center"][0]} {POS["pap_center"][1]-22} L {POS["pap_center"][0]} 210 L {POS["meter_pv"][0]} 210 L {POS["meter_pv"][0]} {POS["meter_pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]-22}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pv"][0]+65} {POS["pv"][1]} C {275} 80, {275} 80, {POS["load"][0]-65} {POS["load"][1]}" {direct_use_arrow} />'
+        ])
+
     elif "Situation 2" in situation_name:
-        nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap_pv'], nodes_library['pv'], nodes_library['load']])
-        lines_to_draw.extend([
-            '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>'
+        junction_y = 300
+        nodes_to_draw.extend([
+            create_box("PV", POS['pv'][0]-65, POS['pv'][1]-22),
+            create_box("Verbruik gebouw", POS['load'][0]-65, POS['load'][1]-22),
+            create_box("meter PV", POS['meter_pv'][0]-65, POS['meter_pv'][1]-22, style_class='meter'),
+            create_box("PAP", POS['pap_left'][0]-65, POS['pap_left'][1]-22, style_class='pap'),
+            create_box("SAP", POS['sap_right'][0]-65, POS['sap_right'][1]-22, style_class='pap')
         ])
+        lines_to_draw.extend([
+            f'<path d="M {POS["hoofdmeter"][0]} {POS["hoofdmeter"][1]-22} L {POS["hoofdmeter"][0]} {junction_y} L {POS["pap_left"][0]} {junction_y} L {POS["pap_left"][0]} {POS["pap_left"][1]+22}" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]} {junction_y} L {POS["sap_right"][0]} {junction_y} L {POS["sap_right"][0]} {POS["sap_right"][1]+22}" {arrow} />',
+            f'<line x1="{POS["pap_left"][0]}" y1="{POS["pap_left"][1]-22}" x2="{POS["load"][0]}" y2="{POS["load"][1]+22}" {arrow} />',
+            f'<line x1="{POS["sap_right"][0]}" y1="{POS["sap_right"][1]-22}" x2="{POS["meter_pv"][0]}" y2="{POS["meter_pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]-22}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+22}" {arrow} />'
+        ])
+
     elif "Situation 3" in situation_name:
-        nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap1'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
-        lines_to_draw.extend([
-            '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="380" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>',
-            '<path d="M 350 250 C 420 270, 420 270, 460 300" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+        junction_y = 300
+        nodes_to_draw.extend([
+            create_box("PV", POS['pv'][0]-65, POS['pv'][1]-22),
+            create_box("Verbruik gebouw", POS['load'][0]-65, POS['load'][1]-22),
+            create_box("Batterij", POS['batt'][0]-65, POS['batt'][1]-22),
+            create_box("meter PV", POS['meter_pv'][0]-65, POS['meter_pv'][1]-22, style_class='meter'),
+            create_box("meter batterij", POS['meter_batt'][0]-65, POS['meter_batt'][1]-22, style_class='meter'),
+            create_box("PAP", POS['pap_left'][0]-65, POS['pap_left'][1]-22, style_class='pap'),
+            create_box("SAP", POS['sap_right'][0]-65, POS['sap_right'][1]-22, style_class='pap')
         ])
+        lines_to_draw.extend([
+            f'<path d="M {POS["hoofdmeter"][0]} {POS["hoofdmeter"][1]-22} L {POS["hoofdmeter"][0]} {junction_y} L {POS["pap_left"][0]} {junction_y} L {POS["pap_left"][0]} {POS["pap_left"][1]+22}" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]} {junction_y} L {POS["sap_right"][0]} {junction_y} L {POS["sap_right"][0]} {POS["sap_right"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_left"][0]} {POS["pap_left"][1]-22} L {POS["pap_left"][0]} 210 L {POS["load"][0]} 210 L {POS["load"][0]} {POS["load"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_left"][0]} {POS["pap_left"][1]-22} L {POS["pap_left"][0]} 210 L {POS["meter_pv"][0]} 210 L {POS["meter_pv"][0]} {POS["meter_pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]-22}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["sap_right"][0]}" y1="{POS["sap_right"][1]-22}" x2="{POS["meter_batt"][0]}" y2="{POS["meter_batt"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_batt"][0]}" y1="{POS["meter_batt"][1]-22}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pv"][0]+65} {POS["pv"][1]} C {275} 80, {275} 80, {POS["load"][0]-65} {POS["load"][1]}" {direct_use_arrow} />'
+        ])
+
     elif "Situation 4" in situation_name:
-        nodes_to_draw.extend([nodes_library['pap_center'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
-        lines_to_draw.extend([
-            '<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="470" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<path d="M 690 85 C 740 125, 740 165, 690 190" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>',
-            '<path d="M 690 215 C 740 250, 740 285, 690 320" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>',
-            '<path d="M 720 80 C 780 145, 780 245, 720 310" stroke="#777" stroke-width="1.5" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+        nodes_to_draw.extend([
+            create_box("PV", POS['pv'][0]-65, POS['pv'][1]-22),
+            create_box("Verbruik gebouw", POS['load'][0]-65, POS['load'][1]-22),
+            create_box("Batterij", POS['batt'][0]-65, POS['batt'][1]-22),
+            create_box("meter PV", POS['meter_pv'][0]-65, POS['meter_pv'][1]-22, style_class='meter'),
+            create_box("meter batterij", POS['meter_batt'][0]-65, POS['meter_batt'][1]-22, style_class='meter'),
+            create_box("PAP", POS['pap_center'][0]-65, POS['pap_center'][1]-22, style_class='pap')
         ])
+        lines_to_draw.extend([
+            f'<line x1="{POS["hoofdmeter"][0]}" y1="{POS["hoofdmeter"][1]-22}" x2="{POS["pap_center"][0]}" y2="{POS["pap_center"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_center"][0]} {POS["pap_center"][1]-22} L {POS["pap_center"][0]} 210 L {POS["load"][0]} 210 L {POS["load"][0]} {POS["load"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_center"][0]} 210 L {POS["meter_pv"][0]} 210 L {POS["meter_pv"][0]} {POS["meter_pv"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_center"][0]} 210 L {POS["meter_batt"][0]} 210 L {POS["meter_batt"][0]} {POS["meter_batt"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]-22}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_batt"][0]}" y1="{POS["meter_batt"][1]-22}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pv"][0]+65} {POS["pv"][1]} C {275} 80, {275} 80, {POS["load"][0]-65} {POS["load"][1]}" {direct_use_arrow} />',
+            f'<path d="M {POS["pv"][0]+65} {POS["pv"][1]+22} C {325} 120, {525} 120, {POS["batt"][0]-65} {POS["batt"][1]+22}" {direct_use_arrow} />',
+            f'<path d="M {POS["batt"][0]-65} {POS["batt"][1]} C {575} 80, {575} 80, {POS["load"][0]+65} {POS["load"][1]}" {direct_use_arrow} />',
+        ])
+
     elif "Situation 5" in situation_name:
-        nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap_pv'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
-        lines_to_draw.extend([
-            '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="520" y1="120" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<path d="M 690 85 C 740 155, 740 245, 690 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+        junction_y = 300
+        nodes_to_draw.extend([
+            create_box("PV", POS['pv'][0]-65, POS['pv'][1]-22),
+            create_box("Verbruik gebouw", POS['load'][0]-65, POS['load'][1]-22),
+            create_box("Batterij", POS['batt'][0]-65, POS['batt'][1]-22),
+            create_box("meter PV", POS['meter_pv'][0]-65, POS['meter_pv'][1]-22, style_class='meter'),
+            create_box("meter batterij", POS['meter_batt'][0]-65, POS['meter_batt'][1]-22, style_class='meter'),
+            create_box("PAP", POS['pap_left'][0]-65, POS['pap_left'][1]-22, style_class='pap'),
+            create_box("SAP", POS['sap_right'][0]-65, POS['sap_right'][1]-22, style_class='pap')
         ])
+        lines_to_draw.extend([
+            f'<path d="M {POS["hoofdmeter"][0]} {POS["hoofdmeter"][1]-22} L {POS["hoofdmeter"][0]} {junction_y} L {POS["pap_left"][0]} {junction_y} L {POS["pap_left"][0]} {POS["pap_left"][1]+22}" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]} {junction_y} L {POS["sap_right"][0]} {junction_y} L {POS["sap_right"][0]} {POS["sap_right"][1]+22}" {arrow} />',
+            f'<line x1="{POS["pap_left"][0]}" y1="{POS["pap_left"][1]-22}" x2="{POS["load"][0]}" y2="{POS["load"][1]+22}" {arrow} />',
+            f'<path d="M {POS["sap_right"][0]} {POS["sap_right"][1]-22} L {POS["sap_right"][0]} 210 L {POS["meter_pv"][0]} 210 L {POS["meter_pv"][0]} {POS["meter_pv"][1]+22}" {arrow} />',
+            f'<path d="M {POS["sap_right"][0]} 210 L {POS["meter_batt"][0]} 210 L {POS["meter_batt"][0]} {POS["meter_batt"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]-22}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_batt"][0]}" y1="{POS["meter_batt"][1]-22}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pv"][0]+65} {POS["pv"][1]+22} C {325} 120, {525} 120, {POS["batt"][0]-65} {POS["batt"][1]+22}" {direct_use_arrow} />'
+        ])
+
     elif "Situation 6" in situation_name:
-        nodes_to_draw.extend([nodes_library['pap_left'], nodes_library['sap1'], nodes_library['sap2'], nodes_library['pv'], nodes_library['load'], nodes_library['batt']])
-        lines_to_draw.extend([
-            '<line x1="170" y1="190" x2="260" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="380" y1="190" x2="650" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="320" y1="150" x2="460" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="320" y1="250" x2="460" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="580" y1="60" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="580" y1="320" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>'
+        junction_y = 300
+        nodes_to_draw.extend([
+            create_box("PV", POS['pv'][0]-65, POS['pv'][1]-22),
+            create_box("Verbruik gebouw", POS['load'][0]-65, POS['load'][1]-22),
+            create_box("Batterij", POS['batt'][0]-65, POS['batt'][1]-22),
+            create_box("meter PV", POS['meter_pv'][0]-65, POS['meter_pv'][1]-22, style_class='meter'),
+            create_box("meter batterij", POS['meter_batt'][0]-65, POS['meter_batt'][1]-22, style_class='meter'),
+            create_box("PAP", POS['pap_center'][0]-65, POS['pap_center'][1]-22, style_class='pap'),
+            create_box("SAP1", POS['sap1'][0]-65, POS['sap1'][1]-22, style_class='pap'),
+            create_box("SAP2", POS['sap2'][0]-65, POS['sap2'][1]-22, style_class='pap')
         ])
+        lines_to_draw.extend([
+            f'<path d="M {POS["hoofdmeter"][0]} {POS["hoofdmeter"][1]-22} L {POS["hoofdmeter"][0]} {junction_y} L {POS["pap_center"][0]} {junction_y} L {POS["pap_center"][0]} {POS["pap_center"][1]+22}" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]} {junction_y} L {POS["sap1"][0]} {junction_y} L {POS["sap1"][0]} {POS["sap1"][1]+22}" {arrow} />',
+            f'<path d="M {POS["hoofdmeter"][0]} {junction_y} L {POS["sap2"][0]} {junction_y} L {POS["sap2"][0]} {POS["sap2"][1]+22}" {arrow} />',
+            f'<line x1="{POS["pap_center"][0]}" y1="{POS["pap_center"][1]-22}" x2="{POS["load"][0]}" y2="{POS["load"][1]+22}" {arrow} />',
+            f'<line x1="{POS["sap1"][0]}" y1="{POS["sap1"][1]-22}" x2="{POS["meter_pv"][0]}" y2="{POS["meter_pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]-22}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["sap2"][0]}" y1="{POS["sap2"][1]-22}" x2="{POS["meter_batt"][0]}" y2="{POS["meter_batt"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_batt"][0]}" y1="{POS["meter_batt"][1]-22}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+22}" {arrow} />',
+        ])
+
     elif "Situation 7" in situation_name:
-        nodes_to_draw.extend([nodes_library['pap_center'], nodes_library['pv'], nodes_library['batt']])
-        lines_to_draw.extend([
-            '<line x1="170" y1="190" x2="350" y2="190" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="470" y1="190" x2="650" y2="60" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<line x1="470" y1="190" x2="650" y2="320" stroke="#777" stroke-width="2" marker-end="url(#arrow-end-solid)"/>',
-            '<path d="M 700 85 C 750 155, 750 245, 700 320" stroke="#FDB813" stroke-width="2" stroke-dasharray="4, 4" fill="none" marker-end="url(#arrow-end-dashed)"/>'
+        nodes_to_draw.extend([
+            create_box("PV", POS['pv'][0]-65, POS['pv'][1]-22),
+            create_box("Batterij", POS['batt'][0]-65, POS['batt'][1]-22),
+            create_box("meter PV", POS['meter_pv'][0]-65, POS['meter_pv'][1]-22, style_class='meter'),
+            create_box("meter batterij", POS['meter_batt'][0]-65, POS['meter_batt'][1]-22, style_class='meter'),
+            create_box("PAP", POS['pap_center'][0]-65, POS['pap_center'][1]-22, style_class='pap')
         ])
-        
-    # Join the final list of SVG elements into a single string
-    svg_content = "\n".join(lines_to_draw + nodes_to_draw)
+        lines_to_draw.extend([
+            f'<line x1="{POS["hoofdmeter"][0]}" y1="{POS["hoofdmeter"][1]-22}" x2="{POS["pap_center"][0]}" y2="{POS["pap_center"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_center"][0]} {POS["pap_center"][1]-22} L {POS["pap_center"][0]} 210 L {POS["meter_pv"][0]} 210 L {POS["meter_pv"][0]} {POS["meter_pv"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pap_center"][0]} 210 L {POS["meter_batt"][0]} 210 L {POS["meter_batt"][0]} {POS["meter_batt"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]-22}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+22}" {arrow} />',
+            f'<line x1="{POS["meter_batt"][0]}" y1="{POS["meter_batt"][1]-22}" x2="{POS["batt"][0]}" y2="{POS["batt"][1]+22}" {arrow} />',
+            f'<path d="M {POS["pv"][0]+65} {POS["pv"][1]+22} C {325} 120, {525} 120, {POS["batt"][0]-65} {POS["batt"][1]+22}" {direct_use_arrow} />'
+        ])
 
-    # --- Build the final HTML using a list of single-line strings ---
-    html_parts = []
-    html_parts.append('<div style="width: 100%; max-width: 850px; height: 400px; font-family: sans-serif; position: relative; margin: auto;">')
-    html_parts.append('<svg viewBox="0 0 850 400" style="width: 100%; height: 100%;">')
-    html_parts.append(arrow_defs) # Add the arrow definitions here
-    html_parts.append(svg_content)
-    html_parts.append('</svg>')
-    html_parts.append('</div>')
-
-    return "".join(html_parts)
-
-
+    # --- Assemble the Final HTML/SVG ---
+    svg_content = "".join(nodes_to_draw) + "".join(lines_to_draw)
+    html_code = f'''
+        <div style="width: 100%; max-width: 850px; height: 500px; font-family: sans-serif; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+            <svg viewBox="0 0 850 500" style="width: 100%; height: 100%;">
+                {arrow_defs}
+                {svg_content}
+            </svg>
+        </div>
+    '''
+    return html_code
 
 
 # --- Add these new helper functions to your main app script ---
