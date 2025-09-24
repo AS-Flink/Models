@@ -315,7 +315,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />',
             
             # CORRECTED: Dashed line from PV Meter to Battery Meter with angled path
-            f'<path d="M {POS["meter_pv"][0]} {POS["meter_pv"][1]+20} L {POS["meter_pv"][0]-70} {POS["meter_pv"][1]+20} L {POS["meter_pv"][0]-70} {POS["battery"][1]-140} L {POS["meter_battery"][0]} {POS["battery"][1]-140}" {direct_use_arrow} />'
+            f'<path d="M {POS["meter_pv"][0]} {POS["meter_pv"][1]+20} L {POS["meter_pv"][0]-70} {POS["meter_pv"][1]+20} L {POS["meter_pv"][0]-70} {POS["battery"][1]-20} L {POS["meter_battery"][0]} {POS["battery"][1]-20}" {direct_use_arrow} />'
         ])
 
     # --- Assemble the Final HTML/SVG ---
