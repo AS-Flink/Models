@@ -216,14 +216,14 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             # Branch to PAP (middle)
             f'<line x1="315" y1="225" x2="{POS["pap_center_sit6"][0]}" y2="{POS["pap_center_sit6"][1]+40}" {arrow} />',
             # Branch to SAP2 (bottom)
-            f'<path d="M 315 225 L 315 {POS["sap2"][1]+40} L {POS["sap2"][0]} {POS["sap2"][1]+40}" {arrow} />',
+            f'<path d="M 315 225 L 315 {POS["sap2"][1]+40} L {POS["sap2"][0]} {POS["sap2"][1]+40}" {arrow_two_way} />',
             # Connections from allocation points to assets
             f'<line x1="{POS["sap1"][0]+100}" y1="{POS["sap1"][1]+40}" x2="{POS["meter_pv"][0]}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             f'<line x1="{POS["pap_center_sit6"][0]+100}" y1="{POS["pap_center_sit6"][1]+40}" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
             f'<line x1="{POS["sap2"][0]+100}" y1="{POS["sap2"][1]+40}" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow} />',
             # Connections from meters to assets
             f'<line x1="{POS["meter_pv"][0]+100}" y1="{POS["meter_pv"][1]+40}" x2="{POS["pv"][0]}" y2="{POS["pv"][1]+40}" {arrow} />',
-            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow} />'
+            f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />'
         ])
 
     elif "Situation 7" in situation_name:
