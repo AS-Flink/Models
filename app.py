@@ -196,7 +196,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<path d="M {POS["pv"][0]} {POS["pv"][1]+60} C 640 180, 640 280, {POS["battery"][0]} {POS["battery"][1]+20}" {direct_use_arrow} />'
         ])
     
-elif "Situation 6" in situation_name:
+    elif "Situation 6" in situation_name:
         nodes_to_draw.extend([
             create_node(POS['sap1'][0], POS['sap1'][1], 'SAP1', icons_b64['alloc']),
             create_node(POS['pap_center_sit6'][0], POS['pap_center_sit6'][1], 'PAP', icons_b64['alloc']),
