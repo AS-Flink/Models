@@ -169,7 +169,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             
             # 2. PV Meter -> PAP
-            f'<path d="M {POS["meter_pv"][0]+45} {POS["meter_pv"][1]+80} L 570 145 L {POS["pap_main"][0]+50} 150 L {POS["pap_main"][0]+50} {POS["load"][1]}" {arrow} />',
+            f'<path d="M {POS["meter_pv"][0]+45} {POS["meter_pv"][1]+80} L 570 155 L {POS["pap_main"][0]+50} 150 L {POS["pap_main"][0]+50} {POS["load"][1]}" {arrow} />',
             
             # 3. Main Meter -> PAP (The outgoing arrow)
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow} />',
