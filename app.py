@@ -322,16 +322,16 @@ elif "Situation 3" in situation_name:
         # --- Connections using one-way and two-way arrows ---
         lines_to_draw.extend([
             # 1. PV -> PV Meter (One-way)
-            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow_one_way} />',
+            f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
             
             # 2. PV Meter -> PAP (One-way)
-            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow_one_way} />',
+            f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />',
 
             # 3. PAP <-> Main Meter (Simplified to one two-way arrow)
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow_two_way} />',
 
             # 4. PAP -> Load (One-way)
-            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow_one_way} />',
+            f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
             # 5. SAP <-> Main Meter (Two-way)
             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+50}" x2="350" y2="390" {arrow_two_way} />',
