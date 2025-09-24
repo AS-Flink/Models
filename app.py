@@ -180,7 +180,7 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
 
             # 5. CORRECTED: Main Meter -> SAP with zig-zag path (solid)
-            f'<path d="M {POS["main_meter"][0]+100} {POS["main_meter"][1]+60} L 315 {POS["main_meter"][1]+60} L 315 390 L 350 390" {arrow_one_way} />', # Main Meter bottom-right to SAP left
+            f'<path d="M {POS["main_meter"][0]+100} {POS["main_meter"][1]+60} L 315 {POS["main_meter"][1]+60} L 315 390 L 350 390" {arrow} />', # Main Meter bottom-right to SAP left
             
             # 6. SAP <-> Battery Meter (Unchanged)
             f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
