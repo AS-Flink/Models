@@ -27,57 +27,6 @@ def get_image_as_base64(path):
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-# def create_horizontal_diagram_with_icons(situation_name, icons_b64):
-#     # Define SVG arrow markers
-#     arrow_defs = """
-#         <defs>
-#             <marker id="arrow-end-yellow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-#                 <path d="M 0 0 L 8 4 L 0 8 z" fill="#FDB813" />
-#             </marker>   
-#             <marker id="arrow-start-yellow" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-#                 <path d="M 8 0 L 0 4 L 8 8 z" fill="#FDB813" />
-#             </marker>
-#         </defs>
-#     """
-
-
-#     # Helper function to create a component with an icon and a label
-#     def create_node(x, y, label, icon_b64, w=100, h=80):
-#         return f'''
-#             <g transform="translate({x}, {y})">
-#                 <rect x="0" y="0" width="{w}" height="{h}" rx="8" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
-#                 <image href="{icon_b64}" x="{w*0.25}" y="5" width="{w*0.5}" height="{h*0.5}"/>
-#                 <text x="{w/2}" y="{h*0.8}" text-anchor="middle" font-weight="bold" font-size="12px" fill="#333">{label}</text>
-#             </g>
-#         '''
-    
-#     # Define consistent positions with English keys
-#     # Spaced out sap1/pap/sap2 for Situation 6
-#     POS = {
-#         'grid': (20, 185), 'main_meter': (180, 185),
-#         'pv': (680, 20), 'load': (680, 185), 'battery': (680, 350),
-#         'meter_pv': (520, 20), 'meter_battery': (520, 350),
-#         'pap_main': (350, 185),
-#         'sap1': (350, 80), 'pap_center_sit6': (350, 185), 'sap2': (350, 290)
-#     }
-
-#     # arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
-#     # direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
-#     # Define styles for the arrows
-#     arrow = 'stroke="#FDB813" stroke-width="3" fill="none" marker-end="url(#arrow-end-yellow)"'
-#     arrow_two_way = 'stroke="#FDB813" stroke-width="3" fill="none" marker-start="url(#arrow-start-yellow)" marker-end="url(#arrow-end-yellow)"'
-#     direct_use_arrow = 'stroke="#FDB813" stroke-width="3" stroke-dasharray="6, 6" fill="none" marker-end="url(#arrow-end-yellow)"'
-
-#     nodes_to_draw = []
-#     lines_to_draw = []
-
-
-#     # --- Base components (Grid and Main Meter) ---
-#     nodes_to_draw.extend([
-#         create_node(POS['grid'][0], POS['grid'][1], 'Grid', icons_b64['grid']),
-#         create_node(POS['main_meter'][0], POS['main_meter'][1], 'Main Meter', icons_b64['meter'])
-#     ])
-#     lines_to_draw.append(f'<line x1="{POS["grid"][0]+100}" y1="{POS["grid"][1]+40}" x2="{POS["main_meter"][0]}" y2="{POS["main_meter"][1]+40}" {arrow_two_way} />')
 def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     """
     Generates the correct horizontal diagram using PNG icons and corrected connections
@@ -180,43 +129,6 @@ def create_horizontal_diagram_with_icons(situation_name, icons_b64):
             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />'
         ])
 
-    # elif "Situation 3" in situation_name:
-    #         # --- Node Placement (Aligned as requested) ---
-    #         nodes_to_draw.extend([
-    #             create_node(350, 185, 'PAP', icons_b64['alloc']),          # Aligned with Load
-    #             create_node(350, 350, 'SAP', icons_b64['alloc']),          # Aligned with Battery group
-    #             create_node(POS['pv'][0], POS['pv'][1], 'PV', icons_b64['pv']),
-    #             create_node(POS['load'][0], POS['load'][1], 'Load', icons_b64['load']),
-    #             create_node(POS['battery'][0], POS['battery'][1], 'Battery', icons_b64['batt']),
-    #             create_node(POS['meter_pv'][0], POS['meter_pv'][1], 'PV Meter', icons_b64['meter']),
-    #             create_node(POS['meter_battery'][0], POS['meter_battery'][1], 'Battery Meter', icons_b64['meter']) # Aligned with Battery group
-    #         ])
-    #         # --- Connections using one-way and two-way arrows ---
-    #         lines_to_draw.extend([
-    #             # 1. PV -> PV Meter (One-way)
-    #             f'<line x1="{POS["pv"][0]}" y1="{POS["pv"][1]+40}" x2="{POS["meter_pv"][0]+100}" y2="{POS["meter_pv"][1]+40}" {arrow} />',
-                
-    #             # 2. PV Meter -> PAP (One-way)
-    #             f'<line x1="{POS["meter_pv"][0]}" y1="{POS["meter_pv"][1]+40}" x2="450" y2="225" {arrow} />',
-    
-    #             # 3. PAP <-> Main Meter (Simplified to one two-way arrow)
-    #             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+40}" x2="350" y2="225" {arrow_two_way} />',
-    
-    #             # 4. PAP -> Load (One-way)
-    #             f'<line x1="450" y1="225" x2="{POS["load"][0]}" y2="{POS["load"][1]+40}" {arrow} />',
-    
-    #             # 5. SAP <-> Main Meter (Two-way)
-    #             f'<line x1="{POS["main_meter"][0]+100}" y1="{POS["main_meter"][1]+50}" x2="350" y2="390" {arrow_two_way} />',
-                
-    #             # 6. SAP <-> Battery Meter (Two-way)
-    #             f'<line x1="450" y1="390" x2="{POS["meter_battery"][0]}" y2="{POS["meter_battery"][1]+40}" {arrow_two_way} />',
-                
-    #             # 7. Battery <-> Battery Meter (Two-way)
-    #             f'<line x1="{POS["meter_battery"][0]+100}" y1="{POS["meter_battery"][1]+40}" x2="{POS["battery"][0]}" y2="{POS["battery"][1]+40}" {arrow_two_way} />',
-                
-    #             # 8. Dashed line for direct use from PV Meter to Load
-    #             f'<path d="M {POS["meter_pv"][0]+50} {POS["meter_pv"][1]+80} C 620 100, 630 225, {POS["load"][0]} {POS["load"][1]+40}" {direct_use_arrow} />'
-    #         ])
     elif "Situation 3" in situation_name:
         # This is the fully corrected code for Situation 3
         nodes_to_draw.extend([
