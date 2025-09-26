@@ -755,10 +755,6 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #         st.session_state.page = "Home"
 #         st.rerun()
 
-import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
 
 # Make sure your analyzer classes are available
 # from your_file import BatteryShavingAnalyzer, NetPeakShavingSizer
