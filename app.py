@@ -828,10 +828,9 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #         st.components.v1.html(html_code, height=320)
 #     else:
 #         st.success("No battery is required for the given threshold.")
+# --- THE MAIN RECOMMENDATION FUNCTION ---
 def display_recommendations(power_req, capacity_req):
-    """
-    Calculates and displays commercial recommendations and visual modular options using PNGs.
-    """
+    """Calculates and displays commercial recommendations and a full system schematic."""
     st.markdown("---")
     st.subheader("✅ Commercial Recommendation")
 
@@ -849,64 +848,99 @@ def display_recommendations(power_req, capacity_req):
         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
 
         st.markdown("---")
-        st.subheader("📦 Modular Configuration Options")
-        st.info("Below are visual examples of how your system could be built using common battery rack sizes.")
+        st.subheader("📦 System Configuration Schematic")
+        st.info("Below is a visual representation of how the recommended system connects to your facility.")
 
-        # --- Load your PNG images ---
-        try:
-            pv_img = Image.open("renewable-energy.png")
-            rack_img = Image.open("system.png")
-            meter_img = Image.open("energy-meter.png")
-            load_img = Image.open("energy-consumption.png")
-            grid_img = Image.open("power-line.png")
-        except FileNotFoundError as e:
-            st.error(f"Image file not found: {e}. Please ensure all PNG files are in the app's folder.")
-            return # Stop execution if images are missing
+        # --- Encode your PNG images to Base64 ---
+        # NOTE: Update the filenames if yours are different
+        img_paths = {
+            "pv": "pv.png", "battery": "battery_rack.png", "meter": "meter.png",
+            "load": "load.png", "grid": "grid.png"
+        }
+        b64_images = {name: get_image_as_base64(path) for name, path in img_paths.items()}
 
-        # --- Loop through each option and display a full schematic ---
-        rack_options = [60, 100, 250] # in kWh
+        # Stop if any image failed to load
+        if any(img is None for img in b64_images.values()):
+            return
+
+        # --- Dynamic HTML Generation ---
+        # Use a representative number of racks for the visual, e.g., from the 100kWh option
+        num_racks = int(np.ceil(capacity_req / 100)) 
         
-        for i, rack_size in enumerate(rack_options):
-            st.markdown(f"#### Option {i+1}: Using {rack_size} kWh Racks")
-            
-            num_racks = int(np.ceil(capacity_req / rack_size))
-            total_capacity = num_racks * rack_size
-            
-            # Display metrics for this option
-            col1, col2 = st.columns(2)
-            col1.metric("Number of Racks Needed", f"{num_racks}")
-            col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
+        html_code = f"""
+        <style>
+            .schematic-container {{
+                position: relative;
+                width: 100%;
+                height: 250px; /* Adjust height as needed */
+                font-family: sans-serif;
+            }}
+            .schematic-lines {{
+                position: absolute; top: 0; left: 0;
+                width: 100%; height: 100%; z-index: 0;
+            }}
+            .component-row {{
+                position: absolute; top: 0; left: 0;
+                width: 100%; height: 100%;
+                display: flex; align-items: center; justify-content: space-between;
+                padding: 0 20px; box-sizing: border-box;
+            }}
+            .component {{
+                background-color: #ffffff;
+                border: 2px solid #e0e0e0;
+                border-radius: 15px; /* Rounded rectangles */
+                padding: 10px;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                z-index: 1;
+            }}
+            .component img {{ width: 60px; height: 60px; }}
+            .component p {{ margin: 5px 0 0 0; font-weight: bold; font-size: 0.9em; }}
+            .battery-box {{
+                display: flex; align-items: center; justify-content: center;
+                min-width: 120px;
+            }}
+            .battery-box span {{
+                font-size: 1.5em; font-weight: bold; margin-left: 10px;
+            }}
+        </style>
 
-            # --- Create the schematic for this option ---
-            row1_cols = st.columns([2, 5, 1.5, 2]) # [PV, space, Meter, Load/Grid]
-            
-            with row1_cols[0]:
-                st.image(pv_img, caption="PV System")
+        <div class="schematic-container">
+            <svg class="schematic-lines">
+                <path d="M15% 50% H 30%" stroke="#333" stroke-width="3" fill="none" />
+                <path d="M50% 50% H 65%" stroke="#333" stroke-width="3" fill="none" />
+                <path d="M85% 50% H 95% 50%" stroke="#333" stroke-width="3" fill="none" />
+                <path d="M85% 50% V 25%" stroke="#333" stroke-width="3" fill="none" />
+            </svg>
 
-            with row1_cols[2]:
-                st.image(meter_img, caption="Meter")
-            
-            with row1_cols[3]:
-                st.image(load_img, caption="Load")
-                st.image(grid_img, caption="Grid")
-
-            # Display the battery racks below
-            st.write("**Battery System**")
-            # Limit display for sanity, but you can adjust max_racks_to_display
-            max_racks_to_display = 12
-            display_count = min(num_racks, max_racks_to_display)
-            
-            image_cols = st.columns(display_count)
-            for col in image_cols:
-                col.image(rack_img)
-            
-            if num_racks > max_racks_to_display:
-                st.info(f"... and {num_racks - max_racks_to_display} more racks.")
-
-            st.markdown("---") # Separator for the next option
-
+            <div class="component-row">
+                <div class="component" style="width: 15%;">
+                    <img src="data:image/png;base64,{b64_images['pv']}">
+                    <p>PV System</p>
+                </div>
+                <div class="component battery-box" style="width: 30%;">
+                    <img src="data:image/png;base64,{b64_images['battery']}">
+                    <span>x {num_racks}</span>
+                </div>
+                <div class="component" style="width: 15%;">
+                    <img src="data:image/png;base64,{b64_images['meter']}">
+                    <p>Meter</p>
+                </div>
+                <div class="component" style="width: 15%;">
+                    <img src="data:image/png;base64,{b64_images['grid']}">
+                    <p>Grid</p>
+                </div>
+                <div class="component" style="position: absolute; top: 0; right: 5%;">
+                    <img src="data:image/png;base64,{b64_images['load']}">
+                    <p>Load</p>
+                </div>
+            </div>
+        </div>
+        """
+        st.components.v1.html(html_code, height=270)
     else:
         st.success("No battery is required for the given threshold.")
+
 
 
 # --- THE MAIN PAGE FUNCTION ---
