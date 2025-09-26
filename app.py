@@ -23,13 +23,13 @@ from analyzers import NetPeakShavingSizer
 import streamlit as st
 from PIL import Image # <--- ADD THIS LINE
 
-def display_header(title):
-    """A simple helper function to display a title."""
-    st.title(title)
-# 3. MAIN PAGE FUNCTION DEFINITION THIRD
-def show_battery_sizing_page():
-    # This call now works because display_header is defined above
-    display_header("Battery Sizing Tool for Peak Shaving 🔋")
+# def display_header(title):
+#     """A simple helper function to display a title."""
+#     st.title(title)
+# # 3. MAIN PAGE FUNCTION DEFINITION THIRD
+# def show_battery_sizing_page():
+#     # This call now works because display_header is defined above
+#     display_header("Battery Sizing Tool for Peak Shaving 🔋")
 
 @st.cache_data
 def get_image_as_base64(path):
@@ -800,7 +800,60 @@ def generate_summary_chart(df, y_bar, y_line, title):
 
 # In your main app.py file
 
-# Make sure numpy is imported at the top of your file
+# # Make sure numpy is imported at the top of your file
+# def display_recommendations(power_req, capacity_req):
+#     """Calculates and displays commercial recommendations and visual modular options."""
+#     st.markdown("---")
+#     st.subheader("✅ Commercial Recommendation")
+
+#     if power_req > 0 and capacity_req > 0:
+#         duration = capacity_req / power_req
+#         if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
+#         elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
+#         else: bess_type = "Long-Duration (Energy Arbitrage)"
+
+#         safe_power = (int(power_req / 25) + 1) * 25
+        
+#         rec1, rec2 = st.columns(2)
+#         rec1.metric("Battery Duration", f"{duration:.1f} Hours")
+#         rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
+#         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
+
+#         # --- Visual Modular Configuration Options ---
+#         st.markdown("---")
+#         st.subheader("📦 Modular Configuration Options")
+#         st.info("Below are visual examples of how your system could be built using common battery rack sizes.")
+
+#         try:
+#             rack_image = Image.open("system.png")
+#         except FileNotFoundError:
+#             st.error("Error: 'battery_rack.png' not found. Please add the image to your app's folder.")
+#             rack_image = None
+
+#         if rack_image:
+#             rack_options = [60, 100, 250] # in kWh
+#             for i, rack_size in enumerate(rack_options):
+#                 st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
+#                 num_racks = int(np.ceil(capacity_req / rack_size))
+#                 total_capacity = num_racks * rack_size
+                
+#                 col1, col2 = st.columns(2)
+#                 col1.metric("Number of Racks Needed", f"{num_racks}")
+#                 col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
+
+#                 max_racks_to_display = 10 
+#                 if num_racks <= max_racks_to_display:
+#                     image_cols = st.columns(num_racks)
+#                     for col in image_cols:
+#                         col.image(rack_image, use_container_width=True)
+#                 else:
+#                     image_cols = st.columns(max_racks_to_display)
+#                     for col in image_cols[:-1]:
+#                         col.image(rack_image, use_container_width=True)
+#                     image_cols[-1].markdown(f"<h3 style='text-align: center; padding-top: 30px;'>+ {num_racks - max_racks_to_display + 1} more</h3>", unsafe_allow_html=True)
+#                 st.markdown("---")
+#     else:
+#         st.success("No battery is required for the given threshold.")
 def display_recommendations(power_req, capacity_req):
     """Calculates and displays commercial recommendations and visual modular options."""
     st.markdown("---")
@@ -819,41 +872,62 @@ def display_recommendations(power_req, capacity_req):
         rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
 
-        # --- Visual Modular Configuration Options ---
         st.markdown("---")
         st.subheader("📦 Modular Configuration Options")
-        st.info("Below are visual examples of how your system could be built using common battery rack sizes.")
+        st.info("Below are visual examples of how your system could be built using common commercial battery rack sizes.")
 
-        try:
-            rack_image = Image.open("system.png")
-        except FileNotFoundError:
-            st.error("Error: 'battery_rack.png' not found. Please add the image to your app's folder.")
-            rack_image = None
+        # --- NEW: Custom HTML/CSS for Visual Rack Display ---
+        # Define a simple SVG for a single battery rack
+        rack_svg = """
+        <svg width="60" height="100" viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="56" height="96" rx="5" fill="#F0F2F6" stroke="#555" stroke-width="2"/>
+            <rect x="10" y="10" width="40" height="10" rx="2" fill="#009879"/>
+            <rect x="10" y="25" width="40" height="10" rx="2" fill="#009879"/>
+            <rect x="10" y="40" width="40" height="10" rx="2" fill="#009879"/>
+            <rect x="10" y="55" width="40" height="10" rx="2" fill="#009879"/>
+            <rect x="10" y="70" width="40" height="10" rx="2" fill="#009879"/>
+            <rect x="10" y="85" width="40" height="5" rx="2" fill="#CCC"/>
+        </svg>
+        """
 
-        if rack_image:
-            rack_options = [60, 100, 250] # in kWh
-            for i, rack_size in enumerate(rack_options):
-                st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
-                num_racks = int(np.ceil(capacity_req / rack_size))
-                total_capacity = num_racks * rack_size
-                
-                col1, col2 = st.columns(2)
-                col1.metric("Number of Racks Needed", f"{num_racks}")
-                col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
+        rack_options = [60, 100, 250] # in kWh
+        
+        for i, rack_size in enumerate(rack_options):
+            st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
+            num_racks = int(np.ceil(capacity_req / rack_size))
+            total_capacity = num_racks * rack_size
+            
+            col1, col2 = st.columns(2)
+            col1.metric("Number of Racks Needed", f"{num_racks}")
+            col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
 
-                max_racks_to_display = 10 
-                if num_racks <= max_racks_to_display:
-                    image_cols = st.columns(num_racks)
-                    for col in image_cols:
-                        col.image(rack_image, use_container_width=True)
-                else:
-                    image_cols = st.columns(max_racks_to_display)
-                    for col in image_cols[:-1]:
-                        col.image(rack_image, use_container_width=True)
-                    image_cols[-1].markdown(f"<h3 style='text-align: center; padding-top: 30px;'>+ {num_racks - max_racks_to_display + 1} more</h3>", unsafe_allow_html=True)
-                st.markdown("---")
+            # CSS to create a scrollable container with connected items
+            html_code = f"""
+            <style>
+                .rack-container {{
+                    background-color: #f0f2f6;
+                    border: 1px solid #ddd;
+                    border-radius: 10px;
+                    padding: 20px;
+                    width: 100%;
+                    overflow-x: auto; /* Creates a horizontal scrollbar if needed */
+                    white-space: nowrap; /* Prevents items from wrapping to the next line */
+                }}
+                .rack-item {{
+                    display: inline-block; /* Aligns items horizontally */
+                    margin-right: -2px; /* Overlaps strokes to look connected */
+                }}
+            </style>
+            <div class="rack-container">
+                {''.join([f'<div class="rack-item">{rack_svg}</div>' for _ in range(num_racks)])}
+            </div>
+            """
+            st.markdown(html_code, unsafe_allow_html=True)
+            st.markdown("---") # Separator for the next option
     else:
         st.success("No battery is required for the given threshold.")
+
+
 
 # --- THE MAIN PAGE FUNCTION ---
 def show_battery_sizing_page():
