@@ -854,7 +854,7 @@ def display_recommendations(power_req, capacity_req):
 
         # --- Load your PNG images ---
         try:
-            pv_img = Image.open("pv.png")
+            pv_img = Image.open("renewable-energy.png")
             rack_img = Image.open("system.png")
             meter_img = Image.open("energy-meter.png")
             load_img = Image.open("energy-consumption.png")
