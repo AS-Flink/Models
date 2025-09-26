@@ -677,130 +677,6 @@ def generate_summary_chart(df, y_bar, y_line, title):
 
 ################# BATTERY SIZING CODE
 
-# def show_battery_sizing_page():
-#     """
-#     Displays the UI for the Battery Net Peak Shaving Sizing Tool.
-#     """
-#     display_header("Battery Sizing Tool for Peak Shaving 🔋")
-
-#     # --- Sidebar Inputs ---
-#     with st.sidebar:
-#         st.header("⚙️ Sizing Configuration")
-#         uploaded_file = st.file_uploader(
-#             "Upload Your Data (CSV)", type="csv",
-#             help="CSV must have 'Datetime', 'load', and 'pv_production' columns."
-#         )
-#         st.info("Set a target for your maximum power draw from the grid.")
-#         grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=80, step=5)
-#         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
-
-#     # --- Main Page Logic ---
-#     if run_button:
-#         # ... (The analysis logic remains the same as before) ...
-#         if uploaded_file is not None:
-#             try:
-#                 input_df = pd.read_csv(uploaded_file)
-#                 input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
-#                 input_df.set_index("Datetime", inplace=True)
-
-#                 analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
-#                 capacity, power, results_df = analyzer.run_analysis(input_df)
-                
-#                 st.session_state['sizing_results'] = {
-#                     "capacity": capacity, "power": power, "df": results_df,
-#                     "grid_import_threshold": grid_import_threshold
-#                 }
-#                 st.rerun()
-#             except Exception as e:
-#                 st.error(f"An error occurred: {e}")
-#         else:
-#             st.warning("Please upload a file to run the analysis.")
-
-#     # --- Display Results ---
-#     if 'sizing_results' in st.session_state:
-#         results = st.session_state['sizing_results']
-        
-#         st.subheader("💡 Calculated Battery Size")
-#         col1, col2 = st.columns(2)
-#         col1.metric("Required Power", f"{results['power']:,.2f} kW")
-#         col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
-
-#         st.markdown("---")
-#         st.subheader("✅ Commercial Recommendation")
-
-#         power_req = results['power']
-#         capacity_req = results['capacity']
-
-#         if power_req > 0 and capacity_req > 0:
-#             duration = capacity_req / power_req
-#             if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
-#             elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
-#             else: bess_type = "Long-Duration (Energy Arbitrage)"
-
-#             safe_power = (int(power_req / 25) + 1) * 25
-            
-#             rec1, rec2 = st.columns(2)
-#             rec1.metric("Battery Duration", f"{duration:.1f} Hours")
-#             rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
-#             st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
-
-#             # --- NEW: Modular Configuration Options Section ---
-#             st.markdown("---")
-#             st.subheader("📦 Modular Configuration Options")
-#             st.info("Below are examples of how your system could be built using common commercial battery rack sizes.")
-
-#             # Define some standard rack sizes
-#             rack_options = [60, 100, 250] # in kWh
-            
-#             option_cols = st.columns(len(rack_options))
-
-#             for i, rack_size in enumerate(rack_options):
-#                 with option_cols[i]:
-#                     # Calculate how many racks are needed (always round up)
-#                     num_racks = int(np.ceil(capacity_req / rack_size))
-#                     total_capacity = num_racks * rack_size
-                    
-#                     st.markdown(f"<h5 style='text-align: center;'>Option {i+1}</h5>", unsafe_allow_html=True)
-#                     st.metric("Rack Size", f"{rack_size} kWh")
-#                     st.metric("Number of Racks Needed", f"{num_racks}")
-#                     st.metric("Total Installed Capacity", f"{total_capacity} kWh")
-
-#         else:
-#             st.success("No battery is required for the given threshold.")
-        
-#         st.markdown("---")
-#         st.subheader("📊 Analysis Charts")
-#         # ... (All your charting code remains the same as before) ...
-#         df = results['df']
-#         fig1_title = "Net Load vs. Peak Shaving Threshold"
-#         fig1 = go.Figure()
-#         fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray', width=1)))
-#         fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
-#         fig1.add_hline(y=results['grid_import_threshold'], line_dash="dash", line_color="red", annotation_text=f"Target Threshold")
-#         fig1.update_layout(title=fig1_title, xaxis_title="Time", yaxis_title="Power (kW)")
-#         st.plotly_chart(fig1, use_container_width=True)
-        
-#         fig2 = go.Figure()
-#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power', fill='tozeroy', line=dict(color='green')))
-#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power', fill='tozeroy', line=dict(color='red')))
-#         fig2.update_layout(title="Required Battery Power Profile", xaxis_title="Time", yaxis_title="Power (kW)")
-#         st.plotly_chart(fig2, use_container_width=True)
-
-#     else:
-#         st.info("Upload a file and set your target grid import to get started.")
-
-#     with st.sidebar:
-#         st.header("Navigation")
-#         if st.button("⬅️ Back to Home"):
-#             if 'sizing_results' in st.session_state:
-#                 del st.session_state['sizing_results']
-#             st.session_state.page = "Home"
-#             st.rerun()
-
-
-# In your main app.py file
-
-# # Make sure numpy is imported at the top of your file
 # def display_recommendations(power_req, capacity_req):
 #     """Calculates and displays commercial recommendations and visual modular options."""
 #     st.markdown("---")
@@ -808,62 +684,12 @@ def generate_summary_chart(df, y_bar, y_line, title):
 
 #     if power_req > 0 and capacity_req > 0:
 #         duration = capacity_req / power_req
-#         if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
-#         elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
-#         else: bess_type = "Long-Duration (Energy Arbitrage)"
-
-#         safe_power = (int(power_req / 25) + 1) * 25
-        
-#         rec1, rec2 = st.columns(2)
-#         rec1.metric("Battery Duration", f"{duration:.1f} Hours")
-#         rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
-#         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
-
-#         # --- Visual Modular Configuration Options ---
-#         st.markdown("---")
-#         st.subheader("📦 Modular Configuration Options")
-#         st.info("Below are visual examples of how your system could be built using common battery rack sizes.")
-
-#         try:
-#             rack_image = Image.open("system.png")
-#         except FileNotFoundError:
-#             st.error("Error: 'battery_rack.png' not found. Please add the image to your app's folder.")
-#             rack_image = None
-
-#         if rack_image:
-#             rack_options = [60, 100, 250] # in kWh
-#             for i, rack_size in enumerate(rack_options):
-#                 st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
-#                 num_racks = int(np.ceil(capacity_req / rack_size))
-#                 total_capacity = num_racks * rack_size
-                
-#                 col1, col2 = st.columns(2)
-#                 col1.metric("Number of Racks Needed", f"{num_racks}")
-#                 col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
-
-#                 max_racks_to_display = 10 
-#                 if num_racks <= max_racks_to_display:
-#                     image_cols = st.columns(num_racks)
-#                     for col in image_cols:
-#                         col.image(rack_image, use_container_width=True)
-#                 else:
-#                     image_cols = st.columns(max_racks_to_display)
-#                     for col in image_cols[:-1]:
-#                         col.image(rack_image, use_container_width=True)
-#                     image_cols[-1].markdown(f"<h3 style='text-align: center; padding-top: 30px;'>+ {num_racks - max_racks_to_display + 1} more</h3>", unsafe_allow_html=True)
-#                 st.markdown("---")
-#     else:
-#         st.success("No battery is required for the given threshold.")
-# def display_recommendations(power_req, capacity_req):
-#     """Calculates and displays commercial recommendations and visual modular options."""
-#     st.markdown("---")
-#     st.subheader("✅ Commercial Recommendation")
-
-#     if power_req > 0 and capacity_req > 0:
-#         duration = capacity_req / power_req
-#         if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
-#         elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
-#         else: bess_type = "Long-Duration (Energy Arbitrage)"
+#         if duration <= 4:
+#             bess_type = "Short-Duration (Peak Shaving)"
+#         elif 4 < duration <= 8:
+#             bess_type = "Medium-Duration (Energy Shifting)"
+#         else:
+#             bess_type = "Long-Duration (Energy Arbitrage)"
 
 #         safe_power = (int(power_req / 25) + 1) * 25
         
@@ -876,8 +702,7 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #         st.subheader("📦 Modular Configuration Options")
 #         st.info("Below are visual examples of how your system could be built using common commercial battery rack sizes.")
 
-#         # --- NEW: Custom HTML/CSS for Visual Rack Display ---
-#         # Define a simple SVG for a single battery rack
+#         # --- SVG for a single battery rack ---
 #         rack_svg = """
 #         <svg width="60" height="100" viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
 #             <rect x="2" y="2" width="56" height="96" rx="5" fill="#F0F2F6" stroke="#555" stroke-width="2"/>
@@ -890,7 +715,32 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #         </svg>
 #         """
 
-#         rack_options = [60, 100, 250] # in kWh
+#         # --- Helper to render racks in a scrollable container ---
+#         def render_racks(num_racks):
+#             html_code = f"""
+#             <style>
+#                 .rack-container {{
+#                     background-color: #f0f2f6;
+#                     border: 1px solid #ddd;
+#                     border-radius: 10px;
+#                     padding: 20px;
+#                     width: 100%;
+#                     overflow-x: auto;
+#                     white-space: nowrap;
+#                 }}
+#                 .rack-item {{
+#                     display: inline-block;
+#                     margin-right: -2px;
+#                 }}
+#             </style>
+#             <div class="rack-container">
+#                 {''.join([f'<div class="rack-item">{rack_svg}</div>' for _ in range(num_racks)])}
+#             </div>
+#             """
+#             st.components.v1.html(html_code, height=150, scrolling=True)
+
+#         # --- Available rack options ---
+#         rack_options = [60, 100, 250]  # kWh per rack
         
 #         for i, rack_size in enumerate(rack_options):
 #             st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
@@ -901,32 +751,10 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #             col1.metric("Number of Racks Needed", f"{num_racks}")
 #             col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
 
-#             # CSS to create a scrollable container with connected items
-#             html_code = f"""
-#             <style>
-#                 .rack-container {{
-#                     background-color: #f0f2f6;
-#                     border: 1px solid #ddd;
-#                     border-radius: 10px;
-#                     padding: 20px;
-#                     width: 100%;
-#                     overflow-x: auto; /* Creates a horizontal scrollbar if needed */
-#                     white-space: nowrap; /* Prevents items from wrapping to the next line */
-#                 }}
-#                 .rack-item {{
-#                     display: inline-block; /* Aligns items horizontally */
-#                     margin-right: -2px; /* Overlaps strokes to look connected */
-#                 }}
-#             </style>
-#             <div class="rack-container">
-#                 {''.join([f'<div class="rack-item">{rack_svg}</div>' for _ in range(num_racks)])}
-#             </div>
-#             """
-#             st.markdown(html_code, unsafe_allow_html=True)
-#             st.markdown("---") # Separator for the next option
+#             render_racks(num_racks)
+#             st.markdown("---")  # Separator for the next option
 #     else:
 #         st.success("No battery is required for the given threshold.")
-
 def display_recommendations(power_req, capacity_req):
     """Calculates and displays commercial recommendations and visual modular options."""
     st.markdown("---")
@@ -965,7 +793,7 @@ def display_recommendations(power_req, capacity_req):
         </svg>
         """
 
-        # --- Helper to render racks in a scrollable container ---
+        # --- Helper to render racks without scrollbars ---
         def render_racks(num_racks):
             html_code = f"""
             <style>
@@ -974,20 +802,20 @@ def display_recommendations(power_req, capacity_req):
                     border: 1px solid #ddd;
                     border-radius: 10px;
                     padding: 20px;
-                    width: 100%;
-                    overflow-x: auto;
-                    white-space: nowrap;
+                    display: flex;
+                    flex-wrap: wrap;  /* Allow wrapping into multiple rows */
+                    gap: 12px;        /* Space between racks */
+                    justify-content: flex-start;
                 }}
                 .rack-item {{
                     display: inline-block;
-                    margin-right: -2px;
                 }}
             </style>
             <div class="rack-container">
                 {''.join([f'<div class="rack-item">{rack_svg}</div>' for _ in range(num_racks)])}
             </div>
             """
-            st.components.v1.html(html_code, height=150, scrolling=True)
+            st.components.v1.html(html_code, height=220)
 
         # --- Available rack options ---
         rack_options = [60, 100, 250]  # kWh per rack
@@ -1075,115 +903,6 @@ def show_battery_sizing_page():
         st.plotly_chart(fig2, use_container_width=True)
     else:
         st.info("Upload a file and set your target grid import to get started.")
-
-# def show_battery_sizing_page():
-#     """
-#     Displays the UI for the Battery Net Peak Shaving Sizing Tool.
-#     """
-#     display_header("Battery Sizing Tool for Peak Shaving 🔋")
-
-#     # --- Sidebar Inputs ---
-#     with st.sidebar:
-#         st.header("⚙️ Sizing Configuration")
-#         uploaded_file = st.file_uploader(
-#             "Upload Your Data (CSV)", type="csv",
-#             help="CSV must have 'Datetime', 'load', and 'pv_production' columns."
-#         )
-#         st.info("Set a target for your maximum power draw from the grid.")
-#         grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=80, step=5)
-#         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
-
-#     # --- Main Page Logic ---
-#     if run_button:
-#         if uploaded_file is not None:
-#             try:
-#                 input_df = pd.read_csv(uploaded_file)
-#                 input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
-#                 input_df.set_index("Datetime", inplace=True)
-
-#                 analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
-#                 capacity, power, results_df = analyzer.run_analysis(input_df)
-                
-#                 st.session_state['sizing_results'] = {
-#                     "capacity": capacity, "power": power, "df": results_df,
-#                     "grid_import_threshold": grid_import_threshold
-#                 }
-#                 st.rerun()
-#             except Exception as e:
-#                 st.error(f"An error occurred: {e}")
-#         else:
-#             st.warning("Please upload a file to run the analysis.")
-
-#     # --- Display Results ---
-#     if 'sizing_results' in st.session_state:
-#         results = st.session_state['sizing_results']
-        
-#         st.subheader("💡 Calculated Battery Size")
-#         col1, col2 = st.columns(2)
-#         col1.metric("Required Power", f"{results['power']:,.2f} kW")
-#         col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
-
-#         # --- NEW: Actionable Recommendations Section ---
-#         st.markdown("---")
-#         st.subheader("✅ Commercial Recommendation")
-
-#         power_req = results['power']
-#         capacity_req = results['capacity']
-
-#         if power_req > 0 and capacity_req > 0:
-#             # Calculate duration and recommend a type
-#             duration = capacity_req / power_req
-#             if duration <= 4:
-#                 bess_type = "Short-Duration (Peak Shaving)"
-#             elif 4 < duration <= 8:
-#                 bess_type = "Medium-Duration (Energy Shifting)"
-#             else:
-#                 bess_type = "Long-Duration (Energy Arbitrage)"
-
-#             # Calculate safe-rounded numbers for procurement
-#             safe_power = (int(power_req / 25) + 1) * 25
-#             safe_capacity = (int(capacity_req / 50) + 1) * 50
-            
-#             rec1, rec2, rec3 = st.columns(3)
-#             rec1.metric("Battery Duration", f"{duration:.1f} Hours")
-#             rec2.metric("Recommended Power Size", f"~{safe_power} kW")
-#             rec3.metric("Recommended Capacity Size", f"~{safe_capacity} kWh")
-#             st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
-#         else:
-#             st.success("No battery is required for the given threshold.")
-
-#         st.markdown("---")
-#         st.subheader("📊 Analysis Charts")
-#         df = results['df']
-
-#         # Chart 1: Net Load vs. Threshold
-#         fig1_title = "Net Load vs. Peak Shaving Threshold"
-#         fig1 = go.Figure()
-#         fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray', width=1)))
-#         fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
-#         fig1.add_hline(y=results['grid_import_threshold'], line_dash="dash", line_color="red", annotation_text=f"Target Threshold")
-#         fig1.update_layout(title=fig1_title, xaxis_title="Time", yaxis_title="Power (kW)")
-#         st.plotly_chart(fig1, use_container_width=True)
-        
-#         # --- NEW: Battery Operation Chart ---
-#         fig2 = go.Figure()
-#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power', fill='tozeroy', line=dict(color='green')))
-#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power', fill='tozeroy', line=dict(color='red')))
-#         fig2.update_layout(title="Required Battery Power Profile", xaxis_title="Time", yaxis_title="Power (kW)")
-#         st.plotly_chart(fig2, use_container_width=True)
-
-#     else:
-#         st.info("Upload a file and set your target grid import to get started.")
-
-#     with st.sidebar:
-#         st.header("Navigation")
-#         if st.button("⬅️ Back to Home"):
-#             if 'sizing_results' in st.session_state:
-#                 del st.session_state['sizing_results']
-#             st.session_state.page = "Home"
-#             st.rerun()
-
-
 
 ################# BATTERY SIZING CODE
 
