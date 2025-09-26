@@ -40,6 +40,16 @@ def get_image_as_base64(path):
     with open(path, "rb") as f:
         data = f.read()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+    
+# --- Helper function to encode images ---
+def get_image_as_base64(path):
+    """Encodes a local image file into a Base64 string."""
+    try:
+        with open(path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except FileNotFoundError:
+        st.error(f"Image not found at {path}. Please check the file path.")
+        return None
 
 def create_horizontal_diagram_with_icons(situation_name, icons_b64):
     """
