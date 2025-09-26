@@ -755,10 +755,18 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #         st.session_state.page = "Home"
 #         st.rerun()
 
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+
+# Make sure your analyzer classes are available
+# from your_file import BatteryShavingAnalyzer, NetPeakShavingSizer
+
 def show_battery_sizing_page():
     """
     Displays the UI for the Battery Sizing Tool, allowing users to choose
-    between a Grid Limit model and a Peak Shaving model.
+    between a strict grid limit model and a net peak shaving model.
     """
     display_header("Battery Sizing Tool for Peak Shaving 🔋")
 
@@ -766,28 +774,27 @@ def show_battery_sizing_page():
     with st.sidebar:
         st.header("⚙️ Sizing Configuration")
         uploaded_file = st.file_uploader(
-            "Upload Your Data (CSV)",
-            type="csv",
+            "Upload Your Data (CSV)", type="csv",
             help="CSV must have 'Datetime', 'load', and 'pv_production' columns."
         )
 
-        # --- A. Choose Analysis Mode ---
+        # --- A. Choose Analysis Mode (Updated Labels) ---
         analysis_mode = st.radio(
             "Select Analysis Mode",
-            ["Grid Limit Adherence", "Peak Shaving"],
-            help="**Grid Limit Adherence:** Sizes a battery to never exceed fixed grid import/export limits. \n\n**Peak Shaving:** Sizes a battery to clip the highest consumption peaks based on a percentile."
+            ["Strict Grid Limits", "Net Peak Shaving"],
+            help="**Strict Grid Limits:** Enforces fixed import/export limits at all times. \n\n**Net Peak Shaving:** Sets a target to cap your maximum import from the grid."
         )
 
-        # --- B. Conditional Inputs based on Mode ---
-        if analysis_mode == "Grid Limit Adherence":
+        # --- B. Conditional Inputs based on Mode (Updated for New Model) ---
+        if analysis_mode == "Strict Grid Limits":
             st.info("Set fixed kW limits for your grid connection.")
             import_limit = st.number_input("Grid Import Limit (kW)", min_value=0, value=350, step=10)
-            export_limit = st.number_input("Grid Export Limit (kW)", max_value=0, value=-250, step=10, key='grid_export')
+            export_limit = st.number_input("Grid Export Limit (kW)", max_value=0, value=-250, step=10)
 
-        elif analysis_mode == "Peak Shaving":
-            st.info("Set the percentage of top peaks to shave.")
-            peak_top_x_percent = st.slider("Shave Top X% of Peaks", min_value=1, max_value=20, value=5, step=1, help="For example, 5% will shave the highest 5% of your loads.")
-            export_limit = st.number_input("Grid Export Limit (for charging, kW)", max_value=0, value=-10, step=10, key='peak_export')
+        elif analysis_mode == "Net Peak Shaving":
+            st.info("Set a target for your maximum power draw from the grid.")
+            # --- CHANGED: Replaced slider with a direct kW threshold input ---
+            grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=0, value=80, step=5)
 
         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
 
@@ -799,8 +806,8 @@ def show_battery_sizing_page():
                 input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
                 input_df.set_index("Datetime", inplace=True)
 
-                # --- C. Conditional Analysis ---
-                if analysis_mode == "Grid Limit Adherence":
+                # --- C. Conditional Analysis (Updated for New Model) ---
+                if analysis_mode == "Strict Grid Limits":
                     analyzer = BatteryShavingAnalyzer(import_limit_kw=import_limit, export_limit_kw=export_limit)
                     capacity, power, results_df = analyzer.run_analysis(input_df)
                     st.session_state['sizing_results'] = {
@@ -808,20 +815,18 @@ def show_battery_sizing_page():
                         "import_limit": import_limit, "export_limit": export_limit
                     }
 
-                elif analysis_mode == "Peak Shaving":
-                    peak_percentile = 100 - peak_top_x_percent
-                    analyzer = PeakShavingAnalyzer(peak_percentile=peak_percentile, export_limit_kw=export_limit)
+                elif analysis_mode == "Net Peak Shaving":
+                    # --- CHANGED: Instantiates the new NetPeakShavingSizer ---
+                    analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
                     capacity, power, results_df = analyzer.run_analysis(input_df)
-                    peak_threshold = results_df["load"].quantile(peak_percentile / 100.0)
                     st.session_state['sizing_results'] = {
                         "mode": analysis_mode, "capacity": capacity, "power": power, "df": results_df,
-                        "peak_threshold": peak_threshold, "export_limit": export_limit
+                        "grid_import_threshold": grid_import_threshold
                     }
 
-                st.rerun() # Rerun to display results
+                st.rerun()
             except Exception as e:
                 st.error(f"An error occurred: {e}")
-                st.error("Please ensure your CSV has 'Datetime', 'load', and 'pv_production' columns.")
         else:
             st.warning("Please upload a file to run the analysis.")
 
@@ -832,37 +837,42 @@ def show_battery_sizing_page():
         st.subheader(f"💡 Recommended Battery Size for {mode}")
 
         col1, col2 = st.columns(2)
-        col1.metric("Required Power (Charge/Discharge)", f"{results['power']:,.2f} kW")
+        col1.metric("Required Power", f"{results['power']:,.2f} kW")
         col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
 
         st.markdown("---")
         st.subheader("📊 Analysis Charts")
         df = results['df']
 
-        # --- D. Conditional Charting ---
-        if mode == "Grid Limit Adherence":
+        # --- D. Conditional Charting (Updated for New Model) ---
+        if mode == "Strict Grid Limits":
             fig1_title = "Net Load vs. Grid Limits"
             fig1 = go.Figure()
             fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Net Load', line=dict(color='royalblue', width=1)))
             fig1.add_hline(y=results['import_limit'], line_dash="dash", line_color="red", annotation_text=f"Import Limit ({results['import_limit']} kW)")
             fig1.add_hline(y=results['export_limit'], line_dash="dash", line_color="green", annotation_text=f"Export Limit ({results['export_limit']} kW)")
-        else: # Peak Shaving
-            fig1_title = "Load vs. Peak Shaving Threshold"
+        
+        else: # Net Peak Shaving
+            fig1_title = "Net Load vs. Peak Shaving Threshold"
             fig1 = go.Figure()
-            fig1.add_trace(go.Scatter(x=df.index, y=df['load'], mode='lines', name='Building Load', line=dict(color='royalblue', width=1)))
-            fig1.add_hline(y=results['peak_threshold'], line_dash="dash", line_color="red", annotation_text=f"Peak Threshold ({results['peak_threshold']:.2f} kW)")
+            # Original Net Load (what the grid would see without a battery)
+            fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray', width=1)))
+            # --- NEW: Show the final grid import AFTER the battery ---
+            fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
+            # The target threshold line
+            fig1.add_hline(y=results['grid_import_threshold'], line_dash="dash", line_color="red", annotation_text=f"Target Threshold ({results['grid_import_threshold']} kW)")
         
         fig1.update_layout(title=fig1_title, xaxis_title="Time", yaxis_title="Power (kW)")
         st.plotly_chart(fig1, use_container_width=True)
 
         # The other plots are generic and work for both modes
         fig2 = go.Figure()
-        fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power (to Battery)', fill='tozeroy', line=dict(color='green')))
-        fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power (from Battery)', fill='tozeroy', line=dict(color='red')))
-        fig2.update_layout(title="Required Battery Power", xaxis_title="Time", yaxis_title="Power (kW)")
+        fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power', fill='tozeroy', line=dict(color='green')))
+        fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power', fill='tozeroy', line=dict(color='red')))
+        fig2.update_layout(title="Required Battery Power Profile", xaxis_title="Time", yaxis_title="Power (kW)")
         st.plotly_chart(fig2, use_container_width=True)
         
-        fig3 = px.line(df, x=df.index, y='soc_kwh', title="Calculated Battery State of Charge (Relative)", labels={"soc_kwh": "Energy (kWh)", "index": "Time"})
+        fig3 = px.line(df, x=df.index, y='soc_kwh', title="Calculated Battery State of Charge (Continuous Trend)", labels={"soc_kwh": "Energy (kWh)", "index": "Time"})
         st.plotly_chart(fig3, use_container_width=True)
 
     else:
