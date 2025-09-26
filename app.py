@@ -19,7 +19,7 @@ import os
 # from battery_shaving_core import BatteryShavingAnalyzer # Add this
 # from peak_shaving_core import PeakShavingAnalyzer
 # ADD THESE LINES AT THE TOP OF YOUR APP.PY
-from analyzers import BatteryShavingAnalyzer, NetPeakShavingSizer
+from analyzers import NetPeakShavingSizer
 import streamlit as st
 
 def display_header(title):
