@@ -854,8 +854,8 @@ def display_recommendations(power_req, capacity_req):
         # --- Encode your PNG images to Base64 ---
         # NOTE: Update the filenames if yours are different
         img_paths = {
-            "pv": "pv.png", "battery": "battery_rack.png", "meter": "meter.png",
-            "load": "load.png", "grid": "grid.png"
+            "pv": "renewable-energy.png", "battery": "system.png", "meter": "energy-meter.png",
+            "load": "energy-consumption.png", "grid": "power-line.png"
         }
         b64_images = {name: get_image_as_base64(path) for name, path in img_paths.items()}
 
