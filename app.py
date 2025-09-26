@@ -838,9 +838,126 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #         st.components.v1.html(html_code, height=320)
 #     else:
 #         st.success("No battery is required for the given threshold.")
-# --- THE MAIN RECOMMENDATION FUNCTION ---
+
+
+
+# # --- THE MAIN RECOMMENDATION FUNCTION ---
+# def display_recommendations(power_req, capacity_req):
+#     """Calculates and displays commercial recommendations and a full system schematic."""
+#     st.markdown("---")
+#     st.subheader("✅ Commercial Recommendation")
+
+#     if power_req > 0 and capacity_req > 0:
+#         duration = capacity_req / power_req
+#         if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
+#         elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
+#         else: bess_type = "Long-Duration (Energy Arbitrage)"
+
+#         safe_power = (int(power_req / 25) + 1) * 25
+        
+#         rec1, rec2 = st.columns(2)
+#         rec1.metric("Battery Duration", f"{duration:.1f} Hours")
+#         rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
+#         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
+
+#         st.markdown("---")
+#         st.subheader("📦 System Configuration Schematic")
+#         st.info("Below is a visual representation of how the recommended system connects to your facility.")
+
+#         # --- Encode your PNG images to Base64 ---
+#         # NOTE: Update the filenames if yours are different
+#         img_paths = {
+#             "pv": "renewable-energy.png", "battery": "system.png", "meter": "energy-meter.png",
+#             "load": "energy-consumption.png", "grid": "power-line.png"
+#         }
+#         b64_images = {name: get_image_as_base64(path) for name, path in img_paths.items()}
+
+#         # Stop if any image failed to load
+#         if any(img is None for img in b64_images.values()):
+#             return
+
+#         # --- Dynamic HTML Generation ---
+#         # Use a representative number of racks for the visual, e.g., from the 100kWh option
+#         num_racks = int(np.ceil(capacity_req / 100)) 
+        
+#         html_code = f"""
+#         <style>
+#             .schematic-container {{
+#                 position: relative;
+#                 width: 100%;
+#                 height: 250px; /* Adjust height as needed */
+#                 font-family: sans-serif;
+#             }}
+#             .schematic-lines {{
+#                 position: absolute; top: 0; left: 0;
+#                 width: 100%; height: 100%; z-index: 0;
+#             }}
+#             .component-row {{
+#                 position: absolute; top: 0; left: 0;
+#                 width: 100%; height: 100%;
+#                 display: flex; align-items: center; justify-content: space-between;
+#                 padding: 0 20px; box-sizing: border-box;
+#             }}
+#             .component {{
+#                 background-color: #ffffff;
+#                 border: 2px solid #e0e0e0;
+#                 border-radius: 15px; /* Rounded rectangles */
+#                 padding: 10px;
+#                 text-align: center;
+#                 box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+#                 z-index: 1;
+#             }}
+#             .component img {{ width: 60px; height: 60px; }}
+#             .component p {{ margin: 5px 0 0 0; font-weight: bold; font-size: 0.9em; }}
+#             .battery-box {{
+#                 display: flex; align-items: center; justify-content: center;
+#                 min-width: 120px;
+#             }}
+#             .battery-box span {{
+#                 font-size: 1.5em; font-weight: bold; margin-left: 10px;
+#             }}
+#         </style>
+
+#         <div class="schematic-container">
+#             <svg class="schematic-lines">
+#                 <path d="M15% 50% H 30%" stroke="#333" stroke-width="3" fill="none" />
+#                 <path d="M50% 50% H 65%" stroke="#333" stroke-width="3" fill="none" />
+#                 <path d="M85% 50% H 95% 50%" stroke="#333" stroke-width="3" fill="none" />
+#                 <path d="M85% 50% V 25%" stroke="#333" stroke-width="3" fill="none" />
+#             </svg>
+
+#             <div class="component-row">
+#                 <div class="component" style="width: 15%;">
+#                     <img src="data:image/png;base64,{b64_images['pv']}">
+#                     <p>PV System</p>
+#                 </div>
+#                 <div class="component battery-box" style="width: 30%;">
+#                     <img src="data:image/png;base64,{b64_images['battery']}">
+#                     <span>x {num_racks}</span>
+#                 </div>
+#                 <div class="component" style="width: 15%;">
+#                     <img src="data:image/png;base64,{b64_images['meter']}">
+#                     <p>Meter</p>
+#                 </div>
+#                 <div class="component" style="width: 15%;">
+#                     <img src="data:image/png;base64,{b64_images['grid']}">
+#                     <p>Grid</p>
+#                 </div>
+#                 <div class="component" style="position: absolute; top: 0; right: 5%;">
+#                     <img src="data:image/png;base64,{b64_images['load']}">
+#                     <p>Load</p>
+#                 </div>
+#             </div>
+#         </div>
+#         """
+#         st.components.v1.html(html_code, height=270)
+#     else:
+#         st.success("No battery is required for the given threshold.")
 def display_recommendations(power_req, capacity_req):
-    """Calculates and displays commercial recommendations and a full system schematic."""
+    """
+    Calculates and displays commercial recommendations, a correct system schematic,
+    and a table of all modular options.
+    """
     st.markdown("---")
     st.subheader("✅ Commercial Recommendation")
 
@@ -857,97 +974,67 @@ def display_recommendations(power_req, capacity_req):
         rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
 
+        # --- 1. THE CORRECTED SYSTEM SCHEMATIC ---
         st.markdown("---")
         st.subheader("📦 System Configuration Schematic")
-        st.info("Below is a visual representation of how the recommended system connects to your facility.")
+        st.info("Below is a visual representation of how the components connect.")
 
-        # --- Encode your PNG images to Base64 ---
-        # NOTE: Update the filenames if yours are different
         img_paths = {
             "pv": "renewable-energy.png", "battery": "system.png", "meter": "energy-meter.png",
             "load": "energy-consumption.png", "grid": "power-line.png"
         }
+
         b64_images = {name: get_image_as_base64(path) for name, path in img_paths.items()}
 
-        # Stop if any image failed to load
         if any(img is None for img in b64_images.values()):
             return
 
-        # --- Dynamic HTML Generation ---
-        # Use a representative number of racks for the visual, e.g., from the 100kWh option
-        num_racks = int(np.ceil(capacity_req / 100)) 
+        num_racks_for_visual = int(np.ceil(capacity_req / 100)) # Use 100kWh racks for the visual
         
-        html_code = f"""
+        html_schematic = f"""
         <style>
-            .schematic-container {{
-                position: relative;
-                width: 100%;
-                height: 250px; /* Adjust height as needed */
-                font-family: sans-serif;
-            }}
-            .schematic-lines {{
-                position: absolute; top: 0; left: 0;
-                width: 100%; height: 100%; z-index: 0;
-            }}
-            .component-row {{
-                position: absolute; top: 0; left: 0;
-                width: 100%; height: 100%;
-                display: flex; align-items: center; justify-content: space-between;
-                padding: 0 20px; box-sizing: border-box;
-            }}
-            .component {{
-                background-color: #ffffff;
-                border: 2px solid #e0e0e0;
-                border-radius: 15px; /* Rounded rectangles */
-                padding: 10px;
-                text-align: center;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                z-index: 1;
-            }}
-            .component img {{ width: 60px; height: 60px; }}
-            .component p {{ margin: 5px 0 0 0; font-weight: bold; font-size: 0.9em; }}
-            .battery-box {{
-                display: flex; align-items: center; justify-content: center;
-                min-width: 120px;
-            }}
-            .battery-box span {{
-                font-size: 1.5em; font-weight: bold; margin-left: 10px;
-            }}
+            .schematic-container {{ position: relative; width: 100%; height: 280px; font-family: sans-serif; }}
+            .schematic-lines {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }}
+            .component-row {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; box-sizing: border-box; }}
+            .component {{ background-color: #ffffff; border: 2px solid #e0e0e0; border-radius: 15px; padding: 10px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 1; width: 18%; }}
+            .component img {{ width: 50px; height: 50px; }}
+            .component p {{ margin: 5px 0 0 0; font-weight: bold; font-size: 0.8em; }}
+            .battery-box span {{ font-size: 1.2em; font-weight: bold; margin-left: 8px; }}
         </style>
-
         <div class="schematic-container">
             <svg class="schematic-lines">
-                <path d="M15% 50% H 30%" stroke="#333" stroke-width="3" fill="none" />
-                <path d="M50% 50% H 65%" stroke="#333" stroke-width="3" fill="none" />
-                <path d="M85% 50% H 95% 50%" stroke="#333" stroke-width="3" fill="none" />
-                <path d="M85% 50% V 25%" stroke="#333" stroke-width="3" fill="none" />
+                <path d="M20% 50% H 30%" stroke="#555" stroke-width="2.5" fill="none" />
+                <path d="M50% 50% H 60%" stroke="#555" stroke-width="2.5" fill="none" />
+                <path d="M80% 50% V 25% H 90%" stroke="#555" stroke-width="2.5" fill="none" />
+                <path d="M80% 50% V 75% H 90%" stroke="#555" stroke-width="2.5" fill="none" />
             </svg>
-
             <div class="component-row">
-                <div class="component" style="width: 15%;">
-                    <img src="data:image/png;base64,{b64_images['pv']}">
-                    <p>PV System</p>
-                </div>
-                <div class="component battery-box" style="width: 30%;">
-                    <img src="data:image/png;base64,{b64_images['battery']}">
-                    <span>x {num_racks}</span>
-                </div>
-                <div class="component" style="width: 15%;">
-                    <img src="data:image/png;base64,{b64_images['meter']}">
-                    <p>Meter</p>
-                </div>
-                <div class="component" style="width: 15%;">
-                    <img src="data:image/png;base64,{b64_images['grid']}">
-                    <p>Grid</p>
-                </div>
-                <div class="component" style="position: absolute; top: 0; right: 5%;">
-                    <img src="data:image/png;base64,{b64_images['load']}">
-                    <p>Load</p>
+                <div class="component"><img src="data:image/png;base64,{b64_images['pv']}"><p>PV System</p></div>
+                <div class="component battery-box"><img src="data:image/png;base64,{b64_images['battery']}"><span>x {num_racks_for_visual}</span></div>
+                <div class="component"><img src="data:image/png;base64,{b64_images['meter']}"><p>Meter</p></div>
+                <div style="width: 18%; height: 100%; position: relative;">
+                    <div class="component" style="position: absolute; top: 5%; left:0; width:100%;"><img src="data:image/png;base64,{b64_images['load']}"><p>Load</p></div>
+                    <div class="component" style="position: absolute; bottom: 5%; left:0; width:100%;"><img src="data:image/png;base64,{b64_images['grid']}"><p>Grid</p></div>
                 </div>
             </div>
         </div>
         """
-        st.components.v1.html(html_code, height=270)
+        st.components.v1.html(html_schematic, height=300)
+
+        # --- 2. THE DETAILED MODULAR OPTIONS TABLE ---
+        st.markdown("---")
+        st.subheader("📋 All Modular Options")
+        st.info("Compare how your system could be built using different commercial battery rack sizes.")
+
+        rack_options = [60, 100, 250] # in kWh
+        table_html = """<style>.styled-table{border-collapse:collapse;margin:25px 0;font-size:1em;font-family:sans-serif;width:100%;box-shadow:0 0 20px rgba(0,0,0,0.15)}.styled-table thead tr{background-color:#009879;color:#fff;text-align:left}.styled-table th,.styled-table td{padding:12px 15px}.styled-table tbody tr{border-bottom:1px solid #ddd}.styled-table tbody tr:nth-of-type(even){background-color:#f3f3f3}.styled-table tbody tr:last-of-type{border-bottom:2px solid #009879}</style><table class="styled-table"><thead><tr><th>Option</th><th>Rack Size (kWh)</th><th>Number of Racks Needed</th><th>Total Installed Capacity (kWh)</th></tr></thead><tbody>"""
+        for i, rack_size in enumerate(rack_options):
+            num_racks = int(np.ceil(capacity_req / rack_size))
+            total_capacity = num_racks * rack_size
+            table_html += f"<tr><td><strong>Option {i+1}</strong></td><td>{rack_size}</td><td>{num_racks}</td><td><strong>{total_capacity}</strong></td></tr>"
+        table_html += "</tbody></table>"
+        st.markdown(table_html, unsafe_allow_html=True)
+
     else:
         st.success("No battery is required for the given threshold.")
 
