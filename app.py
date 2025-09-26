@@ -17,6 +17,7 @@ import streamlit as st
 import base64
 import os
 from battery_shaving_core import BatteryShavingAnalyzer # Add this
+from peak_shaving_core import PeakShavingAnalyzer
 
 @st.cache_data
 def get_image_as_base64(path):
@@ -664,12 +665,102 @@ def generate_summary_chart(df, y_bar, y_line, title):
 
 ################# BATTERY SIZING CODE
 
+# def show_battery_sizing_page():
+#     """
+#     Displays the UI for the Battery Peak Shaving Sizing Tool.
+#     """
+#     display_header("Battery Sizing Tool for Peak Shaving 🔋")
+#     st.info("This tool calculates the battery **power (kW)** and **capacity (kWh)** needed to keep your grid exchange within defined import and export limits.")
+
+#     # --- 1. User Inputs in Sidebar ---
+#     with st.sidebar:
+#         st.header("⚙️ Sizing Configuration")
+#         uploaded_file = st.file_uploader(
+#             "Upload Your Data (CSV)",
+#             type="csv",
+#             help="CSV must have 'Datetime', 'load', and 'pv_production' columns."
+#         )
+#         import_limit = st.number_input("Grid Import Limit (kW)", min_value=0, value=350, step=10)
+#         export_limit = st.number_input("Grid Export Limit (kW)", max_value=0, value=-250, step=10)
+#         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
+
+#     # --- 2. Analysis and Results Display ---
+#     if run_button:
+#         if uploaded_file is not None:
+#             try:
+#                 # Load and prepare data
+#                 input_df = pd.read_csv(uploaded_file)
+#                 input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
+#                 input_df.set_index("Datetime", inplace=True)
+
+#                 # Instantiate and run analyzer
+#                 analyzer = BatteryShavingAnalyzer(import_limit_kw=import_limit, export_limit_kw=export_limit)
+#                 capacity, power, results_df = analyzer.run_analysis(input_df)
+
+#                 # Store results in session state to persist them
+#                 st.session_state['sizing_results'] = {
+#                     "capacity": capacity,
+#                     "power": power,
+#                     "df": results_df,
+#                     "import_limit": import_limit,
+#                     "export_limit": export_limit
+#                 }
+#                 st.rerun() # Rerun to display results outside the 'if run_button' block
+#             except Exception as e:
+#                 st.error(f"An error occurred: {e}")
+#                 st.error("Please ensure your CSV has the columns 'Datetime', 'load', and 'pv_production' with correctly formatted data.")
+#         else:
+#             st.warning("Please upload a file to run the analysis.")
+
+#     # --- 3. Display Results if they exist in session state ---
+#     if 'sizing_results' in st.session_state:
+#         results = st.session_state['sizing_results']
+#         st.subheader("💡 Recommended Battery Size")
+        
+#         col1, col2 = st.columns(2)
+#         col1.metric("Required Power (Charge/Discharge)", f"{results['power']:,.2f} kW")
+#         col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
+
+#         st.markdown("---")
+#         st.subheader("📊 Analysis Charts")
+
+#         df = results['df']
+        
+#         # Plot 1: Net Load vs Limits
+#         fig1 = go.Figure()
+#         fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Net Load', line=dict(color='royalblue', width=1)))
+#         fig1.add_hline(y=results['import_limit'], line_dash="dash", line_color="red", annotation_text=f"Import Limit ({results['import_limit']} kW)")
+#         fig1.add_hline(y=results['export_limit'], line_dash="dash", line_color="green", annotation_text=f"Export Limit ({results['export_limit']} kW)")
+#         fig1.update_layout(title="Net Load vs. Grid Limits", xaxis_title="Time", yaxis_title="Power (kW)")
+#         st.plotly_chart(fig1, use_container_width=True)
+
+#         # Plot 2: Battery Power (Charge/Discharge)
+#         fig2 = go.Figure()
+#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power (to Battery)', fill='tozeroy', line=dict(color='green')))
+#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power (from Battery)', fill='tozeroy', line=dict(color='red')))
+#         fig2.update_layout(title="Required Battery Power to Shave Peaks", xaxis_title="Time", yaxis_title="Power (kW)")
+#         st.plotly_chart(fig2, use_container_width=True)
+        
+#         # Plot 3: Battery State of Charge
+#         fig3 = px.line(df, x=df.index, y='soc_kwh', title="Calculated Battery State of Charge (Relative)", labels={"soc_kwh": "Energy (kWh)", "index": "Time"})
+#         st.plotly_chart(fig3, use_container_width=True)
+
+#     else:
+#         st.info("Upload a file and configure the limits in the sidebar to get started.")
+
+#     # --- Navigation ---
+#     if st.button("⬅️ Back to Home"):
+#         if 'sizing_results' in st.session_state:
+#             del st.session_state['sizing_results'] # Clean up state
+#         st.session_state.page = "Home"
+#         st.rerun()
+
 def show_battery_sizing_page():
     """
-    Displays the UI for the Battery Peak Shaving Sizing Tool.
+    Displays the UI for the Battery Sizing Tool, allowing users to choose
+    between a Grid Limit model and a Peak Shaving model.
     """
     display_header("Battery Sizing Tool for Peak Shaving 🔋")
-    st.info("This tool calculates the battery **power (kW)** and **capacity (kWh)** needed to keep your grid exchange within defined import and export limits.")
 
     # --- 1. User Inputs in Sidebar ---
     with st.sidebar:
@@ -679,73 +770,103 @@ def show_battery_sizing_page():
             type="csv",
             help="CSV must have 'Datetime', 'load', and 'pv_production' columns."
         )
-        import_limit = st.number_input("Grid Import Limit (kW)", min_value=0, value=350, step=10)
-        export_limit = st.number_input("Grid Export Limit (kW)", max_value=0, value=-250, step=10)
+
+        # --- A. Choose Analysis Mode ---
+        analysis_mode = st.radio(
+            "Select Analysis Mode",
+            ["Grid Limit Adherence", "Peak Shaving"],
+            help="**Grid Limit Adherence:** Sizes a battery to never exceed fixed grid import/export limits. \n\n**Peak Shaving:** Sizes a battery to clip the highest consumption peaks based on a percentile."
+        )
+
+        # --- B. Conditional Inputs based on Mode ---
+        if analysis_mode == "Grid Limit Adherence":
+            st.info("Set fixed kW limits for your grid connection.")
+            import_limit = st.number_input("Grid Import Limit (kW)", min_value=0, value=350, step=10)
+            export_limit = st.number_input("Grid Export Limit (kW)", max_value=0, value=-250, step=10, key='grid_export')
+
+        elif analysis_mode == "Peak Shaving":
+            st.info("Set the percentage of top peaks to shave.")
+            peak_top_x_percent = st.slider("Shave Top X% of Peaks", min_value=1, max_value=20, value=5, step=1, help="For example, 5% will shave the highest 5% of your loads.")
+            export_limit = st.number_input("Grid Export Limit (for charging, kW)", max_value=0, value=-10, step=10, key='peak_export')
+
         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
 
     # --- 2. Analysis and Results Display ---
     if run_button:
         if uploaded_file is not None:
             try:
-                # Load and prepare data
                 input_df = pd.read_csv(uploaded_file)
                 input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
                 input_df.set_index("Datetime", inplace=True)
 
-                # Instantiate and run analyzer
-                analyzer = BatteryShavingAnalyzer(import_limit_kw=import_limit, export_limit_kw=export_limit)
-                capacity, power, results_df = analyzer.run_analysis(input_df)
+                # --- C. Conditional Analysis ---
+                if analysis_mode == "Grid Limit Adherence":
+                    analyzer = BatteryShavingAnalyzer(import_limit_kw=import_limit, export_limit_kw=export_limit)
+                    capacity, power, results_df = analyzer.run_analysis(input_df)
+                    st.session_state['sizing_results'] = {
+                        "mode": analysis_mode, "capacity": capacity, "power": power, "df": results_df,
+                        "import_limit": import_limit, "export_limit": export_limit
+                    }
 
-                # Store results in session state to persist them
-                st.session_state['sizing_results'] = {
-                    "capacity": capacity,
-                    "power": power,
-                    "df": results_df,
-                    "import_limit": import_limit,
-                    "export_limit": export_limit
-                }
-                st.rerun() # Rerun to display results outside the 'if run_button' block
+                elif analysis_mode == "Peak Shaving":
+                    peak_percentile = 100 - peak_top_x_percent
+                    analyzer = PeakShavingAnalyzer(peak_percentile=peak_percentile, export_limit_kw=export_limit)
+                    capacity, power, results_df = analyzer.run_analysis(input_df)
+                    peak_threshold = results_df["load"].quantile(peak_percentile / 100.0)
+                    st.session_state['sizing_results'] = {
+                        "mode": analysis_mode, "capacity": capacity, "power": power, "df": results_df,
+                        "peak_threshold": peak_threshold, "export_limit": export_limit
+                    }
+
+                st.rerun() # Rerun to display results
             except Exception as e:
                 st.error(f"An error occurred: {e}")
-                st.error("Please ensure your CSV has the columns 'Datetime', 'load', and 'pv_production' with correctly formatted data.")
+                st.error("Please ensure your CSV has 'Datetime', 'load', and 'pv_production' columns.")
         else:
             st.warning("Please upload a file to run the analysis.")
 
-    # --- 3. Display Results if they exist in session state ---
+    # --- 3. Display Results if they exist ---
     if 'sizing_results' in st.session_state:
         results = st.session_state['sizing_results']
-        st.subheader("💡 Recommended Battery Size")
-        
+        mode = results['mode']
+        st.subheader(f"💡 Recommended Battery Size for {mode}")
+
         col1, col2 = st.columns(2)
         col1.metric("Required Power (Charge/Discharge)", f"{results['power']:,.2f} kW")
         col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
 
         st.markdown("---")
         st.subheader("📊 Analysis Charts")
-
         df = results['df']
+
+        # --- D. Conditional Charting ---
+        if mode == "Grid Limit Adherence":
+            fig1_title = "Net Load vs. Grid Limits"
+            fig1 = go.Figure()
+            fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Net Load', line=dict(color='royalblue', width=1)))
+            fig1.add_hline(y=results['import_limit'], line_dash="dash", line_color="red", annotation_text=f"Import Limit ({results['import_limit']} kW)")
+            fig1.add_hline(y=results['export_limit'], line_dash="dash", line_color="green", annotation_text=f"Export Limit ({results['export_limit']} kW)")
+        else: # Peak Shaving
+            fig1_title = "Load vs. Peak Shaving Threshold"
+            fig1 = go.Figure()
+            fig1.add_trace(go.Scatter(x=df.index, y=df['load'], mode='lines', name='Building Load', line=dict(color='royalblue', width=1)))
+            fig1.add_hline(y=results['peak_threshold'], line_dash="dash", line_color="red", annotation_text=f"Peak Threshold ({results['peak_threshold']:.2f} kW)")
         
-        # Plot 1: Net Load vs Limits
-        fig1 = go.Figure()
-        fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Net Load', line=dict(color='royalblue', width=1)))
-        fig1.add_hline(y=results['import_limit'], line_dash="dash", line_color="red", annotation_text=f"Import Limit ({results['import_limit']} kW)")
-        fig1.add_hline(y=results['export_limit'], line_dash="dash", line_color="green", annotation_text=f"Export Limit ({results['export_limit']} kW)")
-        fig1.update_layout(title="Net Load vs. Grid Limits", xaxis_title="Time", yaxis_title="Power (kW)")
+        fig1.update_layout(title=fig1_title, xaxis_title="Time", yaxis_title="Power (kW)")
         st.plotly_chart(fig1, use_container_width=True)
 
-        # Plot 2: Battery Power (Charge/Discharge)
+        # The other plots are generic and work for both modes
         fig2 = go.Figure()
         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power (to Battery)', fill='tozeroy', line=dict(color='green')))
         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power (from Battery)', fill='tozeroy', line=dict(color='red')))
-        fig2.update_layout(title="Required Battery Power to Shave Peaks", xaxis_title="Time", yaxis_title="Power (kW)")
+        fig2.update_layout(title="Required Battery Power", xaxis_title="Time", yaxis_title="Power (kW)")
         st.plotly_chart(fig2, use_container_width=True)
         
-        # Plot 3: Battery State of Charge
         fig3 = px.line(df, x=df.index, y='soc_kwh', title="Calculated Battery State of Charge (Relative)", labels={"soc_kwh": "Energy (kWh)", "index": "Time"})
         st.plotly_chart(fig3, use_container_width=True)
 
     else:
-        st.info("Upload a file and configure the limits in the sidebar to get started.")
+        st.info("Upload a file and configure the settings in the sidebar to get started.")
 
     # --- Navigation ---
     if st.button("⬅️ Back to Home"):
@@ -753,7 +874,6 @@ def show_battery_sizing_page():
             del st.session_state['sizing_results'] # Clean up state
         st.session_state.page = "Home"
         st.rerun()
-
 
 ################# BATTERY SIZING CODE
 
