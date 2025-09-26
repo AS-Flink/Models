@@ -854,6 +854,79 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #                 st.markdown("---")
 #     else:
 #         st.success("No battery is required for the given threshold.")
+# def display_recommendations(power_req, capacity_req):
+#     """Calculates and displays commercial recommendations and visual modular options."""
+#     st.markdown("---")
+#     st.subheader("✅ Commercial Recommendation")
+
+#     if power_req > 0 and capacity_req > 0:
+#         duration = capacity_req / power_req
+#         if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
+#         elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
+#         else: bess_type = "Long-Duration (Energy Arbitrage)"
+
+#         safe_power = (int(power_req / 25) + 1) * 25
+        
+#         rec1, rec2 = st.columns(2)
+#         rec1.metric("Battery Duration", f"{duration:.1f} Hours")
+#         rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
+#         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
+
+#         st.markdown("---")
+#         st.subheader("📦 Modular Configuration Options")
+#         st.info("Below are visual examples of how your system could be built using common commercial battery rack sizes.")
+
+#         # --- NEW: Custom HTML/CSS for Visual Rack Display ---
+#         # Define a simple SVG for a single battery rack
+#         rack_svg = """
+#         <svg width="60" height="100" viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+#             <rect x="2" y="2" width="56" height="96" rx="5" fill="#F0F2F6" stroke="#555" stroke-width="2"/>
+#             <rect x="10" y="10" width="40" height="10" rx="2" fill="#009879"/>
+#             <rect x="10" y="25" width="40" height="10" rx="2" fill="#009879"/>
+#             <rect x="10" y="40" width="40" height="10" rx="2" fill="#009879"/>
+#             <rect x="10" y="55" width="40" height="10" rx="2" fill="#009879"/>
+#             <rect x="10" y="70" width="40" height="10" rx="2" fill="#009879"/>
+#             <rect x="10" y="85" width="40" height="5" rx="2" fill="#CCC"/>
+#         </svg>
+#         """
+
+#         rack_options = [60, 100, 250] # in kWh
+        
+#         for i, rack_size in enumerate(rack_options):
+#             st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
+#             num_racks = int(np.ceil(capacity_req / rack_size))
+#             total_capacity = num_racks * rack_size
+            
+#             col1, col2 = st.columns(2)
+#             col1.metric("Number of Racks Needed", f"{num_racks}")
+#             col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
+
+#             # CSS to create a scrollable container with connected items
+#             html_code = f"""
+#             <style>
+#                 .rack-container {{
+#                     background-color: #f0f2f6;
+#                     border: 1px solid #ddd;
+#                     border-radius: 10px;
+#                     padding: 20px;
+#                     width: 100%;
+#                     overflow-x: auto; /* Creates a horizontal scrollbar if needed */
+#                     white-space: nowrap; /* Prevents items from wrapping to the next line */
+#                 }}
+#                 .rack-item {{
+#                     display: inline-block; /* Aligns items horizontally */
+#                     margin-right: -2px; /* Overlaps strokes to look connected */
+#                 }}
+#             </style>
+#             <div class="rack-container">
+#                 {''.join([f'<div class="rack-item">{rack_svg}</div>' for _ in range(num_racks)])}
+#             </div>
+#             """
+#             st.markdown(html_code, unsafe_allow_html=True)
+#             st.markdown("---") # Separator for the next option
+#     else:
+#         st.success("No battery is required for the given threshold.")
+
 def display_recommendations(power_req, capacity_req):
     """Calculates and displays commercial recommendations and visual modular options."""
     st.markdown("---")
@@ -861,9 +934,12 @@ def display_recommendations(power_req, capacity_req):
 
     if power_req > 0 and capacity_req > 0:
         duration = capacity_req / power_req
-        if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
-        elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
-        else: bess_type = "Long-Duration (Energy Arbitrage)"
+        if duration <= 4:
+            bess_type = "Short-Duration (Peak Shaving)"
+        elif 4 < duration <= 8:
+            bess_type = "Medium-Duration (Energy Shifting)"
+        else:
+            bess_type = "Long-Duration (Energy Arbitrage)"
 
         safe_power = (int(power_req / 25) + 1) * 25
         
@@ -876,8 +952,7 @@ def display_recommendations(power_req, capacity_req):
         st.subheader("📦 Modular Configuration Options")
         st.info("Below are visual examples of how your system could be built using common commercial battery rack sizes.")
 
-        # --- NEW: Custom HTML/CSS for Visual Rack Display ---
-        # Define a simple SVG for a single battery rack
+        # --- SVG for a single battery rack ---
         rack_svg = """
         <svg width="60" height="100" viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="2" y="2" width="56" height="96" rx="5" fill="#F0F2F6" stroke="#555" stroke-width="2"/>
@@ -890,7 +965,32 @@ def display_recommendations(power_req, capacity_req):
         </svg>
         """
 
-        rack_options = [60, 100, 250] # in kWh
+        # --- Helper to render racks in a scrollable container ---
+        def render_racks(num_racks):
+            html_code = f"""
+            <style>
+                .rack-container {{
+                    background-color: #f0f2f6;
+                    border: 1px solid #ddd;
+                    border-radius: 10px;
+                    padding: 20px;
+                    width: 100%;
+                    overflow-x: auto;
+                    white-space: nowrap;
+                }}
+                .rack-item {{
+                    display: inline-block;
+                    margin-right: -2px;
+                }}
+            </style>
+            <div class="rack-container">
+                {''.join([f'<div class="rack-item">{rack_svg}</div>' for _ in range(num_racks)])}
+            </div>
+            """
+            st.components.v1.html(html_code, height=150, scrolling=True)
+
+        # --- Available rack options ---
+        rack_options = [60, 100, 250]  # kWh per rack
         
         for i, rack_size in enumerate(rack_options):
             st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
@@ -901,32 +1001,10 @@ def display_recommendations(power_req, capacity_req):
             col1.metric("Number of Racks Needed", f"{num_racks}")
             col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
 
-            # CSS to create a scrollable container with connected items
-            html_code = f"""
-            <style>
-                .rack-container {{
-                    background-color: #f0f2f6;
-                    border: 1px solid #ddd;
-                    border-radius: 10px;
-                    padding: 20px;
-                    width: 100%;
-                    overflow-x: auto; /* Creates a horizontal scrollbar if needed */
-                    white-space: nowrap; /* Prevents items from wrapping to the next line */
-                }}
-                .rack-item {{
-                    display: inline-block; /* Aligns items horizontally */
-                    margin-right: -2px; /* Overlaps strokes to look connected */
-                }}
-            </style>
-            <div class="rack-container">
-                {''.join([f'<div class="rack-item">{rack_svg}</div>' for _ in range(num_racks)])}
-            </div>
-            """
-            st.markdown(html_code, unsafe_allow_html=True)
-            st.markdown("---") # Separator for the next option
+            render_racks(num_racks)
+            st.markdown("---")  # Separator for the next option
     else:
         st.success("No battery is required for the given threshold.")
-
 
 
 # --- THE MAIN PAGE FUNCTION ---
