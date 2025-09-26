@@ -1235,64 +1235,64 @@ def show_home_page():
     with right_col:
         st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif", width=650)
 
-# def show_project_selection_page():
-#     display_header("Project Management 🗂️")
-#     col1, col2 = st.columns(2)
-#     with col1:
-#         st.subheader("Create a New Project")
-#         with st.form("new_project_form"):
-#             new_project_name = st.text_input("New project name:")
-#             submitted = st.form_submit_button("Create Project")
-#             if submitted:
-#                 if not new_project_name: st.warning("Project name cannot be empty.")
-#                 elif new_project_name in st.session_state.projects: st.error("A project with this name already exists.")
-#                 else:
-#                     st.session_state.projects[new_project_name] = {'inputs': HARDCODED_DEFAULTS.copy(),'type': "BESS & PV",'last_saved': datetime.now().isoformat()}
-#                     save_projects(); st.success(f"Project '{new_project_name}' created!"); st.rerun()
-#     with col2:
-#         st.subheader("Manage Existing Projects")
-#         if not st.session_state.projects: st.info("No projects found. Create one or load from file.")
-#         else:
-#             for project_name, project_data in st.session_state.projects.items():
-#                 with st.container(border=True):
-#                     p_col1, p_col2 = st.columns([3, 1])
-#                     with p_col1:
-#                         st.markdown(f"**{project_name}**")
-#                         if 'last_saved' in project_data:
-#                             saved_time = datetime.fromisoformat(project_data['last_saved']).strftime("%Y-%m-%d %H:%M")
-#                             st.caption(f"Last saved: {saved_time}")
-#                     with p_col2:
-#                         if st.button("Load", key=f"load_{project_name}", use_container_width=True):
-#                             st.session_state.current_project_name = project_name; st.session_state.page = "Model"; st.rerun()
-#                     if st.session_state.renaming_project == project_name:
-#                         with st.form(f"rename_form_{project_name}"):
-#                             new_name = st.text_input("New name", value=project_name)
-#                             rename_col1, rename_col2 = st.columns(2)
-#                             if rename_col1.form_submit_button("Save", use_container_width=True):
-#                                 if new_name and new_name not in st.session_state.projects:
-#                                     st.session_state.projects[new_name] = st.session_state.projects.pop(project_name)
-#                                     st.session_state.renaming_project = None; save_projects(); st.rerun()
-#                                 else: st.error("New name is invalid or already exists.")
-#                             if rename_col2.form_submit_button("Cancel", use_container_width=True):
-#                                 st.session_state.renaming_project = None; st.rerun()
-#                     elif st.session_state.deleting_project == project_name:
-#                         st.warning(f"Are you sure you want to delete **{project_name}**?")
-#                         del_col1, del_col2 = st.columns(2)
-#                         if del_col1.button("Yes, permanently delete", type="primary", key=f"del_confirm_{project_name}", use_container_width=True):
-#                             del st.session_state.projects[project_name]
-#                             st.session_state.deleting_project = None; save_projects(); st.rerun()
-#                         if del_col2.button("Cancel", key=f"del_cancel_{project_name}", use_container_width=True):
-#                             st.session_state.deleting_project = None; st.rerun()
-#                     else:
-#                         action_cols = st.columns(3)
-#                         if action_cols[0].button("✏️ Rename", key=f"rename_{project_name}", use_container_width=True): st.session_state.renaming_project = project_name; st.rerun()
-#                         if action_cols[1].button("Duplicate", key=f"clone_{project_name}", use_container_width=True):
-#                             new_name = f"{project_name} (copy)"; i = 1
-#                             while new_name in st.session_state.projects: i += 1; new_name = f"{project_name} (copy {i})"
-#                             st.session_state.projects[new_name] = copy.deepcopy(project_data)
-#                             st.session_state.projects[new_name]['last_saved'] = datetime.now().isoformat()
-#                             save_projects(); st.rerun()
-#                         if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
+def show_project_selection_page():
+    display_header("Project Management 🗂️")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Create a New Project")
+        with st.form("new_project_form"):
+            new_project_name = st.text_input("New project name:")
+            submitted = st.form_submit_button("Create Project")
+            if submitted:
+                if not new_project_name: st.warning("Project name cannot be empty.")
+                elif new_project_name in st.session_state.projects: st.error("A project with this name already exists.")
+                else:
+                    st.session_state.projects[new_project_name] = {'inputs': HARDCODED_DEFAULTS.copy(),'type': "BESS & PV",'last_saved': datetime.now().isoformat()}
+                    save_projects(); st.success(f"Project '{new_project_name}' created!"); st.rerun()
+    with col2:
+        st.subheader("Manage Existing Projects")
+        if not st.session_state.projects: st.info("No projects found. Create one or load from file.")
+        else:
+            for project_name, project_data in st.session_state.projects.items():
+                with st.container(border=True):
+                    p_col1, p_col2 = st.columns([3, 1])
+                    with p_col1:
+                        st.markdown(f"**{project_name}**")
+                        if 'last_saved' in project_data:
+                            saved_time = datetime.fromisoformat(project_data['last_saved']).strftime("%Y-%m-%d %H:%M")
+                            st.caption(f"Last saved: {saved_time}")
+                    with p_col2:
+                        if st.button("Load", key=f"load_{project_name}", use_container_width=True):
+                            st.session_state.current_project_name = project_name; st.session_state.page = "Model"; st.rerun()
+                    if st.session_state.renaming_project == project_name:
+                        with st.form(f"rename_form_{project_name}"):
+                            new_name = st.text_input("New name", value=project_name)
+                            rename_col1, rename_col2 = st.columns(2)
+                            if rename_col1.form_submit_button("Save", use_container_width=True):
+                                if new_name and new_name not in st.session_state.projects:
+                                    st.session_state.projects[new_name] = st.session_state.projects.pop(project_name)
+                                    st.session_state.renaming_project = None; save_projects(); st.rerun()
+                                else: st.error("New name is invalid or already exists.")
+                            if rename_col2.form_submit_button("Cancel", use_container_width=True):
+                                st.session_state.renaming_project = None; st.rerun()
+                    elif st.session_state.deleting_project == project_name:
+                        st.warning(f"Are you sure you want to delete **{project_name}**?")
+                        del_col1, del_col2 = st.columns(2)
+                        if del_col1.button("Yes, permanently delete", type="primary", key=f"del_confirm_{project_name}", use_container_width=True):
+                            del st.session_state.projects[project_name]
+                            st.session_state.deleting_project = None; save_projects(); st.rerun()
+                        if del_col2.button("Cancel", key=f"del_cancel_{project_name}", use_container_width=True):
+                            st.session_state.deleting_project = None; st.rerun()
+                    else:
+                        action_cols = st.columns(3)
+                        if action_cols[0].button("✏️ Rename", key=f"rename_{project_name}", use_container_width=True): st.session_state.renaming_project = project_name; st.rerun()
+                        if action_cols[1].button("Duplicate", key=f"clone_{project_name}", use_container_width=True):
+                            new_name = f"{project_name} (copy)"; i = 1
+                            while new_name in st.session_state.projects: i += 1; new_name = f"{project_name} (copy {i})"
+                            st.session_state.projects[new_name] = copy.deepcopy(project_data)
+                            st.session_state.projects[new_name]['last_saved'] = datetime.now().isoformat()
+                            save_projects(); st.rerun()
+                        if action_cols[2].button("🗑️ Delete", key=f"delete_{project_name}", use_container_width=True): st.session_state.deleting_project = project_name; st.rerun()
 
 
 # def show_revenue_analysis_page():
