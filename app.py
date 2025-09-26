@@ -824,7 +824,7 @@ def display_recommendations(power_req, capacity_req):
         st.info("Below are visual examples of how your system could be built using common battery rack sizes.")
 
         try:
-            rack_image = Image.open("battery_rack.png")
+            rack_image = Image.open("system.png")
         except FileNotFoundError:
             st.error("Error: 'battery_rack.png' not found. Please add the image to your app's folder.")
             rack_image = None
