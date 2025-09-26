@@ -25,6 +25,10 @@ import streamlit as st
 def display_header(title):
     """A simple helper function to display a title."""
     st.title(title)
+# 3. MAIN PAGE FUNCTION DEFINITION THIRD
+def show_battery_sizing_page():
+    # This call now works because display_header is defined above
+    display_header("Battery Sizing Tool for Peak Shaving 🔋")
 
 @st.cache_data
 def get_image_as_base64(path):
