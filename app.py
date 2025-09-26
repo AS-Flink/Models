@@ -845,11 +845,11 @@ def display_recommendations(power_req, capacity_req):
                 if num_racks <= max_racks_to_display:
                     image_cols = st.columns(num_racks)
                     for col in image_cols:
-                        col.image(rack_image, use_column_width=True)
+                        col.image(rack_image, use_container_width=True)
                 else:
                     image_cols = st.columns(max_racks_to_display)
                     for col in image_cols[:-1]:
-                        col.image(rack_image, use_column_width=True)
+                        col.image(rack_image, use_container_width=True)
                     image_cols[-1].markdown(f"<h3 style='text-align: center; padding-top: 30px;'>+ {num_racks - max_racks_to_display + 1} more</h3>", unsafe_allow_html=True)
                 st.markdown("---")
     else:
