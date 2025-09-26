@@ -756,8 +756,82 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #     else:
 #         st.success("No battery is required for the given threshold.")
 
+# def display_recommendations(power_req, capacity_req):
+#     """Calculates and displays commercial recommendations and the full system schematic."""
+#     st.markdown("---")
+#     st.subheader("✅ Commercial Recommendation")
+
+#     if power_req > 0 and capacity_req > 0:
+#         duration = capacity_req / power_req
+#         if duration <= 4: bess_type = "Short-Duration (Peak Shaving)"
+#         elif 4 < duration <= 8: bess_type = "Medium-Duration (Energy Shifting)"
+#         else: bess_type = "Long-Duration (Energy Arbitrage)"
+
+#         safe_power = (int(power_req / 25) + 1) * 25
+        
+#         rec1, rec2 = st.columns(2)
+#         rec1.metric("Battery Duration", f"{duration:.1f} Hours")
+#         rec2.metric("Recommended Power Size (PCS)", f"~{safe_power} kW")
+#         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
+
+#         st.markdown("---")
+#         st.subheader("📦 System Configuration Schematic")
+#         st.info("Below is a visual representation of how the recommended system connects to your facility.")
+
+#         # --- SVG Definitions for all components ---
+#         rack_svg = """<svg width="50" height="80" viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="96" rx="5" fill="#FFF" stroke="#555" stroke-width="2"/><rect x="10" y="10" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="22" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="34" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="46" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="58" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="70" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="82" width="40" height="8" rx="2" fill="#CCC"/></svg>"""
+#         pv_svg = """<svg viewBox="0 0 100 100"><rect x="5" y="5" width="90" height="90" rx="5" fill="#FFD700" stroke="#000" stroke-width="2"/><path d="M5 50 H95 M50 5 V95 M5 5 L95 95 M5 95 L95 5" stroke="#000" stroke-width="1.5"/></svg>"""
+#         meter_svg = """<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFF" stroke="#000" stroke-width="2"/><path d="M50 50 L20 30" stroke="red" stroke-width="3"/><rect x="35" y="60" width="30" height="15" fill="#f0f2f6" stroke="#000" stroke-width="1"/></svg>"""
+#         load_svg = """<svg viewBox="0 0 100 100"><path d="M10 90 L30 40 L50 70 L70 20 L90 90 Z" stroke="#000" stroke-width="2" fill="none"/><rect x="5" y="5" width="90" height="90" rx="5" fill="none" stroke="#000" stroke-width="2"/></svg>"""
+#         grid_svg = """<svg viewBox="0 0 100 100"><path d="M50 10 V90 M20 30 H80 M20 50 H80 M20 70 H80" stroke="#000" stroke-width="3"/><path d="M50 10 L35 20 M50 10 L65 20" stroke="#000" stroke-width="3"/></svg>"""
+
+#         # --- Dynamic HTML Generation ---
+#         num_racks = int(np.ceil(capacity_req / 100)) # Using 100kWh racks as the example
+        
+#         html_code = f"""
+#         <style>
+#             .system-container {{ position: relative; width: 100%; height: 300px; }}
+#             .component-row {{ display: flex; align-items: center; justify-content: space-between; position: absolute; width: 100%; top: 50%; transform: translateY(-50%); }}
+#             .component {{ text-align: center; }}
+#             .component svg {{ width: 80px; height: 80px; }}
+#             .component p {{ margin: 0; font-weight: bold; }}
+#             .battery-box {{ border: 2px solid #555; border-radius: 10px; background-color: #f0f2f6; padding: 10px; display: flex; align-items: center; white-space: nowrap; }}
+#             .lines-svg {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }}
+#         </style>
+
+#         <div class="system-container">
+#             <svg class="lines-svg">
+#                 <path d="M10% 80% V 50% H 30%" stroke="gray" stroke-width="2" fill="none"/>
+#                 <path d="M68% 50% H 78%" stroke="gray" stroke-width="2" fill="none"/>
+#                 <path d="M85% 50% V 20% H 95%" stroke="gray" stroke-width="2" fill="none"/>
+#                 <path d="M85% 50% V 80% H 95%" stroke="gray" stroke-width="2" fill="none"/>
+#                 <path d="M85% 50% H 95%" stroke="gray" stroke-width="2" fill="none"/>
+#             </svg>
+
+#             <div class="component-row">
+#                 <div class="component" style="width: 20%;">
+#                     {pv_svg}<p>PV System</p>
+#                 </div>
+#                 <div class="battery-box" style="flex-grow: 1; justify-content: center;">
+#                     {''.join([f'<div>{rack_svg}</div>' for _ in range(num_racks)])}
+#                 </div>
+#                 <div class="component" style="width: 15%;">
+#                     {meter_svg}<p>Meter</p>
+#                 </div>
+#                 <div style="display: flex; flex-direction: column; align-items: center; width: 20%;">
+#                     <div class="component">{load_svg}<p>Load</p></div>
+#                     <div class="component">{grid_svg}<p>Grid</p></div>
+#                 </div>
+#             </div>
+#         </div>
+#         """
+#         st.components.v1.html(html_code, height=320)
+#     else:
+#         st.success("No battery is required for the given threshold.")
 def display_recommendations(power_req, capacity_req):
-    """Calculates and displays commercial recommendations and the full system schematic."""
+    """
+    Calculates and displays commercial recommendations and visual modular options using PNGs.
+    """
     st.markdown("---")
     st.subheader("✅ Commercial Recommendation")
 
@@ -775,57 +849,62 @@ def display_recommendations(power_req, capacity_req):
         st.success(f"**Recommended System Type:** This configuration points to a **{bess_type}** system.")
 
         st.markdown("---")
-        st.subheader("📦 System Configuration Schematic")
-        st.info("Below is a visual representation of how the recommended system connects to your facility.")
+        st.subheader("📦 Modular Configuration Options")
+        st.info("Below are visual examples of how your system could be built using common battery rack sizes.")
 
-        # --- SVG Definitions for all components ---
-        rack_svg = """<svg width="50" height="80" viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="56" height="96" rx="5" fill="#FFF" stroke="#555" stroke-width="2"/><rect x="10" y="10" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="22" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="34" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="46" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="58" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="70" width="40" height="8" rx="2" fill="#009879"/><rect x="10" y="82" width="40" height="8" rx="2" fill="#CCC"/></svg>"""
-        pv_svg = """<svg viewBox="0 0 100 100"><rect x="5" y="5" width="90" height="90" rx="5" fill="#FFD700" stroke="#000" stroke-width="2"/><path d="M5 50 H95 M50 5 V95 M5 5 L95 95 M5 95 L95 5" stroke="#000" stroke-width="1.5"/></svg>"""
-        meter_svg = """<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFF" stroke="#000" stroke-width="2"/><path d="M50 50 L20 30" stroke="red" stroke-width="3"/><rect x="35" y="60" width="30" height="15" fill="#f0f2f6" stroke="#000" stroke-width="1"/></svg>"""
-        load_svg = """<svg viewBox="0 0 100 100"><path d="M10 90 L30 40 L50 70 L70 20 L90 90 Z" stroke="#000" stroke-width="2" fill="none"/><rect x="5" y="5" width="90" height="90" rx="5" fill="none" stroke="#000" stroke-width="2"/></svg>"""
-        grid_svg = """<svg viewBox="0 0 100 100"><path d="M50 10 V90 M20 30 H80 M20 50 H80 M20 70 H80" stroke="#000" stroke-width="3"/><path d="M50 10 L35 20 M50 10 L65 20" stroke="#000" stroke-width="3"/></svg>"""
+        # --- Load your PNG images ---
+        try:
+            pv_img = Image.open("pv.png")
+            rack_img = Image.open("system.png")
+            meter_img = Image.open("energy-meter.png")
+            load_img = Image.open("energy-consumption.png")
+            grid_img = Image.open("power-line.png")
+        except FileNotFoundError as e:
+            st.error(f"Image file not found: {e}. Please ensure all PNG files are in the app's folder.")
+            return # Stop execution if images are missing
 
-        # --- Dynamic HTML Generation ---
-        num_racks = int(np.ceil(capacity_req / 100)) # Using 100kWh racks as the example
+        # --- Loop through each option and display a full schematic ---
+        rack_options = [60, 100, 250] # in kWh
         
-        html_code = f"""
-        <style>
-            .system-container {{ position: relative; width: 100%; height: 300px; }}
-            .component-row {{ display: flex; align-items: center; justify-content: space-between; position: absolute; width: 100%; top: 50%; transform: translateY(-50%); }}
-            .component {{ text-align: center; }}
-            .component svg {{ width: 80px; height: 80px; }}
-            .component p {{ margin: 0; font-weight: bold; }}
-            .battery-box {{ border: 2px solid #555; border-radius: 10px; background-color: #f0f2f6; padding: 10px; display: flex; align-items: center; white-space: nowrap; }}
-            .lines-svg {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }}
-        </style>
+        for i, rack_size in enumerate(rack_options):
+            st.markdown(f"#### Option {i+1}: Using {rack_size} kWh Racks")
+            
+            num_racks = int(np.ceil(capacity_req / rack_size))
+            total_capacity = num_racks * rack_size
+            
+            # Display metrics for this option
+            col1, col2 = st.columns(2)
+            col1.metric("Number of Racks Needed", f"{num_racks}")
+            col2.metric("Total Installed Capacity", f"{total_capacity:,.0f} kWh")
 
-        <div class="system-container">
-            <svg class="lines-svg">
-                <path d="M10% 80% V 50% H 30%" stroke="gray" stroke-width="2" fill="none"/>
-                <path d="M68% 50% H 78%" stroke="gray" stroke-width="2" fill="none"/>
-                <path d="M85% 50% V 20% H 95%" stroke="gray" stroke-width="2" fill="none"/>
-                <path d="M85% 50% V 80% H 95%" stroke="gray" stroke-width="2" fill="none"/>
-                <path d="M85% 50% H 95%" stroke="gray" stroke-width="2" fill="none"/>
-            </svg>
+            # --- Create the schematic for this option ---
+            row1_cols = st.columns([2, 5, 1.5, 2]) # [PV, space, Meter, Load/Grid]
+            
+            with row1_cols[0]:
+                st.image(pv_img, caption="PV System")
 
-            <div class="component-row">
-                <div class="component" style="width: 20%;">
-                    {pv_svg}<p>PV System</p>
-                </div>
-                <div class="battery-box" style="flex-grow: 1; justify-content: center;">
-                    {''.join([f'<div>{rack_svg}</div>' for _ in range(num_racks)])}
-                </div>
-                <div class="component" style="width: 15%;">
-                    {meter_svg}<p>Meter</p>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; width: 20%;">
-                    <div class="component">{load_svg}<p>Load</p></div>
-                    <div class="component">{grid_svg}<p>Grid</p></div>
-                </div>
-            </div>
-        </div>
-        """
-        st.components.v1.html(html_code, height=320)
+            with row1_cols[2]:
+                st.image(meter_img, caption="Meter")
+            
+            with row1_cols[3]:
+                st.image(load_img, caption="Load")
+                st.image(grid_img, caption="Grid")
+
+            # Display the battery racks below
+            st.write("**Battery System**")
+            # Limit display for sanity, but you can adjust max_racks_to_display
+            max_racks_to_display = 12
+            display_count = min(num_racks, max_racks_to_display)
+            
+            image_cols = st.columns(display_count)
+            for col in image_cols:
+                col.image(rack_img)
+            
+            if num_racks > max_racks_to_display:
+                st.info(f"... and {num_racks - max_racks_to_display} more racks.")
+
+            st.markdown("---") # Separator for the next option
+
     else:
         st.success("No battery is required for the given threshold.")
 
