@@ -107,66 +107,19 @@
 
 #         return required_capacity_kwh, required_power_kw, df
 
-
-
 # analyzers.py
 
 import pandas as pd
-import numpy as np
-
-class BatteryShavingAnalyzer:
-    """
-    STRICT GRID LIMITS MODEL
-    Calculates battery size to never exceed fixed import/export limits.
-    Capacity is sized based on the single largest continuous discharge event.
-    """
-    def __init__(self, import_limit_kw, export_limit_kw, time_step_h=0.25):
-        self.import_limit_kw = import_limit_kw
-        self.export_limit_kw = export_limit_kw
-        self.time_step_h = time_step_h
-
-    def run_analysis(self, input_df: pd.DataFrame):
-        df = input_df.copy()
-        df["net_load"] = df["load"] - df["pv_production"]
-        df["battery_power"] = 0.0
-        
-        discharge_needed = df["net_load"] > self.import_limit_kw
-        df.loc[discharge_needed, "battery_power"] = -(df["net_load"] - self.import_limit_kw)
-
-        charge_needed = df["net_load"] < self.export_limit_kw
-        df.loc[charge_needed, "battery_power"] = -(df["net_load"] - self.export_limit_kw)
-
-        df["energy_through_battery"] = df["battery_power"] * self.time_step_h
-        
-        # --- CAPACITY CALCULATION (NEW LOGIC) ---
-        # Step A: Identify all moments of discharging.
-        is_discharging = df['battery_power'] < 0
-
-        # Step B: Assign a unique ID to each continuous block of discharging.
-        # The counter increases every time the status changes from charging/idle to discharging or vice-versa.
-        discharge_event_id = (is_discharging != is_discharging.shift()).cumsum()
-        
-        # Step C: Calculate the total energy for each continuous discharge event.
-        # We group by the event ID and sum the energy. We only care about discharge events.
-        discharge_streaks_kwh = df['energy_through_battery'].groupby(discharge_event_id[is_discharging]).sum()
-
-        # Step D: The required capacity is the absolute largest of these event totals.
-        # If there are no discharge events, the capacity is 0.
-        required_capacity_kwh = discharge_streaks_kwh.abs().max() if not discharge_streaks_kwh.empty else 0.0
-
-        # The power requirement is still the single highest power spike.
-        required_power_kw = df["battery_power"].abs().max()
-
-        return required_capacity_kwh, required_power_kw, df
-
 
 class NetPeakShavingSizer:
     """
-    NET PEAK SHAVING MODEL
-    Calculates battery size to cap grid import below a target threshold.
+    Calculates the minimum battery size for a NET peak shaving application.
+    It ensures the power drawn FROM THE GRID (net load) stays below a threshold.
     Capacity is sized based on the single largest continuous discharge event.
     """
     def __init__(self, grid_import_threshold_kw, time_step_h=0.25):
+        if grid_import_threshold_kw <= 0:
+            raise ValueError("Grid import threshold must be a positive number.")
         self.grid_threshold_kw = grid_import_threshold_kw
         self.time_step_h = time_step_h
 
@@ -183,20 +136,11 @@ class NetPeakShavingSizer:
 
         df["energy_through_battery"] = df["battery_power"] * self.time_step_h
         
-        # --- CAPACITY CALCULATION (NEW LOGIC) ---
-        # Step A: Identify all moments of discharging.
         is_discharging = df['battery_power'] < 0
-
-        # Step B: Assign a unique ID to each continuous block of discharging.
         discharge_event_id = (is_discharging != is_discharging.shift()).cumsum()
-        
-        # Step C: Calculate the total energy for each continuous discharge event.
         discharge_streaks_kwh = df['energy_through_battery'].groupby(discharge_event_id[is_discharging]).sum()
-
-        # Step D: The required capacity is the absolute largest of these event totals.
+        
         required_capacity_kwh = discharge_streaks_kwh.abs().max() if not discharge_streaks_kwh.empty else 0.0
-
-        # The power requirement is still the single highest power spike.
         required_power_kw = df["battery_power"].abs().max()
         df['grid_import_with_battery'] = df['net_load'] + df['battery_power']
 
