@@ -740,7 +740,7 @@ def display_recommendations(power_req, capacity_req):
             st.components.v1.html(html_code, height=150, scrolling=True)
 
         # --- Available rack options ---
-        rack_options = [60, 100, 250]  # kWh per rack
+        rack_options = []  # kWh per rack
         
         for i, rack_size in enumerate(rack_options):
             st.markdown(f"##### Option {i+1}: Using {rack_size} kWh Racks")
