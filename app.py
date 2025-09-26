@@ -20,7 +20,11 @@ import os
 # from peak_shaving_core import PeakShavingAnalyzer
 # ADD THESE LINES AT THE TOP OF YOUR APP.PY
 from analyzers import BatteryShavingAnalyzer, NetPeakShavingSizer
+import streamlit as st
 
+def display_header(title):
+    """A simple helper function to display a title."""
+    st.title(title)
 
 @st.cache_data
 def get_image_as_base64(path):
