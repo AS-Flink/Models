@@ -980,46 +980,77 @@ def display_recommendations(power_req, capacity_req):
         st.info("Below is a visual representation of how the components connect.")
 
         img_paths = {
-            "pv": "renewable-energy.png", "battery": "system.png", "meter": "energy-meter.png",
-            "load": "energy-consumption.png", "grid": "power-line.png"
+             "pv": "renewable-energy.png", "battery": "system.png", "meter": "energy-meter.png",
+             "load": "energy-consumption.png", "grid": "power-line.png"
         }
-
         b64_images = {name: get_image_as_base64(path) for name, path in img_paths.items()}
 
         if any(img is None for img in b64_images.values()):
             return
-
-        num_racks_for_visual = int(np.ceil(capacity_req / 100)) # Use 100kWh racks for the visual
         
         html_schematic = f"""
         <style>
-            .schematic-container {{ position: relative; width: 100%; height: 280px; font-family: sans-serif; }}
-            .schematic-lines {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }}
-            .component-row {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; box-sizing: border-box; }}
-            .component {{ background-color: #ffffff; border: 2px solid #e0e0e0; border-radius: 15px; padding: 10px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 1; width: 18%; }}
+            .container {{
+                position: relative;
+                width: 100%;
+                height: 250px;
+                font-family: sans-serif;
+            }}
+            .grid-layout {{
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+                height: 100%;
+                align-items: center;
+                justify-items: center;
+            }}
+            .component {{
+                background-color: #ffffff;
+                border: 2px solid #e0e0e0;
+                border-radius: 15px;
+                padding: 10px;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                width: 120px;
+                z-index: 2;
+            }}
             .component img {{ width: 50px; height: 50px; }}
             .component p {{ margin: 5px 0 0 0; font-weight: bold; font-size: 0.8em; }}
-            .battery-box span {{ font-size: 1.2em; font-weight: bold; margin-left: 8px; }}
+            .lines {{
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                z-index: 1;
+            }}
         </style>
-        <div class="schematic-container">
-            <svg class="schematic-lines">
-                <path d="M20% 50% H 30%" stroke="#555" stroke-width="2.5" fill="none" />
-                <path d="M50% 50% H 60%" stroke="#555" stroke-width="2.5" fill="none" />
-                <path d="M80% 50% V 25% H 90%" stroke="#555" stroke-width="2.5" fill="none" />
-                <path d="M80% 50% V 75% H 90%" stroke="#555" stroke-width="2.5" fill="none" />
+        <div class="container">
+            <svg class="lines">
+                <line x1="12.5%" y1="50%" x2="37.5%" y2="50%" stroke="#333" stroke-width="2.5" />
+                <line x1="37.5%" y1="50%" x2="62.5%" y2="50%" stroke="#333" stroke-width="2.5" />
+                <line x1="62.5%" y1="50%" x2="87.5%" y2="50%" stroke="#333" stroke-width="2.5" />
+                <line x1="87.5%" y1="50%" x2="87.5%" y2="25%" stroke="#333" stroke-width="2.5" />
+                <line x1="87.5%" y1="50%" x2="87.5%" y2="75%" stroke="#333" stroke-width="2.5" />
             </svg>
-            <div class="component-row">
-                <div class="component"><img src="data:image/png;base64,{b64_images['pv']}"><p>PV System</p></div>
-                <div class="component battery-box"><img src="data:image/png;base64,{b64_images['battery']}"><span>x {num_racks_for_visual}</span></div>
-                <div class="component"><img src="data:image/png;base64,{b64_images['meter']}"><p>Meter</p></div>
-                <div style="width: 18%; height: 100%; position: relative;">
-                    <div class="component" style="position: absolute; top: 5%; left:0; width:100%;"><img src="data:image/png;base64,{b64_images['load']}"><p>Load</p></div>
-                    <div class="component" style="position: absolute; bottom: 5%; left:0; width:100%;"><img src="data:image/png;base64,{b64_images['grid']}"><p>Grid</p></div>
+            <div class="grid-layout">
+                <div class="component" style="grid-column: 1; grid-row: 1 / span 2;">
+                    <img src="data:image/png;base64,{b64_images['pv']}"><p>PV System</p>
+                </div>
+                <div class="component" style="grid-column: 2; grid-row: 1 / span 2;">
+                    <img src="data:image/png;base64,{b64_images['battery']}"><p>Battery System</p>
+                </div>
+                <div class="component" style="grid-column: 3; grid-row: 1 / span 2;">
+                    <img src="data:image/png;base64,{b64_images['meter']}"><p>Meter</p>
+                </div>
+                <div class="component" style="grid-column: 4; grid-row: 1;">
+                    <img src="data:image/png;base64,{b64_images['load']}"><p>Load</p>
+                </div>
+                <div class="component" style="grid-column: 4; grid-row: 2;">
+                    <img src="data:image/png;base64,{b64_images['grid']}"><p>Grid</p>
                 </div>
             </div>
         </div>
         """
-        st.components.v1.html(html_schematic, height=300)
+        st.components.v1.html(html_schematic, height=270)
 
         # --- 2. THE DETAILED MODULAR OPTIONS TABLE ---
         st.markdown("---")
