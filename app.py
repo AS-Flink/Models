@@ -21,6 +21,7 @@ import os
 # ADD THESE LINES AT THE TOP OF YOUR APP.PY
 from analyzers import NetPeakShavingSizer
 import streamlit as st
+from PIL import Image # <--- ADD THIS LINE
 
 def display_header(title):
     """A simple helper function to display a title."""
