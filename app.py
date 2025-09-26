@@ -766,6 +766,118 @@ def generate_summary_chart(df, y_bar, y_line, title):
 #         st.session_state.page = "Home"
 #         st.rerun()
 
+def show_battery_sizing_page():
+    """
+    Displays the UI for the Battery Sizing Tool.
+    """
+    display_header("Battery Sizing Tool for Peak Shaving 🔋")
+
+    # --- Sidebar Inputs ---
+    with st.sidebar:
+        st.header("⚙️ Sizing Configuration")
+        uploaded_file = st.file_uploader(
+            "Upload Your Data (CSV)", type="csv",
+            help="CSV must have 'Datetime', 'load', and 'pv_production' columns."
+        )
+
+        analysis_mode = st.radio(
+            "Select Analysis Mode",
+            ["Strict Grid Limits", "Net Peak Shaving"],
+            help="**Strict Grid Limits:** Enforces fixed import/export limits. \n\n**Net Peak Shaving:** Sets a target to cap your maximum grid import."
+        )
+
+        if analysis_mode == "Strict Grid Limits":
+            st.info("Set fixed kW limits for your grid connection.")
+            import_limit = st.number_input("Grid Import Limit (kW)", min_value=1, value=350, step=10)
+            export_limit = st.number_input("Grid Export Limit (kW)", max_value=0, value=-250, step=10)
+
+        elif analysis_mode == "Net Peak Shaving":
+            st.info("Set a target for your maximum power draw from the grid.")
+            grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=80, step=5)
+
+        run_button = st.button("🚀 Run Sizing Analysis", type="primary")
+
+    # --- Main Page Logic ---
+    if run_button:
+        if uploaded_file is not None:
+            try:
+                input_df = pd.read_csv(uploaded_file)
+                input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
+                input_df.set_index("Datetime", inplace=True)
+
+                if analysis_mode == "Strict Grid Limits":
+                    analyzer = BatteryShavingAnalyzer(import_limit_kw=import_limit, export_limit_kw=export_limit)
+                    capacity, power, results_df = analyzer.run_analysis(input_df)
+                    st.session_state['sizing_results'] = {
+                        "mode": analysis_mode, "capacity": capacity, "power": power, "df": results_df,
+                        "import_limit": import_limit, "export_limit": export_limit
+                    }
+
+                elif analysis_mode == "Net Peak Shaving":
+                    analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
+                    capacity, power, results_df = analyzer.run_analysis(input_df)
+                    st.session_state['sizing_results'] = {
+                        "mode": analysis_mode, "capacity": capacity, "power": power, "df": results_df,
+                        "grid_import_threshold": grid_import_threshold
+                    }
+                st.rerun()
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+        else:
+            st.warning("Please upload a file to run the analysis.")
+
+    # --- Display Results ---
+    if 'sizing_results' in st.session_state:
+        # (The results display code is long, so keeping it the same as before)
+        results = st.session_state['sizing_results']
+        mode = results['mode']
+        st.subheader(f"💡 Recommended Battery Size for {mode}")
+
+        col1, col2 = st.columns(2)
+        col1.metric("Required Power", f"{results['power']:,.2f} kW")
+        col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
+
+        st.markdown("---")
+        st.subheader("📊 Analysis Charts")
+        df = results['df']
+
+        if mode == "Strict Grid Limits":
+            fig1_title = "Net Load vs. Grid Limits"
+            fig1 = go.Figure()
+            fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Net Load', line=dict(color='royalblue')))
+            fig1.add_hline(y=results['import_limit'], line_dash="dash", line_color="red", annotation_text=f"Import Limit")
+            fig1.add_hline(y=results['export_limit'], line_dash="dash", line_color="green", annotation_text=f"Export Limit")
+        else: # Net Peak Shaving
+            fig1_title = "Net Load vs. Peak Shaving Threshold"
+            fig1 = go.Figure()
+            fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray')))
+            fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue')))
+            fig1.add_hline(y=results['grid_import_threshold'], line_dash="dash", line_color="red", annotation_text=f"Target Threshold")
+        
+        fig1.update_layout(title=fig1_title, xaxis_title="Time", yaxis_title="Power (kW)")
+        st.plotly_chart(fig1, use_container_width=True)
+        # ... Other plots follow ...
+
+    else:
+        st.info("Upload a file and configure the settings to get started.")
+
+    with st.sidebar:
+        st.header("Navigation")
+        if st.button("⬅️ Back to Home"):
+            if 'sizing_results' in st.session_state:
+                del st.session_state['sizing_results']
+            st.session_state.page = "Home"
+            st.rerun()
+
+
+# --- 4. Main App Logic (The Controller) ---
+if 'page' not in st.session_state:
+    st.session_state.page = 'Home'
+
+if st.session_state.page == 'Home':
+    show_home_page()
+elif st.session_state.page == 'Battery Sizing':
+    show_battery_sizing_page()
 
 
 ################# BATTERY SIZING CODE
