@@ -1072,6 +1072,73 @@ def display_recommendations(power_req, capacity_req):
 
 
 # --- THE MAIN PAGE FUNCTION ---
+# def show_battery_sizing_page():
+#     """Displays the UI for the Battery Net Peak Shaving Sizing Tool."""
+#     display_header("Battery Sizing Tool for Peak Shaving 🔋")
+
+#     with st.sidebar:
+#         st.header("⚙️ Sizing Configuration")
+#         uploaded_file = st.file_uploader("Upload Your Data (CSV)", type="csv")
+#         st.info("Set a target for your maximum power draw from the grid.")
+#         grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=80, step=5)
+#         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
+        
+#         st.header("Navigation")
+#         if st.button("⬅️ Back to Home"):
+#             if 'sizing_results' in st.session_state:
+#                 del st.session_state['sizing_results']
+#             st.session_state.page = "Home"
+#             st.rerun()
+
+#     if run_button and uploaded_file is not None:
+#         try:
+#             input_df = pd.read_csv(uploaded_file)
+#             input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
+#             input_df.set_index("Datetime", inplace=True)
+
+#             analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
+#             capacity, power, results_df = analyzer.run_analysis(input_df)
+            
+#             st.session_state['sizing_results'] = {
+#                 "capacity": capacity, "power": power, "df": results_df,
+#                 "grid_import_threshold": grid_import_threshold
+#             }
+#             st.rerun()
+#         except Exception as e:
+#             st.error(f"An error occurred: {e}")
+
+#     elif run_button and uploaded_file is None:
+#         st.warning("Please upload a file to run the analysis.")
+
+#     if 'sizing_results' in st.session_state:
+#         results = st.session_state['sizing_results']
+        
+#         st.subheader("💡 Calculated Battery Size")
+#         col1, col2 = st.columns(2)
+#         col1.metric("Required Power", f"{results['power']:,.2f} kW")
+#         col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
+        
+#         display_recommendations(results['power'], results['capacity'])
+
+#         # --- Charting Section ---
+#         st.subheader("📊 Analysis Charts")
+#         df = results['df']
+#         grid_import_threshold = results['grid_import_threshold']
+
+#         fig1 = go.Figure()
+#         fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray')))
+#         fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
+#         fig1.add_hline(y=grid_import_threshold, line_dash="dash", line_color="red", annotation_text="Target Threshold")
+#         fig1.update_layout(title="Net Load vs. Peak Shaving Threshold", yaxis_title="Power (kW)")
+#         st.plotly_chart(fig1, use_container_width=True)
+
+#         fig2 = go.Figure()
+#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power', fill='tozeroy', line=dict(color='green')))
+#         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power', fill='tozeroy', line=dict(color='red')))
+#         fig2.update_layout(title="Required Battery Power Profile", yaxis_title="Power (kW)")
+#         st.plotly_chart(fig2, use_container_width=True)
+#     else:
+#         st.info("Upload a file and set your target grid import to get started.")
 def show_battery_sizing_page():
     """Displays the UI for the Battery Net Peak Shaving Sizing Tool."""
     display_header("Battery Sizing Tool for Peak Shaving 🔋")
@@ -1125,6 +1192,7 @@ def show_battery_sizing_page():
         df = results['df']
         grid_import_threshold = results['grid_import_threshold']
 
+        # Chart 1: Net Load
         fig1 = go.Figure()
         fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray')))
         fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
@@ -1132,14 +1200,23 @@ def show_battery_sizing_page():
         fig1.update_layout(title="Net Load vs. Peak Shaving Threshold", yaxis_title="Power (kW)")
         st.plotly_chart(fig1, use_container_width=True)
 
+        # Chart 2: Battery Power Profile
         fig2 = go.Figure()
         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power', fill='tozeroy', line=dict(color='green')))
         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power', fill='tozeroy', line=dict(color='red')))
         fig2.update_layout(title="Required Battery Power Profile", yaxis_title="Power (kW)")
         st.plotly_chart(fig2, use_container_width=True)
+        
+        # --- NEW: Chart 3: Cumulative SOC ---
+        # This plot shows the long-term energy balance trend in the battery.
+        fig3 = px.line(df, x=df.index, y='soc_kwh', 
+                       title="Cumulative Battery State of Charge (SOC) Trend",
+                       labels={"soc_kwh": "Energy (kWh)", "index": "Time"})
+        fig3.update_traces(line_color='purple')
+        st.plotly_chart(fig3, use_container_width=True)
+
     else:
         st.info("Upload a file and set your target grid import to get started.")
-
 ################# BATTERY SIZING CODE
 
 # # --- PAGE DISPLAY FUNCTIONS ---
