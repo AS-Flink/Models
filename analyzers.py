@@ -109,18 +109,60 @@
 
 # analyzers.py
 
+# import pandas as pd
+
+# class NetPeakShavingSizer:
+#     """
+#     Calculates the minimum battery size for a NET peak shaving application.
+#     It ensures the power drawn FROM THE GRID (net load) stays below a threshold.
+#     Capacity is sized based on the single largest continuous discharge event.
+#     """
+#     def __init__(self, grid_import_threshold_kw, time_step_h=0.25):
+#         if grid_import_threshold_kw <= 0:
+#             raise ValueError("Grid import threshold must be a positive number.")
+#         self.grid_threshold_kw = grid_import_threshold_kw
+#         self.time_step_h = time_step_h
+
+#     def run_analysis(self, input_df: pd.DataFrame):
+#         df = input_df.copy()
+#         df["net_load"] = df["load"] - df["pv_production"]
+#         df["battery_power"] = 0.0
+
+#         discharge_needed = df["net_load"] > self.grid_threshold_kw
+#         df.loc[discharge_needed, "battery_power"] = -(df["net_load"] - self.grid_threshold_kw)
+
+#         charge_needed = (df["net_load"] < 0) & (~discharge_needed)
+#         df.loc[charge_needed, "battery_power"] = -df["net_load"]
+
+#         df["energy_through_battery"] = df["battery_power"] * self.time_step_h
+#         df['battery_soc_kwh'] = df['energy_through_battery'].cumsum()
+
+#         is_discharging = df['battery_power'] < 0
+#         discharge_event_id = (is_discharging != is_discharging.shift()).cumsum()
+#         discharge_streaks_kwh = df['energy_through_battery'].groupby(discharge_event_id[is_discharging]).sum()
+        
+#         required_capacity_kwh = discharge_streaks_kwh.abs().max() if not discharge_streaks_kwh.empty else 0.0
+#         required_power_kw = df["battery_power"].abs().max()
+#         df['grid_import_with_battery'] = df['net_load'] + df['battery_power']
+
+#         return required_capacity_kwh, required_power_kw, df
+
 import pandas as pd
 
 class NetPeakShavingSizer:
     """
-    Calculates the minimum battery size for a NET peak shaving application.
-    It ensures the power drawn FROM THE GRID (net load) stays below a threshold.
-    Capacity is sized based on the single largest continuous discharge event.
+    Calculates the minimum battery size to keep grid exchange within set import and export thresholds.
+    Capacity is now sized based on the maximum energy range required (SOC max - SOC min).
     """
-    def __init__(self, grid_import_threshold_kw, time_step_h=0.25):
+    def __init__(self, grid_import_threshold_kw, grid_export_threshold_kw=0, time_step_h=0.25):
         if grid_import_threshold_kw <= 0:
             raise ValueError("Grid import threshold must be a positive number.")
-        self.grid_threshold_kw = grid_import_threshold_kw
+        if grid_export_threshold_kw > 0:
+            raise ValueError("Grid export threshold must be zero or a negative number.")
+            
+        self.grid_import_threshold_kw = grid_import_threshold_kw
+        # By convention, export is negative power. 0 means no export allowed.
+        self.grid_export_threshold_kw = grid_export_threshold_kw
         self.time_step_h = time_step_h
 
     def run_analysis(self, input_df: pd.DataFrame):
@@ -128,21 +170,30 @@ class NetPeakShavingSizer:
         df["net_load"] = df["load"] - df["pv_production"]
         df["battery_power"] = 0.0
 
-        discharge_needed = df["net_load"] > self.grid_threshold_kw
-        df.loc[discharge_needed, "battery_power"] = -(df["net_load"] - self.grid_threshold_kw)
+        # --- REVISED DISPATCH LOGIC ---
+        
+        # 1. Discharge when net_load is ABOVE the import threshold
+        discharge_needed = df["net_load"] > self.grid_import_threshold_kw
+        df.loc[discharge_needed, "battery_power"] = -(df["net_load"] - self.grid_import_threshold_kw)
 
-        charge_needed = (df["net_load"] < 0) & (~discharge_needed)
-        df.loc[charge_needed, "battery_power"] = -df["net_load"]
+        # 2. Charge ONLY when net_load is BELOW the export threshold
+        # This prevents the battery from charging with all excess PV.
+        charge_needed = df["net_load"] < self.grid_export_threshold_kw
+        df.loc[charge_needed, "battery_power"] = -(df["net_load"] - self.grid_export_threshold_kw)
 
+        # --- REVISED SIZING LOGIC ---
+        
         df["energy_through_battery"] = df["battery_power"] * self.time_step_h
         df['battery_soc_kwh'] = df['energy_through_battery'].cumsum()
 
-        is_discharging = df['battery_power'] < 0
-        discharge_event_id = (is_discharging != is_discharging.shift()).cumsum()
-        discharge_streaks_kwh = df['energy_through_battery'].groupby(discharge_event_id[is_discharging]).sum()
+        # The required capacity is the difference between the highest and lowest
+        # points of the SOC curve. This is the true "size" of the energy tank we need.
+        # We add a small buffer (1e-9) to handle cases with no battery usage.
+        required_capacity_kwh = df['battery_soc_kwh'].max() - df['battery_soc_kwh'].min() + 1e-9
         
-        required_capacity_kwh = discharge_streaks_kwh.abs().max() if not discharge_streaks_kwh.empty else 0.0
+        # Required power is still the max absolute power in or out
         required_power_kw = df["battery_power"].abs().max()
+        
         df['grid_import_with_battery'] = df['net_load'] + df['battery_power']
 
         return required_capacity_kwh, required_power_kw, df
