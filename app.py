@@ -16,10 +16,7 @@ from revenue_logic import run_revenue_model
 import streamlit as st
 import base64
 import os
-# from battery_shaving_core import BatteryShavingAnalyzer # Add this
-# from peak_shaving_core import PeakShavingAnalyzer
-# ADD THESE LINES AT THE TOP OF YOUR APP.PY
-from analyzers import NetPeakShavingSizer, SelfConsumptionSizer
+from analyzers import NetPeakShavingSizer
 import streamlit as st
 from PIL import Image # <--- ADD THIS LINE
 
