@@ -1191,11 +1191,6 @@ def show_battery_sizing_page():
         df = results['df'].reset_index()
         grid_import_threshold = results['grid_import_threshold']
 
-        # --- THIS IS THE FIX ---
-        # Explicitly convert the soc_kwh column to a numeric type before plotting.
-        # This forces any non-numeric errors into NaN, which we then fill with 0.
-        df['soc_kwh'] = pd.to_numeric(df['soc_kwh'], errors='coerce').fillna(0)
-
         # Chart 1: Net Load
         fig1 = go.Figure()
         fig1.add_trace(go.Scatter(x=df['Datetime'], y=df['net_load'], name='Original Net Load', line=dict(color='lightgray')))
@@ -1222,6 +1217,7 @@ def show_battery_sizing_page():
 
     else:
         st.info("Upload a file and set your target grid import to get started.")
+
 
 
 ################# BATTERY SIZING CODE
