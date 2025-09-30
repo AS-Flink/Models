@@ -147,14 +147,14 @@
 #         return required_capacity_kwh, required_power_kw, df
 
 
+# analyzers.py
+
 import pandas as pd
 import numpy as np
 
 class NetPeakShavingSizer:
     """
     Calculates the minimum battery size for a NET peak shaving application.
-    It ensures the power drawn FROM THE GRID (net load) stays below a threshold.
-    Capacity is sized based on the single largest continuous discharge event.
     """
     def __init__(self, grid_import_threshold_kw, time_step_h=0.25):
         if grid_import_threshold_kw <= 0:
@@ -175,8 +175,7 @@ class NetPeakShavingSizer:
 
         df["energy_through_battery"] = df["battery_power"] * self.time_step_h
         
-        # --- ADD THIS LINE BACK ---
-        # This calculates the cumulative SOC trend over the whole period.
+        # --- THIS IS THE CRITICAL LINE THAT WAS MISSING ---
         df['soc_kwh'] = df['energy_through_battery'].cumsum()
         
         is_discharging = df['battery_power'] < 0
