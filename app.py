@@ -17,6 +17,8 @@ import streamlit as st
 import base64
 import os
 from analyzers import NetPeakShavingSizer
+from analyzers import SelfConsumptionSizer
+
 import streamlit as st
 from PIL import Image # <--- ADD THIS LINE
 
