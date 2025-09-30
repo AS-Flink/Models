@@ -1149,6 +1149,13 @@ def show_battery_sizing_page():
         st.info("Set a target for your maximum power draw from the grid.")
         grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=80, step=5)
         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
+        
+        st.header("Navigation")
+        if st.button("⬅️ Back to Home"):
+            if 'sizing_results' in st.session_state:
+                del st.session_state['sizing_results']
+            st.session_state.page = "Home"
+            st.rerun()
 
     if run_button and uploaded_file is not None:
         try:
@@ -1184,6 +1191,11 @@ def show_battery_sizing_page():
         df = results['df'].reset_index()
         grid_import_threshold = results['grid_import_threshold']
 
+        # --- THIS IS THE FIX ---
+        # Explicitly convert the soc_kwh column to a numeric type before plotting.
+        # This forces any non-numeric errors into NaN, which we then fill with 0.
+        df['soc_kwh'] = pd.to_numeric(df['soc_kwh'], errors='coerce').fillna(0)
+
         # Chart 1: Net Load
         fig1 = go.Figure()
         fig1.add_trace(go.Scatter(x=df['Datetime'], y=df['net_load'], name='Original Net Load', line=dict(color='lightgray')))
@@ -1199,20 +1211,18 @@ def show_battery_sizing_page():
         fig2.update_layout(title="Required Battery Power Profile", yaxis_title="Power (kW)")
         st.plotly_chart(fig2, use_container_width=True)
         
-        # --- NEW: Chart 3: Cumulative SOC ---
+        # Chart 3: Cumulative SOC
         st.markdown("---")
         st.subheader("🔋 Battery Energy Trend")
-        st.info("This plot shows the cumulative energy balance in the battery over the year. It helps visualize long-term charging or discharging trends.")
-        
         fig3 = px.line(df, x='Datetime', y='soc_kwh', 
                        title="Cumulative Battery State of Charge (SOC) Trend",
                        labels={"soc_kwh": "Energy (kWh)", "Datetime": "Time"})
         fig3.update_traces(line_color='purple')
         st.plotly_chart(fig3, use_container_width=True)
-        # --- END OF NEW CHART CODE ---
 
     else:
         st.info("Upload a file and set your target grid import to get started.")
+
 
 ################# BATTERY SIZING CODE
 
