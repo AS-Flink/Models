@@ -197,3 +197,52 @@ class NetPeakShavingSizer:
         df['grid_import_with_battery'] = df['net_load'] + df['battery_power']
 
         return required_capacity_kwh, required_power_kw, df
+
+
+class EconomicDispatchSizer:
+    """
+    Calculates the minimum battery size for a PRICE ARBITRAGE application.
+    It charges the battery from excess solar when prices are low and
+    discharges to serve the load when prices are high.
+    """
+    def __init__(self, high_price_threshold, low_price_threshold, time_step_h=0.25):
+        if high_price_threshold <= low_price_threshold:
+            raise ValueError("High price threshold must be greater than low price threshold.")
+        self.high_price = high_price_threshold
+        self.low_price = low_price_threshold
+        self.time_step_h = time_step_h
+
+    def run_analysis(self, input_df: pd.DataFrame):
+        if 'price' not in input_df.columns:
+            raise ValueError("Input DataFrame must contain a 'price' column for economic dispatch.")
+            
+        df = input_df.copy()
+        df["net_load"] = df["load"] - df["pv_production"]
+        df["battery_power"] = 0.0
+
+        # --- NEW ECONOMIC DISPATCH LOGIC ---
+
+        # 1. Discharge to serve the load when prices are HIGH
+        # We only discharge if there is a load to serve (net_load > 0)
+        discharge_needed = (df["price"] > self.high_price) & (df["net_load"] > 0)
+        df.loc[discharge_needed, "battery_power"] = -df["net_load"]
+
+        # 2. Charge from excess solar when prices are LOW
+        # We only charge if there is excess PV (net_load < 0)
+        charge_needed = (df["price"] < self.low_price) & (df["net_load"] < 0)
+        df.loc[charge_needed, "battery_power"] = -df["net_load"]
+
+        # --- Sizing logic is the same "daily cycle" as before ---
+        
+        df["energy_through_battery"] = df["battery_power"] * self.time_step_h
+        df['battery_soc_kwh'] = df.groupby(df.index.date)['energy_through_battery'].cumsum()
+
+        daily_soc_range = df.groupby(df.index.date)['battery_soc_kwh'].agg(['max', 'min'])
+        daily_kwh_swing = daily_soc_range['max'] - daily_soc_range['min']
+
+        required_capacity_kwh = daily_kwh_swing.max()
+        required_power_kw = df["battery_power"].abs().max()
+        df['grid_import_with_battery'] = df['net_load'] + df['battery_power']
+
+        return required_capacity_kwh, required_power_kw, df
+
