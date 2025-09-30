@@ -1070,18 +1070,7 @@ def display_recommendations(power_req, capacity_req):
         st.success("No battery is required for the given threshold.")
 
 
-# # --- THE MAIN PAGE FUNCTION ---
-# # def show_battery_sizing_page():
-# #     """Displays the UI for the Battery Net Peak Shaving Sizing Tool."""
-# #     display_header("Battery Sizing Tool for Peak Shaving 🔋")
 
-# #     with st.sidebar:
-# #         st.header("⚙️ Sizing Configuration")
-# #         uploaded_file = st.file_uploader("Upload Your Data (CSV)", type="csv")
-# #         st.info("Set the upper and lower limits for your power exchange with the grid.")
-# #         grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=356, step=5)
-# #         grid_export_threshold = st.number_input("Target Max Grid Export (kW)", max_value=0, value=-200, step=5)
-# #         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
 # def show_battery_sizing_page():
 #     """Displays the UI for the Battery Sizing Tool."""
 #     display_header("Battery Sizing Tool 🔋")
@@ -1090,14 +1079,12 @@ def display_recommendations(power_req, capacity_req):
 #         st.header("⚙️ Sizing Configuration")
 #         uploaded_file = st.file_uploader("Upload Your Data (CSV)", type="csv")
         
-#         # --- ADD MODE SELECTOR ---
 #         analysis_mode = st.radio(
 #             "Select Analysis Mode",
 #             ["Net Peak Shaving", "Economic Dispatch"],
 #             help="Choose 'Peak Shaving' to limit grid import/export, or 'Economic Dispatch' to operate based on electricity prices."
 #         )
 
-#         # --- CONDITIONAL INPUTS ---
 #         if analysis_mode == "Net Peak Shaving":
 #             st.info("Set the upper and lower limits for your power exchange with the grid.")
 #             grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=356, step=5)
@@ -1108,7 +1095,6 @@ def display_recommendations(power_req, capacity_req):
 #             high_price_threshold = st.number_input("High Price Threshold (€/MWh)", value=120, step=5)
 
 #         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
-
         
 #         st.header("Navigation")
 #         if st.button("⬅️ Back to Home"):
@@ -1117,55 +1103,44 @@ def display_recommendations(power_req, capacity_req):
 #             st.session_state.page = "Home"
 #             st.rerun()
 
-#     # if run_button and uploaded_file is not None:
-#     #     try:
-#     #         input_df = pd.read_csv(uploaded_file)
-#     #         input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
-#     #         input_df.set_index("Datetime", inplace=True)
-
-#     #         analyzer = NetPeakShavingSizer(
-#     #             grid_import_threshold_kw=grid_import_threshold,
-#     #             grid_export_threshold_kw=grid_export_threshold
-#     #         )
-#     #         capacity, power, results_df = analyzer.run_analysis(input_df)
-            
-#     #         st.session_state['sizing_results'] = {
-#     #             "capacity": capacity, "power": power, "df": results_df,
-#     #             "grid_import_threshold": grid_import_threshold,
-#     #             # Store the export threshold for charting
-#     #             "grid_export_threshold": grid_export_threshold
-#     #         }
-
-#     #         st.rerun()
-#     #     except Exception as e:
-#     #         st.error(f"An error occurred: {e}")
 #     if run_button and uploaded_file is not None:
 #         try:
 #             input_df = pd.read_csv(uploaded_file)
 #             input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
 #             input_df.set_index("Datetime", inplace=True)
+            
+#             results_data = {}
 
-#             # --- CONDITIONAL ANALYSIS ---
 #             if analysis_mode == "Net Peak Shaving":
 #                 analyzer = NetPeakShavingSizer(
 #                     grid_import_threshold_kw=grid_import_threshold,
 #                     grid_export_threshold_kw=grid_export_threshold
 #                 )
+#                 capacity, power, results_df = analyzer.run_analysis(input_df)
+#                 results_data = {
+#                     "grid_import_threshold": grid_import_threshold,
+#                     "grid_export_threshold": grid_export_threshold
+#                 }
 #             else: # Economic Dispatch
 #                 analyzer = EconomicDispatchSizer(
 #                     high_price_threshold=high_price_threshold,
 #                     low_price_threshold=low_price_threshold
 #                 )
+#                 capacity, power, results_df = analyzer.run_analysis(input_df)
+#                 results_data = {
+#                     "high_price_threshold": high_price_threshold,
+#                     "low_price_threshold": low_price_threshold
+#                 }
             
-#             capacity, power, results_df = analyzer.run_analysis(input_df)
-            
-#             # The rest of the code works as is, because both analyzers return the same structure
+#             # --- CORRECTED SESSION STATE LOGIC ---
 #             st.session_state['sizing_results'] = {
-#                 "capacity": capacity, "power": power, "df": results_df,
-#                 # You can store other relevant info here if needed for charts
+#                 "capacity": capacity,
+#                 "power": power,
+#                 "df": results_df,
+#                 "analysis_mode": analysis_mode, # Save the mode
+#                 "thresholds": results_data      # Save the relevant thresholds
 #             }
 #             st.rerun()
-
 #         except Exception as e:
 #             st.error(f"An error occurred: {e}")
 
@@ -1185,37 +1160,38 @@ def display_recommendations(power_req, capacity_req):
 #         # --- Charting Section ---
 #         st.subheader("📊 Analysis Charts")
 #         df = results['df']
-#         grid_import_threshold = results['grid_import_threshold']
         
-#         # Chart 1: Net Load vs. Peak Shaving Threshold (Existing)
+#         # --- CORRECTED CHARTING LOGIC ---
 #         fig1 = go.Figure()
 #         fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray')))
 #         fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
-#         fig1.add_hline(y=grid_import_threshold, line_dash="dash", line_color="red", annotation_text="Target Threshold")
-#         fig1.update_layout(title="Net Load vs. Peak Shaving Threshold", yaxis_title="Power (kW)")
+        
+#         # Only draw threshold lines if the mode was Net Peak Shaving
+#         if results['analysis_mode'] == 'Net Peak Shaving':
+#             fig1.add_hline(y=results['thresholds']['grid_import_threshold'], line_dash="dash", line_color="red", annotation_text="Max Import")
+#             fig1.add_hline(y=results['thresholds']['grid_export_threshold'], line_dash="dash", line_color="green", annotation_text="Max Export")
+#             fig1.update_layout(title="Grid Power Exchange: Before vs. After Battery", yaxis_title="Power (kW)")
+#         else:
+#             fig1.update_layout(title="Net Load vs. Battery-Adjusted Grid Flow", yaxis_title="Power (kW)")
+
 #         st.plotly_chart(fig1, use_container_width=True)
 
-#         # Chart 2: Battery Power Profile (Existing)
 #         fig2 = go.Figure()
 #         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(lower=0), mode='lines', name='Charging Power', fill='tozeroy', line=dict(color='green')))
 #         fig2.add_trace(go.Scatter(x=df.index, y=df['battery_power'].clip(upper=0), mode='lines', name='Discharging Power', fill='tozeroy', line=dict(color='red')))
 #         fig2.update_layout(title="Required Battery Power Profile", yaxis_title="Power (kW)")
 #         st.plotly_chart(fig2, use_container_width=True)
-        
-#         # --- ADD THIS NEW CHART BLOCK ---
+
 #         fig3 = go.Figure()
 #         fig3.add_trace(go.Scatter(x=df.index, y=df['battery_soc_kwh'], mode='lines', name='Battery SOC', fill='tozeroy', line=dict(color='orange')))
-#         fig3.update_layout(
-#             title="Battery State of Charge (SOC)",
-#             yaxis_title="Energy (kWh)"
-#         )
+#         fig3.update_layout(title="Battery State of Charge (SOC)", yaxis_title="Energy (kWh)")
 #         st.plotly_chart(fig3, use_container_width=True)
 
 #     else:
 #         st.info("Upload a file and set your target grid import to get started.")
 
 def show_battery_sizing_page():
-    """Displays the UI for the Battery Sizing Tool."""
+    """Displays the UI for the Battery Sizing Tool with selectable methods."""
     display_header("Battery Sizing Tool 🔋")
 
     with st.sidebar:
@@ -1228,10 +1204,21 @@ def show_battery_sizing_page():
             help="Choose 'Peak Shaving' to limit grid import/export, or 'Economic Dispatch' to operate based on electricity prices."
         )
 
+        # --- NESTED OPTIONS FOR NET PEAK SHAVING ---
         if analysis_mode == "Net Peak Shaving":
-            st.info("Set the upper and lower limits for your power exchange with the grid.")
+            st.info("Set the grid limits and choose a sizing method.")
+            
+            # Knob for Sizing Method
+            sizing_method_option = st.radio(
+                "Select Sizing Method",
+                ["Worst Day (Practical)", "Guaranteed (Yearly)"],
+                help="""**Worst Day:** A practical, cost-effective size for daily challenges. 
+                         **Guaranteed:** A larger, more expensive size for 100% violation avoidance."""
+            )
+            
             grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=356, step=5)
             grid_export_threshold = st.number_input("Target Max Grid Export (kW)", max_value=0, value=-200, step=5)
+        
         else: # Economic Dispatch
             st.info("Set the price thresholds for charging and discharging. Your CSV must have a 'price' column.")
             low_price_threshold = st.number_input("Low Price Threshold (€/MWh)", value=50, step=5)
@@ -1255,11 +1242,18 @@ def show_battery_sizing_page():
             results_data = {}
 
             if analysis_mode == "Net Peak Shaving":
+                # Translate the user-friendly option to the function parameter
+                if sizing_method_option == "Worst Day (Practical)":
+                    mode = 'worst_day'
+                else:
+                    mode = 'guaranteed'
+                
                 analyzer = NetPeakShavingSizer(
                     grid_import_threshold_kw=grid_import_threshold,
                     grid_export_threshold_kw=grid_export_threshold
                 )
-                capacity, power, results_df = analyzer.run_analysis(input_df)
+                # Call the analysis with the selected mode
+                capacity, power, results_df = analyzer.run_analysis(input_df, sizing_mode=mode)
                 results_data = {
                     "grid_import_threshold": grid_import_threshold,
                     "grid_export_threshold": grid_export_threshold
@@ -1275,13 +1269,12 @@ def show_battery_sizing_page():
                     "low_price_threshold": low_price_threshold
                 }
             
-            # --- CORRECTED SESSION STATE LOGIC ---
             st.session_state['sizing_results'] = {
                 "capacity": capacity,
                 "power": power,
                 "df": results_df,
-                "analysis_mode": analysis_mode, # Save the mode
-                "thresholds": results_data      # Save the relevant thresholds
+                "analysis_mode": analysis_mode,
+                "thresholds": results_data
             }
             st.rerun()
         except Exception as e:
@@ -1304,12 +1297,10 @@ def show_battery_sizing_page():
         st.subheader("📊 Analysis Charts")
         df = results['df']
         
-        # --- CORRECTED CHARTING LOGIC ---
         fig1 = go.Figure()
         fig1.add_trace(go.Scatter(x=df.index, y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray')))
         fig1.add_trace(go.Scatter(x=df.index, y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
         
-        # Only draw threshold lines if the mode was Net Peak Shaving
         if results['analysis_mode'] == 'Net Peak Shaving':
             fig1.add_hline(y=results['thresholds']['grid_import_threshold'], line_dash="dash", line_color="red", annotation_text="Max Import")
             fig1.add_hline(y=results['thresholds']['grid_export_threshold'], line_dash="dash", line_color="green", annotation_text="Max Export")
@@ -1326,7 +1317,9 @@ def show_battery_sizing_page():
         st.plotly_chart(fig2, use_container_width=True)
 
         fig3 = go.Figure()
-        fig3.add_trace(go.Scatter(x=df.index, y=df['battery_soc_kwh'], mode='lines', name='Battery SOC', fill='tozeroy', line=dict(color='orange')))
+        # --- CORRECTED SOC COLUMN NAME ---
+        # This fixes the KeyError from before.
+        fig3.add_trace(go.Scatter(x=df.index, y=df['battery_soc_kwh_cumulative'], mode='lines', name='Battery SOC', fill='tozeroy', line=dict(color='orange')))
         fig3.update_layout(title="Battery State of Charge (SOC)", yaxis_title="Energy (kWh)")
         st.plotly_chart(fig3, use_container_width=True)
 
@@ -1336,63 +1329,6 @@ def show_battery_sizing_page():
 
 ################# BATTERY SIZING CODE
 
-# # --- PAGE DISPLAY FUNCTIONS ---
-# def show_home_page():
-#     display_header("Flink Energy Management System (EMS) Simulation ")
-#     st.subheader('Tools')
-#     st.write("Please select a tool to begin.")
-#     col1, col2, col3 = st.columns(3)
-#     with col1:
-#         st.markdown("#### 🛠️ Sizing Tools")
-#         # Change this line:
-#         if st.button("Battery Size Finder", type="primary"): 
-#             st.session_state.page = "Battery_Sizing"
-#             st.rerun()
-
-#     with col2:
-#         st.markdown("#### 💰 Revenue Analysis")
-#         if st.button("Battery Revenue Analysis",type="primary"):
-#             st.session_state.page = "Revenue_Analysis"
-#             st.rerun()
-#     with col3:
-#         st.markdown("#### 📈 Financial Modeling")
-#         if st.button("Business Case Simulation", type="primary"):
-#             st.session_state.page = "Project_Selection"; st.rerun()
-
-# def show_home_page():
-#     display_header("Flink Energy Management System (EMS) Simulation ")
-
-#     # --- 1. CENTER THE IMAGE FIRST ---
-#     # Create three columns; the middle one holds the image.
-#     # Adjust the ratio like [1, 2, 1] to control the size.
-#     # A larger middle number (e.g., 6) makes the image wider.
-#     # A smaller middle number (e.g., 2) makes it narrower.
-#     img_col1, img_col2, img_col3 = st.columns([1, 2, 1])
-
-#     with img_col2:
-#         st.image("https://i.postimg.cc/2ykmvjVb/Energy-blog-anim.gif") # Make sure to use your actual GIF link
-
-#     st.markdown("---") # Visual separator
-
-#     # --- 2. DISPLAY THE TOOLS SECTION AFTER THE IMAGE ---
-#     st.subheader('Tools')
-#     st.write("Please select a tool to begin.")
-
-#     tool_col1, tool_col2, tool_col3 = st.columns(3)
-#     with tool_col1:
-#         st.markdown("#### 🛠️ Sizing Tools")
-#         if st.button("Battery Size Finder", type="primary"):
-#             st.session_state.page = "Battery_Sizing"
-#             st.rerun()
-#     with tool_col2:
-#         st.markdown("#### 💰 Revenue Analysis")
-#         if st.button("Battery Revenue Analysis",type="primary"):
-#             st.session_state.page = "Revenue_Analysis"
-#             st.rerun()
-#     with tool_col3:
-#         st.markdown("#### 📈 Financial Modeling")
-#         if st.button("Business Case Simulation", type="primary"):
-#             st.session_state.page = "Project_Selection"; st.rerun()
 def show_home_page():
     display_header("Flink EMS Simulation ")
 
