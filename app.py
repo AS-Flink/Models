@@ -1325,10 +1325,16 @@ def show_battery_sizing_page():
         fig2.update_layout(title="Required Battery Power Profile", yaxis_title="Power (kW)")
         st.plotly_chart(fig2, use_container_width=True)
 
+        # fig3 = go.Figure()
+        # fig3.add_trace(go.Scatter(x=df.index, y=df['battery_soc_kwh'], mode='lines', name='Battery SOC', fill='tozeroy', line=dict(color='orange')))
+        # fig3.update_layout(title="Battery State of Charge (SOC)", yaxis_title="Energy (kWh)")
+        # st.plotly_chart(fig3, use_container_width=True)
+    
         fig3 = go.Figure()
-        fig3.add_trace(go.Scatter(x=df.index, y=df['battery_soc_kwh'], mode='lines', name='Battery SOC', fill='tozeroy', line=dict(color='orange')))
+        fig3.add_trace(go.Scatter(x=df.index, y=df['battery_soc_kwh_cumulative'], mode='lines', name='Battery SOC', fill='tozeroy', line=dict(color='orange')))
         fig3.update_layout(title="Battery State of Charge (SOC)", yaxis_title="Energy (kWh)")
         st.plotly_chart(fig3, use_container_width=True)
+
     else:
         st.info("Upload a file and set your target grid import to get started.")
 
