@@ -1070,7 +1070,7 @@ def display_recommendations(power_req, capacity_req):
         st.success("No battery is required for the given threshold.")
 
 
---- THE MAIN PAGE FUNCTION ---
+# --- THE MAIN PAGE FUNCTION ---
 def show_battery_sizing_page():
     """Displays the UI for the Battery Net Peak Shaving Sizing Tool."""
     display_header("Battery Sizing Tool for Peak Shaving 🔋")
