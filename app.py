@@ -1159,8 +1159,6 @@ def show_battery_sizing_page():
             analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
             capacity, power, results_df = analyzer.run_analysis(analysis_df)
             
-            # The analyzer returns a DataFrame with 'Datetime' as the index.
-            # We store it this way.
             st.session_state['sizing_results'] = {
                 "capacity": capacity, "power": power, "df": results_df,
                 "grid_import_threshold": grid_import_threshold
@@ -1182,13 +1180,11 @@ def show_battery_sizing_page():
         
         display_recommendations(results['power'], results['capacity'])
 
-        # --- Charting Section ---
         st.subheader("📊 Analysis Charts")
-        
-        # IMPORTANT: Reset the index here to make 'Datetime' a plottable column
         df = results['df'].reset_index()
         grid_import_threshold = results['grid_import_threshold']
 
+        # Chart 1: Net Load
         fig1 = go.Figure()
         fig1.add_trace(go.Scatter(x=df['Datetime'], y=df['net_load'], name='Original Net Load', line=dict(color='lightgray')))
         fig1.add_trace(go.Scatter(x=df['Datetime'], y=df['grid_import_with_battery'], name='Final Grid Import', line=dict(color='royalblue', width=2)))
@@ -1196,15 +1192,25 @@ def show_battery_sizing_page():
         fig1.update_layout(title="Net Load vs. Peak Shaving Threshold", yaxis_title="Power (kW)")
         st.plotly_chart(fig1, use_container_width=True)
 
+        # Chart 2: Battery Power Profile
         fig2 = go.Figure()
         fig2.add_trace(go.Scatter(x=df['Datetime'], y=df['battery_power'].clip(lower=0), name='Charging Power', fill='tozeroy', line=dict(color='green')))
         fig2.add_trace(go.Scatter(x=df['Datetime'], y=df['battery_power'].clip(upper=0), name='Discharging Power', fill='tozeroy', line=dict(color='red')))
         fig2.update_layout(title="Required Battery Power Profile", yaxis_title="Power (kW)")
         st.plotly_chart(fig2, use_container_width=True)
         
-        # The `soc_kwh` column is missing from your analyzer, so we can't plot it.
-        # If you need it, you would add `df['soc_kwh'] = df['energy_through_battery'].cumsum()`
-        # back into your `run_analysis` method.
+        # --- NEW: Chart 3: Cumulative SOC ---
+        st.markdown("---")
+        st.subheader("🔋 Battery Energy Trend")
+        st.info("This plot shows the cumulative energy balance in the battery over the year. It helps visualize long-term charging or discharging trends.")
+        
+        fig3 = px.line(df, x='Datetime', y='soc_kwh', 
+                       title="Cumulative Battery State of Charge (SOC) Trend",
+                       labels={"soc_kwh": "Energy (kWh)", "Datetime": "Time"})
+        fig3.update_traces(line_color='purple')
+        st.plotly_chart(fig3, use_container_width=True)
+        # --- END OF NEW CHART CODE ---
+
     else:
         st.info("Upload a file and set your target grid import to get started.")
 
