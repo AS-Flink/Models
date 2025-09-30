@@ -1078,9 +1078,11 @@ def show_battery_sizing_page():
     with st.sidebar:
         st.header("⚙️ Sizing Configuration")
         uploaded_file = st.file_uploader("Upload Your Data (CSV)", type="csv")
-        st.info("Set a target for your maximum power draw from the grid.")
-        grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=80, step=5)
+        st.info("Set the upper and lower limits for your power exchange with the grid.")
+        grid_import_threshold = st.number_input("Target Max Grid Import (kW)", min_value=1, value=356, step=5)
+        grid_export_threshold = st.number_input("Target Max Grid Export (kW)", max_value=0, value=-200, step=5)
         run_button = st.button("🚀 Run Sizing Analysis", type="primary")
+
         
         st.header("Navigation")
         if st.button("⬅️ Back to Home"):
@@ -1095,13 +1097,19 @@ def show_battery_sizing_page():
             input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
             input_df.set_index("Datetime", inplace=True)
 
-            analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
+            analyzer = NetPeakShavingSizer(
+                grid_import_threshold_kw=grid_import_threshold,
+                grid_export_threshold_kw=grid_export_threshold
+            )
             capacity, power, results_df = analyzer.run_analysis(input_df)
             
             st.session_state['sizing_results'] = {
                 "capacity": capacity, "power": power, "df": results_df,
-                "grid_import_threshold": grid_import_threshold
+                "grid_import_threshold": grid_import_threshold,
+                # Store the export threshold for charting
+                "grid_export_threshold": grid_export_threshold
             }
+
             st.rerun()
         except Exception as e:
             st.error(f"An error occurred: {e}")
