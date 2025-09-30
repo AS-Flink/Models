@@ -147,63 +147,12 @@
 
 #         return required_capacity_kwh, required_power_kw, df
 
-# import pandas as pd
-
-# class NetPeakShavingSizer:
-#     """
-#     Calculates the minimum battery size to keep grid exchange within set import and export thresholds.
-#     Capacity is now sized based on the maximum energy range required (SOC max - SOC min).
-#     """
-#     def __init__(self, grid_import_threshold_kw, grid_export_threshold_kw=0, time_step_h=0.25):
-#         if grid_import_threshold_kw <= 0:
-#             raise ValueError("Grid import threshold must be a positive number.")
-#         if grid_export_threshold_kw > 0:
-#             raise ValueError("Grid export threshold must be zero or a negative number.")
-            
-#         self.grid_import_threshold_kw = grid_import_threshold_kw
-#         # By convention, export is negative power. 0 means no export allowed.
-#         self.grid_export_threshold_kw = grid_export_threshold_kw
-#         self.time_step_h = time_step_h
-
-#     def run_analysis(self, input_df: pd.DataFrame):
-#         df = input_df.copy()
-#         df["net_load"] = df["load"] - df["pv_production"]
-#         df["battery_power"] = 0.0
-
-#         # --- REVISED DISPATCH LOGIC ---
-        
-#         # 1. Discharge when net_load is ABOVE the import threshold
-#         discharge_needed = df["net_load"] > self.grid_import_threshold_kw
-#         df.loc[discharge_needed, "battery_power"] = -(df["net_load"] - self.grid_import_threshold_kw)
-
-#         # 2. Charge ONLY when net_load is BELOW the export threshold
-#         # This prevents the battery from charging with all excess PV.
-#         charge_needed = df["net_load"] < self.grid_export_threshold_kw
-#         df.loc[charge_needed, "battery_power"] = -(df["net_load"] - self.grid_export_threshold_kw)
-
-#         # --- REVISED SIZING LOGIC ---
-        
-#         df["energy_through_battery"] = df["battery_power"] * self.time_step_h
-#         df['battery_soc_kwh'] = df['energy_through_battery'].cumsum()
-
-#         # The required capacity is the difference between the highest and lowest
-#         # points of the SOC curve. This is the true "size" of the energy tank we need.
-#         # We add a small buffer (1e-9) to handle cases with no battery usage.
-#         required_capacity_kwh = df['battery_soc_kwh'].max() - df['battery_soc_kwh'].min() + 1e-9
-        
-#         # Required power is still the max absolute power in or out
-#         required_power_kw = df["battery_power"].abs().max()
-        
-#         df['grid_import_with_battery'] = df['net_load'] + df['battery_power']
-
-#         return required_capacity_kwh, required_power_kw, df
-
 import pandas as pd
 
 class NetPeakShavingSizer:
     """
-    Calculates the minimum battery size to keep grid exchange within set thresholds,
-    based on a daily operational cycle.
+    Calculates the minimum battery size to keep grid exchange within set import and export thresholds.
+    Capacity is now sized based on the maximum energy range required (SOC max - SOC min).
     """
     def __init__(self, grid_import_threshold_kw, grid_export_threshold_kw=0, time_step_h=0.25):
         if grid_import_threshold_kw <= 0:
@@ -212,6 +161,7 @@ class NetPeakShavingSizer:
             raise ValueError("Grid export threshold must be zero or a negative number.")
             
         self.grid_import_threshold_kw = grid_import_threshold_kw
+        # By convention, export is negative power. 0 means no export allowed.
         self.grid_export_threshold_kw = grid_export_threshold_kw
         self.time_step_h = time_step_h
 
@@ -220,27 +170,26 @@ class NetPeakShavingSizer:
         df["net_load"] = df["load"] - df["pv_production"]
         df["battery_power"] = 0.0
 
-        # Dispatch logic remains the same
+        # --- REVISED DISPATCH LOGIC ---
+        
+        # 1. Discharge when net_load is ABOVE the import threshold
         discharge_needed = df["net_load"] > self.grid_import_threshold_kw
         df.loc[discharge_needed, "battery_power"] = -(df["net_load"] - self.grid_import_threshold_kw)
 
+        # 2. Charge ONLY when net_load is BELOW the export threshold
+        # This prevents the battery from charging with all excess PV.
         charge_needed = df["net_load"] < self.grid_export_threshold_kw
         df.loc[charge_needed, "battery_power"] = -(df["net_load"] - self.grid_export_threshold_kw)
 
-        df["energy_through_battery"] = df["battery_power"] * self.time_step_h
+        # --- REVISED SIZING LOGIC ---
         
-        # --- REVISED SIZING LOGIC WITH DAILY RESET ---
+        df["energy_through_battery"] = df["battery_power"] * self.time_step_h
+        df['battery_soc_kwh'] = df['energy_through_battery'].cumsum()
 
-        # 1. Calculate SOC, but reset the calculation for each new day.
-        # This prevents the long-term energy drift.
-        df['battery_soc_kwh'] = df.groupby(df.index.date)['energy_through_battery'].cumsum()
-
-        # 2. Find the energy range (max - min SOC) needed for EACH day.
-        daily_soc_range = df.groupby(df.index.date)['battery_soc_kwh'].agg(['max', 'min'])
-        daily_kwh_swing = daily_soc_range['max'] - daily_soc_range['min']
-
-        # 3. The required capacity is the BIGGEST swing needed on any single day.
-        required_capacity_kwh = daily_kwh_swing.max()
+        # The required capacity is the difference between the highest and lowest
+        # points of the SOC curve. This is the true "size" of the energy tank we need.
+        # We add a small buffer (1e-9) to handle cases with no battery usage.
+        required_capacity_kwh = df['battery_soc_kwh'].max() - df['battery_soc_kwh'].min() + 1e-9
         
         # Required power is still the max absolute power in or out
         required_power_kw = df["battery_power"].abs().max()
