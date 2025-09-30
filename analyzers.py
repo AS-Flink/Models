@@ -135,7 +135,8 @@ class NetPeakShavingSizer:
         df.loc[charge_needed, "battery_power"] = -df["net_load"]
 
         df["energy_through_battery"] = df["battery_power"] * self.time_step_h
-        
+        df['battery_soc_kwh'] = df['energy_through_battery'].cumsum()
+
         is_discharging = df['battery_power'] < 0
         discharge_event_id = (is_discharging != is_discharging.shift()).cumsum()
         discharge_streaks_kwh = df['energy_through_battery'].groupby(discharge_event_id[is_discharging]).sum()
@@ -145,7 +146,3 @@ class NetPeakShavingSizer:
         df['grid_import_with_battery'] = df['net_load'] + df['battery_power']
 
         return required_capacity_kwh, required_power_kw, df
-
-
-
-
