@@ -1144,6 +1144,7 @@ def show_battery_sizing_page():
     display_header("Battery Sizing Tool for Peak Shaving 🔋")
 
     with st.sidebar:
+        # ... (Sidebar code remains exactly the same) ...
         st.header("⚙️ Sizing Configuration")
         uploaded_file = st.file_uploader("Upload Your Data (CSV)", type="csv")
         st.info("Set a target for your maximum power draw from the grid.")
@@ -1161,15 +1162,13 @@ def show_battery_sizing_page():
         try:
             input_df = pd.read_csv(uploaded_file)
             input_df["Datetime"] = pd.to_datetime(input_df["Datetime"], dayfirst=True)
-            
-            # --- CHANGE 1: Set index for analysis but keep Datetime column for plotting ---
             analysis_df = input_df.set_index("Datetime")
             
             analyzer = NetPeakShavingSizer(grid_import_threshold_kw=grid_import_threshold)
             capacity, power, results_df = analyzer.run_analysis(analysis_df)
             
             st.session_state['sizing_results'] = {
-                "capacity": capacity, "power": power, "df": results_df.reset_index(), # Reset index here to get 'Datetime' back as a column
+                "capacity": capacity, "power": power, "df": results_df, # <-- NO .reset_index() here
                 "grid_import_threshold": grid_import_threshold
             }
             st.rerun()
@@ -1183,19 +1182,22 @@ def show_battery_sizing_page():
         results = st.session_state['sizing_results']
         
         st.subheader("💡 Calculated Battery Size")
-        # ... (rest of the results display is the same)
+        # ... (Metrics and Recommendations are the same)
         col1, col2 = st.columns(2)
         col1.metric("Required Power", f"{results['power']:,.2f} kW")
         col2.metric("Required Energy Capacity", f"{results['capacity']:,.2f} kWh")
-        
         display_recommendations(results['power'], results['capacity'])
 
         # --- Charting Section ---
         st.subheader("📊 Analysis Charts")
-        df = results['df'] # This df now has a 'Datetime' column
+        
+        # --- THIS IS THE FIX ---
+        # Get the DataFrame from session state and reset the index here.
+        # This ensures 'Datetime' is always a column when plotting.
+        df = results['df'].reset_index()
         grid_import_threshold = results['grid_import_threshold']
 
-        # Charts 1 and 2 work well with the index, but we'll update them for consistency
+        # Now all the charting code will work correctly
         fig1 = go.Figure()
         fig1.add_trace(go.Scatter(x=df['Datetime'], y=df['net_load'], mode='lines', name='Original Net Load', line=dict(color='lightgray')))
         fig1.add_trace(go.Scatter(x=df['Datetime'], y=df['grid_import_with_battery'], mode='lines', name='Final Grid Import', line=dict(color='royalblue', width=2)))
@@ -1209,11 +1211,9 @@ def show_battery_sizing_page():
         fig2.update_layout(title="Required Battery Power Profile", yaxis_title="Power (kW)")
         st.plotly_chart(fig2, use_container_width=True)
         
-        # --- CHANGE 2: Explicitly use the 'Datetime' column for the x-axis ---
         st.markdown("---")
         st.subheader("🔋 Battery Energy Trend")
-        st.info("This plot shows the cumulative energy balance in the battery over the year.")
-        fig3 = px.line(df, x='Datetime', y='soc_kwh', # Use column names directly
+        fig3 = px.line(df, x='Datetime', y='soc_kwh', 
                        title="Cumulative Battery State of Charge (SOC) Trend",
                        labels={"soc_kwh": "Energy (kWh)", "Datetime": "Time"})
         fig3.update_traces(line_color='purple')
@@ -1221,6 +1221,7 @@ def show_battery_sizing_page():
 
     else:
         st.info("Upload a file and set your target grid import to get started.")
+
 
 ################# BATTERY SIZING CODE
 
